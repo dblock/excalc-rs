@@ -13,6 +13,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 - Windows MSI installer: renamed the default install directory from `excalc` to `ExCalc`; added an optional (on by default) "MCP Server Registration" feature that shells out to `copilot mcp add` and `claude mcp add` to register `excalc-mcp` with GitHub Copilot CLI and Claude Code CLI, if either is found on the machine (`src/bin/excalc-mcp-setup.rs`, run as a deferred, impersonated, best-effort custom action).
 - New standard math/general functions: `log2`, `cbrt`, `hypot`, `sign`, `clamp`, `lerp`.
 - New statistics functions: `median`, `mode`, `variance`, `stddev`, `percentile`, `covariance`, `correlation`.
+- New number theory functions: `primorial`, `digitsum`, `digitalroot`, `palindrome?`, `nextprime`.
 
 ## [0.2.0] - 2026-09-24
 

@@ -368,6 +368,74 @@ pub fn phi(n: f64) -> CalcResult<f64> {
     Ok(result as f64)
 }
 
+/// The primorial `n#`: the product of all primes `<= n` (`primorial(0) = 1`
+/// by convention, matching the empty-product identity).
+pub fn primorial(n: f64) -> CalcResult<f64> {
+    let n = non_negative_integer("primorial", n)?;
+    let mut result = 1f64;
+    for i in 2..=n {
+        if is_prime_u64(i) {
+            result *= i as f64;
+            if result.is_infinite() {
+                return Err(CalcError::Overflow);
+            }
+        }
+    }
+    Ok(result)
+}
+
+/// Sum of the decimal digits of `n` (e.g. `digitsum(12345) = 15`).
+pub fn digitsum(n: f64) -> CalcResult<f64> {
+    let n = non_negative_integer("digitsum", n)?;
+    Ok(digits(n).iter().sum::<u64>() as f64)
+}
+
+/// Decimal digits of `n`, most significant first (`digits(0) = [0]`).
+fn digits(mut n: u64) -> Vec<u64> {
+    if n == 0 {
+        return vec![0];
+    }
+    let mut ds = Vec::new();
+    while n > 0 {
+        ds.push(n % 10);
+        n /= 10;
+    }
+    ds.reverse();
+    ds
+}
+
+/// The digital root of `n`: repeatedly sum its digits until a single digit
+/// remains (equivalently `1 + (n - 1) mod 9` for `n > 0`, `0` for `n = 0`).
+pub fn digitalroot(n: f64) -> CalcResult<f64> {
+    let n = non_negative_integer("digitalroot", n)?;
+    if n == 0 {
+        return Ok(0.0);
+    }
+    Ok((1 + (n - 1) % 9) as f64)
+}
+
+/// Whether `n`'s decimal representation reads the same forwards and
+/// backwards. Returns `1` (true) or `0` (false), matching the calculator's
+/// other predicate-style functions.
+pub fn ispalindrome(n: f64) -> CalcResult<f64> {
+    let n = non_negative_integer("palindrome?", n)?;
+    let ds = digits(n);
+    let is_palindrome = ds.iter().eq(ds.iter().rev());
+    Ok(if is_palindrome { 1.0 } else { 0.0 })
+}
+
+/// The smallest prime strictly greater than `n`.
+pub fn nextprime(n: f64) -> CalcResult<f64> {
+    let n = non_negative_integer("nextprime", n)?;
+    let mut candidate = n.max(1);
+    loop {
+        candidate = candidate.checked_add(1).ok_or(CalcError::Overflow)?;
+        if is_prime_u64(candidate) {
+            return Ok(candidate as f64);
+        }
+    }
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
@@ -554,5 +622,53 @@ mod tests {
         assert!(matches!(primen(-1.0), Err(CalcError::DomainError(_))));
         assert!(matches!(mersennegen(-1.0), Err(CalcError::DomainError(_))));
         assert!(matches!(sigma(-1.0, 0.0), Err(CalcError::DomainError(_))));
+    }
+
+    #[test]
+    fn primorial_matches_known_values() {
+        assert_eq!(primorial(0.0).unwrap(), 1.0);
+        assert_eq!(primorial(1.0).unwrap(), 1.0);
+        assert_eq!(primorial(5.0).unwrap(), 2.0 * 3.0 * 5.0);
+        assert_eq!(primorial(10.0).unwrap(), 2.0 * 3.0 * 5.0 * 7.0);
+    }
+
+    #[test]
+    fn digitsum_matches_known_values() {
+        assert_eq!(digitsum(12345.0).unwrap(), 15.0);
+        assert_eq!(digitsum(0.0).unwrap(), 0.0);
+        assert_eq!(digitsum(9.0).unwrap(), 9.0);
+    }
+
+    #[test]
+    fn digitalroot_matches_known_values() {
+        assert_eq!(digitalroot(0.0).unwrap(), 0.0);
+        assert_eq!(digitalroot(9.0).unwrap(), 9.0);
+        assert_eq!(digitalroot(12345.0).unwrap(), 6.0);
+        assert_eq!(digitalroot(99.0).unwrap(), 9.0);
+    }
+
+    #[test]
+    fn ispalindrome_detects_palindromes() {
+        assert_eq!(ispalindrome(12321.0).unwrap(), 1.0);
+        assert_eq!(ispalindrome(12345.0).unwrap(), 0.0);
+        assert_eq!(ispalindrome(0.0).unwrap(), 1.0);
+        assert_eq!(ispalindrome(7.0).unwrap(), 1.0);
+    }
+
+    #[test]
+    fn nextprime_matches_known_values() {
+        assert_eq!(nextprime(0.0).unwrap(), 2.0);
+        assert_eq!(nextprime(2.0).unwrap(), 3.0);
+        assert_eq!(nextprime(10.0).unwrap(), 11.0);
+        assert_eq!(nextprime(13.0).unwrap(), 17.0);
+    }
+
+    #[test]
+    fn new_functions_domain_errors_for_negative_or_fractional_input() {
+        assert!(matches!(primorial(-1.0), Err(CalcError::DomainError(_))));
+        assert!(matches!(digitsum(-1.0), Err(CalcError::DomainError(_))));
+        assert!(matches!(digitalroot(1.5), Err(CalcError::DomainError(_))));
+        assert!(matches!(ispalindrome(-1.0), Err(CalcError::DomainError(_))));
+        assert!(matches!(nextprime(-1.0), Err(CalcError::DomainError(_))));
     }
 }

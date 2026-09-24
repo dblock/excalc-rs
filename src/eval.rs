@@ -371,6 +371,11 @@ fn call_function(name: &str, args: &[f64]) -> CalcResult<f64> {
             expect_args(&lower, args, 2)?;
             number_theory::sigma(args[0], args[1])
         }
+        "primorial" => one_arg(number_theory::primorial),
+        "digitsum" => one_arg(number_theory::digitsum),
+        "digitalroot" => one_arg(number_theory::digitalroot),
+        "palindrome?" => one_arg(number_theory::ispalindrome),
+        "nextprime" => one_arg(number_theory::nextprime),
 
         "not" => one_arg(logic::not),
         "shl" => {

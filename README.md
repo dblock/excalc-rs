@@ -8,7 +8,7 @@ Expression Calculator (CLI, MCP, Rust)
 
 An expression calculator CLI tool and MCP server built for AI coding agents like Claude and GitHub Copilot to outsource arithmetic, saving tokens and avoiding LLM math hallucinations.
 
-A mathematical beast with 151 functions and operators across standard math, trigonometry, statistics, financial (NPV, IRR), number theory (GCD, totient, primality), numeric integration, and advanced/special functions (gamma, elliptic integrals, dilogarithm, and more).
+A mathematical beast with 156 functions and operators across standard math, trigonometry, statistics, financial (NPV, IRR), number theory (GCD, totient, primality), numeric integration, and advanced/special functions (gamma, elliptic integrals, dilogarithm, and more).
 
 Spiritual successor to the Vestris Inc. shareware Expression Calculator written in 1996 in Pascal. It was also pressed on a CD-ROM, translated, and sold in Germany under the name Global Calculator in 1997. See [HISTORY.md](HISTORY.md).
 
@@ -167,6 +167,11 @@ calc "genmers(127)"     # 7     (generator for Mersenne number 127)
 calc "sigma(100, 0)"    # 9     (number of divisors of 100)
 calc "tau(9)"           # 13    (sum of divisors of 9)
 calc "phi(12)"          # 4     (Euler's totient of 12)
+calc "primorial(10)"    # 210   (product of primes <= 10)
+calc "digitsum(12345)"  # 15    (sum of decimal digits)
+calc "digitalroot(12345)"  # 6  (repeated digit sum)
+calc "palindrome?(12321)"  # 1  (true; reads the same forwards and backwards)
+calc "nextprime(10)"    # 11    (smallest prime > 10)
 ```
 
 **Comparison and logical operators** ([details](docs/functions/logic.md)):

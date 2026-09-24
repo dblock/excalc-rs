@@ -19,6 +19,11 @@
 | `sigma(n, k)` | Sum of the `k`-th power of positive divisors of `n` | `N+ x N -> N` | `sigma(100, 0)` → `9` |
 | `tau(n)` | Sum of positive divisors of `n` (i.e. `sigma(n, 1)`) | `N+ -> N` | `tau(9)` → `13` |
 | `phi(n)` (alias `eind`) | Euler's totient function, the count of positive integers `<= n` coprime to `n` | `N+ -> N` | `phi(12)` → `4` |
+| `primorial(n)` | Product of all primes `<= n` (`primorial(0) = 1`) | `N -> N` | `primorial(10)` → `210` |
+| `digitsum(n)` | Sum of the decimal digits of `n` | `N -> N` | `digitsum(12345)` → `15` |
+| `digitalroot(n)` | Repeatedly sum digits until a single digit remains | `N -> [0, 9]` | `digitalroot(12345)` → `6` |
+| `palindrome?(n)` | Whether `n`'s decimal digits read the same forwards and backwards | `N -> {0, 1}` | `palindrome?(12321)` → `1` |
+| `nextprime(n)` | The smallest prime strictly greater than `n` | `N -> N` | `nextprime(10)` → `11` |
 
 ## Notes and implementation details
 
