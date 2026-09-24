@@ -6,7 +6,7 @@ Expression Calculator (Rust)
 
 A portable expression calculator, built as a CLI tool and an MCP server so AI coding agents like Claude and GitHub Copilot can outsource arithmetic instead of computing it themselves — saving tokens and avoiding LLM math mistakes.
 
-Spiritual successor to [excalc](https://github.com/dblock/excalc) (Vestris Inc. Expression Calculator, Pascal, 1996). See [DESIGN.md](DESIGN.md) for the grammar, function catalog, and what's ported vs. deferred vs. skipped, and [docs/](docs/README.md) for detailed per-function reference documentation.
+Spiritual successor to the Vestris Inc. Expression Calculator that I wrote in 1996 in Pascal, also sold as ~3000 copies on a CD-ROM in Germany in 1997 under the name Global Calculator. See [HISTORY.md](HISTORY.md).
 
 ## Install
 
@@ -146,4 +146,4 @@ returns `27.49489742783178`.
 
 The `evaluate` tool takes a single `expression` string argument and returns the numeric result as text, or a tool error with the same message the CLI would print (e.g. `division by zero`, `domain error in sqrt`).
 
-See [CHANGELOG.md](CHANGELOG.md) for release history, [RELEASING.md](RELEASING.md) for how to cut a new release, and [CONTRIBUTING.md](CONTRIBUTING.md) for how to build, test, and contribute.
+See [CHANGELOG.md](CHANGELOG.md) for release history, [RELEASING.md](RELEASING.md) for how to cut a new release, and [CONTRIBUTING.md](CONTRIBUTING.md) for how to build, test, and contribute. See [DESIGN.md](DESIGN.md) for the grammar, function catalog, and what's ported vs. deferred vs. skipped.
