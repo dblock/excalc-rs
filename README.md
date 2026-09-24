@@ -164,6 +164,27 @@ calc "fresnelC(1)"         # ~0.7798934003768329
 calc "fresnelS(1)"         # ~0.4382591473903456
 ```
 
+**Financial functions** ([details](docs/functions/financial.md)):
+
+```
+calc "pv(1000, 0.08, 5)"                     # ~3992.7100370780886 (present value)
+calc "fv(1000, 0.08, 5)"                     # ~5866.600960000006 (future value)
+calc "pmt(10000, 0.08, 5)"                   # ~2504.564545668364 (payment per period)
+calc "npv(0.1, 100, 200, 300)"               # ~481.59278737791124 (net present value)
+calc "rate(2000, 1000, 10)"                  # ~0.07177346253629313 (interest rate per period)
+calc "cterm(0.1, 2000, 1000)"                # ~7.272540897341713 (periods to compound to a future value)
+calc "term(100, 0.01, 5000)"                 # ~40.74890715609402 (periods to reach a future value via deposits)
+calc "sln(10000, 1000, 5)"                   # 1800    (straight-line depreciation)
+calc "syd(10000, 1000, 5, 1)"                # 3000    (sum-of-the-years-digits depreciation)
+calc "ddb(10000, 1000, 5, 1)"                # 4000    (double-declining-balance depreciation)
+calc "db(50000, 10000, 5, 1, 3)"             # ~3440.254204028806 (fixed-declining-balance depreciation)
+calc "irate(5, 2504.5645456684, -10000, 0, 0)"   # ~0.08   (interest rate, payment-timing aware)
+calc "nper(0.08, 2504.5645456684, -10000, 0, 0)" # ~5      (number of periods, payment-timing aware)
+calc "paymt(0.08, 5, -10000, 0, 0)"          # ~2504.564545668364 (payment, payment-timing aware)
+calc "ipaymt(0.08, 1, 5, -10000, 0, 0)"      # 800     (interest portion of a payment)
+calc "ppaymt(0.08, 1, 5, -10000, 0, 0)"      # ~1704.5645456683642 (principal portion of a payment)
+```
+
 **Errors** exit with status `1` and print a message, e.g.:
 
 ```

@@ -10,8 +10,7 @@ See [docs/](docs/README.md) for detailed per-function reference documentation (d
 
 Ported from `common/MCalc.pas` in the original repo, grouped by the milestone that introduces them:
 
-- **v1 (this pass):** core arithmetic engine, standard math functions, statistics functions, general/rounding functions, number theory functions, comparison/logical operators, advanced/special functions (gamma, beta, Pochhammer, elliptic integrals, named integral functions like `erf`/`dilog`/Fresnel integrals).
-- **Later passes:** financial functions.
+- **v1 (this pass):** core arithmetic engine, standard math functions, statistics functions, general/rounding functions, number theory functions, comparison/logical operators, advanced/special functions (gamma, beta, Pochhammer, elliptic integrals, named integral functions like `erf`/`dilog`/Fresnel integrals), financial functions (time value of money, depreciation, and their extended payment-timing-aware variants).
 - **Not ported:** anything GUI-only (2D/3D plotting, drawing, Windows registry-based user-function storage, the Delphi `TCalcThread` threading model). None of that applies to a headless CLI/MCP tool.
 
 ## Grammar
@@ -48,6 +47,8 @@ v1 trig functions operate in **radians only**. The original supported a degree/r
 - `mod` is spelled out as a word token in v1, rather than a single character, since we're normalizing surface syntax anyway.
 - Original's `Ci`/`Chi` (cosine/hyperbolic-cosine integral) formulas reference an undefined variable `G` (presumably meant to be the Euler-Mascheroni constant), which the generic variable-lookup mechanism silently defaults to `0` — almost certainly a bug, since the results are meaningless without the real constant. v1 hardcodes the actual Euler-Mascheroni constant instead.
 - Advanced/special functions that depend on numeric integration in the original (`ellipticE`, `ellipticF`, `dilog`, `erf`, `erfc`, `si`, `ssi`, `ci`, `chi`, `dawson`, `fresnelC`/`fresnelS`) are ported using a private adaptive Simpson's-rule integrator as a stand-in for the still-deferred general-purpose numeric integration engine; see [docs/functions/advanced.md](docs/functions/advanced.md) for details and a TODO on revisiting this once that engine exists.
+- The original's actual dispatched financial functions (defined locally in `MCalc.pas`) use Delphi's standard `Math.Power`, which errors on a negative base with a non-integer exponent - unlike `Finance.pas`'s separate (and unused by the dispatch table) `Power` helper, which silently returns `0` for any non-positive base. v1 uses `f64::powf`, and maps any resulting `NaN` to a domain error and any resulting infinity to an overflow error, rather than silently returning `0` or panicking.
+- The original manual/doc draft named the fixed-declining-balance depreciation function `fdb`, but the actual dispatched token in `MCalc.pas` is `db` — v1 uses `db` to match the real implementation.
 
 ## Function catalog
 
@@ -81,9 +82,9 @@ Full reference (domains, formulas, examples) lives in [docs/](docs/README.md); t
 
 `gamma beta pochhammer bth bman ellipticE ellipticF(ellipticK) ellipticCE ellipticCK dilog dawson erf erfc si ssi ci chi fresnelC fresnelS fresnelF fresnelG`; general-purpose numeric integration (`trapezoid`, `simpson`, `newton`, `boole`, `ordersix`, `weddle`, `gauss`, `int`) still planned
 
-### Planned: Financial ([details](docs/functions/financial.md))
+### v1: Financial ([details](docs/functions/financial.md))
 
-`pv fv pmt npv nper rate term cterm sln syd ddb irate paymt fval ipaymt ppaymt pval`
+`pv fv pmt npv rate cterm term sln syd ddb db` and extended payment-timing-aware variants `irate nper paymt fval pval ipaymt ppaymt`
 
 ## Interfaces
 

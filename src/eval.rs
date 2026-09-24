@@ -4,7 +4,7 @@ use std::collections::HashMap;
 
 use crate::ast::{BinaryOp, Expr, UnaryOp};
 use crate::error::{CalcError, CalcResult};
-use crate::functions::{advanced, general, logic, number_theory, stats, trig};
+use crate::functions::{advanced, financial, general, logic, number_theory, stats, trig};
 
 /// Evaluation context: currently just variable bindings. Constants (`pi`,
 /// `e`) are always available and can't be shadowed in v1.
@@ -308,6 +308,81 @@ fn call_function(name: &str, args: &[f64]) -> CalcResult<f64> {
         "fresnelf" => one_arg(advanced::fresnel_f),
         "fresnelg" => one_arg(advanced::fresnel_g),
 
+        "sln" => {
+            expect_args(&lower, args, 3)?;
+            financial::sln(args[0], args[1], args[2])
+        }
+        "syd" => {
+            expect_args(&lower, args, 4)?;
+            financial::syd(args[0], args[1], args[2], args[3])
+        }
+        "cterm" => {
+            expect_args(&lower, args, 3)?;
+            financial::cterm(args[0], args[1], args[2])
+        }
+        "term" => {
+            expect_args(&lower, args, 3)?;
+            financial::term(args[0], args[1], args[2])
+        }
+        "pmt" => {
+            expect_args(&lower, args, 3)?;
+            financial::pmt(args[0], args[1], args[2])
+        }
+        "rate" => {
+            expect_args(&lower, args, 3)?;
+            financial::rate(args[0], args[1], args[2])
+        }
+        "pv" => {
+            expect_args(&lower, args, 3)?;
+            financial::pv(args[0], args[1], args[2])
+        }
+        "npv" => financial::npv(args),
+        "fv" => {
+            expect_args(&lower, args, 3)?;
+            financial::fv(args[0], args[1], args[2])
+        }
+        "ddb" => {
+            expect_args(&lower, args, 4)?;
+            financial::ddb(args[0], args[1], args[2], args[3])
+        }
+        "db" => match args.len() {
+            4 => financial::db(args[0], args[1], args[2], args[3], 12.0),
+            5 => financial::db(args[0], args[1], args[2], args[3], args[4]),
+            got => Err(CalcError::WrongArgCount {
+                name: lower.clone(),
+                expected: "4 or 5".to_string(),
+                got,
+            }),
+        },
+        "irate" => {
+            expect_args(&lower, args, 5)?;
+            financial::irate(args[0], args[1], args[2], args[3], args[4])
+        }
+        "nper" => {
+            expect_args(&lower, args, 5)?;
+            financial::nper(args[0], args[1], args[2], args[3], args[4])
+        }
+        "paymt" => {
+            expect_args(&lower, args, 5)?;
+            financial::paymt(args[0], args[1], args[2], args[3], args[4])
+        }
+        "fval" => {
+            expect_args(&lower, args, 5)?;
+            financial::fval(args[0], args[1], args[2], args[3], args[4])
+        }
+        "pval" => {
+            expect_args(&lower, args, 5)?;
+            financial::pval(args[0], args[1], args[2], args[3], args[4])
+        }
+        "ipaymt" => {
+            expect_args(&lower, args, 6)?;
+            financial::ipaymt(args[0], args[1], args[2], args[3], args[4], args[5])
+        }
+        "ppaymt" => {
+            expect_args(&lower, args, 6)?;
+            financial::ppaymt(args[0], args[1], args[2], args[3], args[4], args[5])
+        }
+
         _ => Err(CalcError::UnknownFunction(name.to_string())),
     }
 }
@@ -532,6 +607,87 @@ mod tests {
                 name: "ellipticf".to_string(),
                 expected: "1 or 2".to_string(),
                 got: 3,
+            })
+        );
+    }
+
+    #[test]
+    fn financial_functions_dispatch() {
+        assert_eq!(
+            call_function("sln", &[10000.0, 1000.0, 5.0]).unwrap(),
+            1800.0
+        );
+        assert_eq!(
+            call_function("syd", &[10000.0, 1000.0, 5.0, 1.0]).unwrap(),
+            3000.0
+        );
+        assert!((call_function("cterm", &[0.1, 2000.0, 1000.0]).unwrap() - 7.27254).abs() < 1e-3);
+        assert!((call_function("term", &[100.0, 0.01, 5000.0]).unwrap() - 40.7489).abs() < 1e-3);
+        assert!((call_function("pmt", &[10000.0, 0.08, 5.0]).unwrap() - 2504.5645).abs() < 1e-3);
+        assert!((call_function("rate", &[2000.0, 1000.0, 10.0]).unwrap() - 0.0717735).abs() < 1e-5);
+        assert!((call_function("pv", &[1000.0, 0.08, 5.0]).unwrap() - 3992.71).abs() < 1e-1);
+        assert!((call_function("fv", &[1000.0, 0.08, 5.0]).unwrap() - 5866.6).abs() < 1e-1);
+        assert!(
+            (call_function("npv", &[0.1, 100.0, 200.0, 300.0]).unwrap() - 481.5928).abs() < 1e-3
+        );
+        assert_eq!(
+            call_function("ddb", &[10000.0, 1000.0, 5.0, 1.0]).unwrap(),
+            4000.0
+        );
+        assert!(
+            (call_function("db", &[50000.0, 10000.0, 5.0, 1.0]).unwrap() - 13761.0168).abs() < 1e-2
+        );
+        assert!(
+            (call_function("db", &[50000.0, 10000.0, 5.0, 1.0, 3.0]).unwrap() - 3440.254).abs()
+                < 1e-2
+        );
+        assert!(call_function("irate", &[5.0, 100.0, -1000.0, 0.0, 0.0])
+            .unwrap()
+            .is_finite());
+        assert!(
+            call_function("nper", &[0.08, 2504.5645, -10000.0, 0.0, 0.0])
+                .unwrap()
+                .is_finite()
+        );
+        assert!(call_function("paymt", &[0.08, 5.0, -10000.0, 0.0, 0.0])
+            .unwrap()
+            .is_finite());
+        assert!(
+            call_function("fval", &[0.08, 5.0, 2504.5645, -10000.0, 0.0])
+                .unwrap()
+                .is_finite()
+        );
+        assert!(call_function("pval", &[0.08, 5.0, 2504.5645, 0.0, 0.0])
+            .unwrap()
+            .is_finite());
+        assert!(
+            call_function("ipaymt", &[0.08, 1.0, 5.0, -10000.0, 0.0, 0.0])
+                .unwrap()
+                .is_finite()
+        );
+        assert!(
+            call_function("ppaymt", &[0.08, 1.0, 5.0, -10000.0, 0.0, 0.0])
+                .unwrap()
+                .is_finite()
+        );
+    }
+
+    #[test]
+    fn db_wrong_arg_count() {
+        assert_eq!(
+            call_function("db", &[1.0, 2.0, 3.0]),
+            Err(CalcError::WrongArgCount {
+                name: "db".to_string(),
+                expected: "4 or 5".to_string(),
+                got: 3,
+            })
+        );
+        assert_eq!(
+            call_function("db", &[1.0, 2.0, 3.0, 4.0, 5.0, 6.0]),
+            Err(CalcError::WrongArgCount {
+                name: "db".to_string(),
+                expected: "4 or 5".to_string(),
+                got: 6,
             })
         );
     }
