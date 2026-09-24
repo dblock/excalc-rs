@@ -8,6 +8,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 
 ### Added
 
+- Bit manipulation functions: `popcount(n)`, `bitlen(n)`, `bitreverse(n, width)`.
 - New general/rounding functions: `roundto(x, n)` (round to `n` decimal places), `floordiv(a, b)` and `mod2(a, b)` (floored division/modulo, complementing `/`/`mod`'s truncated-towards-zero convention).
 - Combinatorics functions: `factorial(n)` (named equivalent of postfix `!`), `perm(n, r)`, `catalan(n)`, `multinomial(n, k1, k2, ...)`.
 - `atan2(y, x)`: two-argument arctangent, using the sign of both arguments to determine the correct quadrant.

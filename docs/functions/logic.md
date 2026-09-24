@@ -27,5 +27,10 @@ All operands are truncated to a signed 64-bit integer (`i64`) before the bitwise
 | `not(x)` | Bitwise not (inverts each bit) | `not(1)` | `-2` |
 | `shl(x, y)` | Shift `x` left by `y` bits, i.e. `x * 2^y` (wraps on overflow) | `shl(2, 1)` | `4` |
 | `shr(x, y)` | Shift `x` right by `y` bits, i.e. `x / 2^y` | `shr(2, 1)` | `1` |
+| `popcount(n)` | Population count: number of `1` bits in `n` | `popcount(255)` | `8` |
+| `bitlen(n)` | Number of bits needed to represent `n` | `bitlen(256)` | `9` |
+| `bitreverse(n, width)` | Reverses the lowest `width` bits of `n` | `bitreverse(1, 4)` | `8` |
+
+`popcount`/`bitlen`/`bitreverse` operate on non-negative integers only (unlike the other bitwise operators above, which truncate any operand to `i64`); `bitreverse`'s `width` must be in `[1, 64]` and `n` must fit within it.
 
 The original supported single-letter shortcuts (`a`, `o`, `x`, ...) for these as keyboard shortcuts from the Windows UI; this port uses full words (`and`, `or`, `xor`, ...) instead, with one exception: `&` is kept as a shorthand for `and` since it's a common, unambiguous convention in modern calculators and programming languages.

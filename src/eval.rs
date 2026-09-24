@@ -468,6 +468,12 @@ fn call_function(name: &str, args: &[f64]) -> CalcResult<f64> {
             expect_args(&lower, args, 2)?;
             logic::shr(args[0], args[1])
         }
+        "popcount" => one_arg(logic::popcount),
+        "bitlen" => one_arg(logic::bitlen),
+        "bitreverse" => {
+            expect_args(&lower, args, 2)?;
+            logic::bitreverse(args[0], args[1])
+        }
 
         "gamma" => one_arg(advanced::gamma),
         "beta" => {
