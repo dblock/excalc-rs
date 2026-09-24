@@ -10,8 +10,12 @@ env:
 
 jobs:
   coverage:
-    name: Coverage
-    runs-on: ubuntu-latest
+    name: Coverage (${{ matrix.os }})
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest, macos-latest, windows-latest]
     steps:
       - uses: actions/checkout@v4
       - uses: dtolnay/rust-toolchain@stable
@@ -24,3 +28,14 @@ jobs:
       - uses: coverallsapp/github-action@v2
         with:
           file: lcov.info
+          flag-name: ${{ matrix.os }}
+          parallel: true
+
+  coverage-finished:
+    name: Coverage finished
+    needs: coverage
+    runs-on: ubuntu-latest
+    steps:
+      - uses: coverallsapp/github-action@v2
+        with:
+          parallel-finished: true
