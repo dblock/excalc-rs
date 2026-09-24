@@ -35,13 +35,6 @@ calc "1/0"
 
 Run `calc --help` (or `excalc --help`) for full usage.
 
-Without installing, you can also run it straight from a checkout of this repo:
-
-```
-cargo run -- "2 + 2 * 3"
-# 8
-```
-
 ### Examples
 
 Everything below works today (v1). See [docs/](docs/README.md) for full reference documentation, including domains and error conditions for each function, and what's planned but not yet implemented.
@@ -194,5 +187,12 @@ Once connected, just ask your agent a math question in plain language (no specia
 returns `27.49489742783178`.
 
 The `evaluate` tool takes a single `expression` string argument and returns the numeric result as text, or a tool error with the same message the CLI would print (e.g. `division by zero`, `domain error in sqrt`).
+
+Without installing, you can also run it straight from a checkout of this repo:
+
+```
+cargo run -- "2 + 2 * 3"
+# 8
+```
 
 See [CHANGELOG.md](CHANGELOG.md) for release history, [RELEASING.md](RELEASING.md) for how to cut a new release, and [CONTRIBUTING.md](CONTRIBUTING.md) for how to build, test, and contribute. See [DESIGN.md](DESIGN.md) for the grammar, function catalog, and what's ported vs. deferred vs. skipped.
