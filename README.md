@@ -8,7 +8,7 @@ Expression Calculator (CLI, MCP, Rust)
 
 An expression calculator CLI tool and MCP server built for AI coding agents like Claude and GitHub Copilot to outsource arithmetic, saving tokens and avoiding LLM math hallucinations.
 
-A mathematical beast with 156 functions and operators across standard math, trigonometry, statistics, financial (NPV, IRR), number theory (GCD, totient, primality), numeric integration, and advanced/special functions (gamma, elliptic integrals, dilogarithm, and more).
+A mathematical beast with 159 functions and operators across standard math, trigonometry, statistics, financial (NPV, IRR), number theory (GCD, totient, primality), base conversion, numeric integration, and advanced/special functions (gamma, elliptic integrals, dilogarithm, and more).
 
 Spiritual successor to the Vestris Inc. shareware Expression Calculator written in 1996 in Pascal. It was also pressed on a CD-ROM, translated, and sold in Germany under the name Global Calculator in 1997. See [HISTORY.md](HISTORY.md).
 
@@ -173,6 +173,21 @@ calc "digitalroot(12345)"  # 6  (repeated digit sum)
 calc "palindrome?(12321)"  # 1  (true; reads the same forwards and backwards)
 calc "nextprime(10)"    # 11    (smallest prime > 10)
 ```
+
+**Base conversion** ([details](docs/functions/base-conversion.md)):
+
+```
+calc "hex(255)"     # "0xff"    (format as hexadecimal)
+calc "oct(8)"       # "0o10"    (format as octal)
+calc "bin(10)"      # "0b1010"  (format as binary)
+calc "0xff"         # 255     (hexadecimal literal)
+calc "0o17"         # 15      (octal literal)
+calc "0b1010"       # 10      (binary literal)
+calc "0xff + 1"     # 256     (radix literals are just numbers, usable anywhere)
+calc "0XA + 0b10"   # 12      (uppercase prefixes and mixed bases both work)
+```
+
+`hex`/`oct`/`bin` accept a single non-negative integer and return text, not a number — the result can't be used inside a larger expression (`1 + hex(255)` is an error), and only the last statement of a `calc` invocation may be text. `0x`/`0o`/`0b`-prefixed literals go the other way, parsing a hex/octal/binary number as an ordinary numeric value usable anywhere.
 
 **Comparison and logical operators** ([details](docs/functions/logic.md)):
 

@@ -5,10 +5,28 @@ use std::collections::HashMap;
 use crate::ast::{BinaryOp, Expr, Stmt, UnaryOp};
 use crate::error::{CalcError, CalcResult};
 use crate::functions::{
-    advanced, financial, general,
+    advanced, base, financial, general,
     integration::{self, Rule},
     logic, number_theory, stats, trig,
 };
+
+/// The result of evaluating a program or expression: almost always a plain
+/// number, except for the base-conversion functions (`hex`/`oct`/`bin`),
+/// which produce a formatted string instead.
+#[derive(Debug, Clone, PartialEq)]
+pub enum Value {
+    Number(f64),
+    Text(String),
+}
+
+impl std::fmt::Display for Value {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        match self {
+            Value::Number(n) => write!(f, "{n}"),
+            Value::Text(s) => write!(f, "{s}"),
+        }
+    }
+}
 
 /// Evaluation context: currently just variable bindings. Constants (`pi`,
 /// `e`) are always available and can't be shadowed.
@@ -30,18 +48,20 @@ impl Context {
 /// Evaluates a full program: a sequence of statements executed in order,
 /// with variable assignments visible to later statements. Returns the value
 /// of the last statement (an assignment's value is the value assigned, so a
-/// program that ends in `x := 5` evaluates to `5`).
-pub fn eval_program(stmts: &[Stmt], ctx: &mut Context) -> CalcResult<f64> {
-    let mut last = 0.0;
+/// program that ends in `x := 5` evaluates to `5`). Variables are always
+/// numbers, so an assignment's right-hand side must evaluate to a number
+/// (not the text result of `hex`/`oct`/`bin`).
+pub fn eval_program(stmts: &[Stmt], ctx: &mut Context) -> CalcResult<Value> {
+    let mut last = Value::Number(0.0);
     for stmt in stmts {
         last = match stmt {
             Stmt::Assign(name, expr) => {
                 if is_reserved_constant(name) {
                     return Err(CalcError::ReservedIdentifier(name.clone()));
                 }
-                let value = eval(expr, ctx)?;
+                let value = eval_numeric(expr, ctx)?;
                 ctx.set(name.clone(), value);
-                value
+                Value::Number(value)
             }
             Stmt::Expr(expr) => eval(expr, ctx)?,
         };
@@ -53,38 +73,77 @@ fn is_reserved_constant(name: &str) -> bool {
     matches!(name.to_ascii_lowercase().as_str(), "pi" | "e")
 }
 
-pub fn eval(expr: &Expr, ctx: &Context) -> CalcResult<f64> {
-    match expr {
-        Expr::Number(n) => Ok(*n),
+/// Evaluates `expr` and requires the result to be a number, erroring with
+/// `NotANumber` if it's the text result of `hex`/`oct`/`bin` (which can only
+/// appear as a whole top-level expression, not nested inside arithmetic).
+fn eval_numeric(expr: &Expr, ctx: &Context) -> CalcResult<f64> {
+    match eval(expr, ctx)? {
+        Value::Number(n) => Ok(n),
+        Value::Text(_) => Err(CalcError::NotANumber),
+    }
+}
 
-        Expr::Variable(name) => resolve_variable(name, ctx),
+pub fn eval(expr: &Expr, ctx: &Context) -> CalcResult<Value> {
+    match expr {
+        Expr::Number(n) => Ok(Value::Number(*n)),
+
+        Expr::Variable(name) => Ok(Value::Number(resolve_variable(name, ctx)?)),
 
         Expr::Unary(op, inner) => {
-            let v = eval(inner, ctx)?;
-            eval_unary(*op, v)
+            let v = eval_numeric(inner, ctx)?;
+            Ok(Value::Number(eval_unary(*op, v)?))
         }
 
         Expr::Binary(op, lhs, rhs) => {
-            let l = eval(lhs, ctx)?;
-            let r = eval(rhs, ctx)?;
-            eval_binary(*op, l, r)
+            let l = eval_numeric(lhs, ctx)?;
+            let r = eval_numeric(rhs, ctx)?;
+            Ok(Value::Number(eval_binary(*op, l, r)?))
         }
 
         Expr::Call(name, arg_exprs) => {
             let lower = name.to_ascii_lowercase();
             if let Some(rule) = Rule::from_name(&lower) {
-                return eval_composite_integration(&lower, rule, arg_exprs, ctx);
+                return Ok(Value::Number(eval_composite_integration(
+                    &lower, rule, arg_exprs, ctx,
+                )?));
             }
             if lower == "int" || lower == "gauss" {
-                return eval_adaptive_integration(&lower, arg_exprs, ctx);
+                return Ok(Value::Number(eval_adaptive_integration(
+                    &lower, arg_exprs, ctx,
+                )?));
+            }
+            if matches!(lower.as_str(), "hex" | "oct" | "bin") {
+                return eval_base_conversion(&lower, arg_exprs, ctx);
             }
             let mut args = Vec::with_capacity(arg_exprs.len());
             for a in arg_exprs {
-                args.push(eval(a, ctx)?);
+                args.push(eval_numeric(a, ctx)?);
             }
-            call_function(name, &args)
+            Ok(Value::Number(call_function(name, &args)?))
         }
     }
+}
+
+/// `hex(n)`, `oct(n)`, `bin(n)`: format a non-negative integer as a string
+/// in the given base. Only meaningful as a whole expression (its result
+/// can't be combined into further arithmetic), so it's handled here rather
+/// than in `call_function`, which only ever returns numbers.
+fn eval_base_conversion(name: &str, arg_exprs: &[Expr], ctx: &Context) -> CalcResult<Value> {
+    if arg_exprs.len() != 1 {
+        return Err(CalcError::WrongArgCount {
+            name: name.to_string(),
+            expected: "1".to_string(),
+            got: arg_exprs.len(),
+        });
+    }
+    let n = eval_numeric(&arg_exprs[0], ctx)?;
+    let text = match name {
+        "hex" => base::hex(n)?,
+        "oct" => base::oct(n)?,
+        "bin" => base::bin(n)?,
+        _ => unreachable!("eval_base_conversion only called for hex/oct/bin"),
+    };
+    Ok(Value::Text(text))
 }
 
 /// Shared setup for the numeric-integration functions (`int`, `gauss`, and
@@ -109,9 +168,9 @@ fn integration_setup<'a>(
         Expr::Variable(v) if !matches!(v.to_ascii_lowercase().as_str(), "pi" | "e") => v.clone(),
         _ => return Err(CalcError::DomainError(name.to_string())),
     };
-    let a = eval(&arg_exprs[2], ctx)?;
-    let b = eval(&arg_exprs[3], ctx)?;
-    let param = eval(&arg_exprs[4], ctx)?;
+    let a = eval_numeric(&arg_exprs[2], ctx)?;
+    let b = eval_numeric(&arg_exprs[3], ctx)?;
+    let param = eval_numeric(&arg_exprs[4], ctx)?;
     Ok((&arg_exprs[0], var_name, a, b, param))
 }
 
@@ -127,7 +186,7 @@ fn eval_composite_integration(
     };
     let f = |x: f64| -> CalcResult<f64> {
         work_ctx.set(var_name.clone(), x);
-        eval(body, &work_ctx)
+        eval_numeric(body, &work_ctx)
     };
     integration::composite(name, rule, f, a, b, n)
 }
@@ -139,7 +198,7 @@ fn eval_adaptive_integration(name: &str, arg_exprs: &[Expr], ctx: &Context) -> C
     };
     let f = |x: f64| -> CalcResult<f64> {
         work_ctx.set(var_name.clone(), x);
-        eval(body, &work_ctx)
+        eval_numeric(body, &work_ctx)
     };
     integration::adaptive(name, f, a, b, tolerance)
 }
@@ -553,14 +612,17 @@ mod tests {
     fn eval_variable_expr_through_context() {
         let mut ctx = Context::new();
         ctx.set("x", 42.0);
-        assert_eq!(eval(&Expr::Variable("x".to_string()), &ctx).unwrap(), 42.0);
+        assert_eq!(
+            eval(&Expr::Variable("x".to_string()), &ctx).unwrap(),
+            Value::Number(42.0)
+        );
     }
 
     #[test]
     fn eval_program_assignment_visible_to_later_statements() {
         let stmts = crate::parser::parse_program("x := 5; y := x^2 + 1; y").unwrap();
         let mut ctx = Context::new();
-        assert_eq!(eval_program(&stmts, &mut ctx).unwrap(), 26.0);
+        assert_eq!(eval_program(&stmts, &mut ctx).unwrap(), Value::Number(26.0));
         assert_eq!(ctx.variables.get("x"), Some(&5.0));
         assert_eq!(ctx.variables.get("y"), Some(&26.0));
     }
@@ -569,7 +631,7 @@ mod tests {
     fn eval_program_trailing_assignment_returns_assigned_value() {
         let stmts = crate::parser::parse_program("x := 5").unwrap();
         let mut ctx = Context::new();
-        assert_eq!(eval_program(&stmts, &mut ctx).unwrap(), 5.0);
+        assert_eq!(eval_program(&stmts, &mut ctx).unwrap(), Value::Number(5.0));
     }
 
     #[test]
@@ -588,7 +650,7 @@ mod tests {
     fn eval_program_single_expression_still_works() {
         let stmts = crate::parser::parse_program("2 + 2").unwrap();
         let mut ctx = Context::new();
-        assert_eq!(eval_program(&stmts, &mut ctx).unwrap(), 4.0);
+        assert_eq!(eval_program(&stmts, &mut ctx).unwrap(), Value::Number(4.0));
     }
 
     #[test]
@@ -895,7 +957,10 @@ mod tests {
         let mut ctx = Context::new();
         ctx.set("k", 2.0);
         let expr = crate::parser::parse("simpson(k * x, x, 0, 2, 100) + k").unwrap();
-        let result = eval(&expr, &ctx).unwrap();
+        let result = match eval(&expr, &ctx).unwrap() {
+            Value::Number(n) => n,
+            Value::Text(_) => panic!("expected a number"),
+        };
         // integral of 2*x from 0 to 2 = 4, plus outer k (2) = 6.
         assert!((result - 6.0).abs() < 1e-2);
     }

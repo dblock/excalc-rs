@@ -6,6 +6,8 @@
 //! - a plain number (`8`, `-2`, `0.5`) is compared exactly;
 //! - a `~`-prefixed number (`~1.5708`) is compared with a small tolerance,
 //!   for irrational results shown rounded for readability;
+//! - a double-quoted string (`"ff"`) asserts the result is that exact text
+//!   (used for the base-conversion functions, `hex`/`oct`/`bin`);
 //! - `error: <message>` asserts evaluation fails with that exact message
 //!   (matching the CLI's `error: {e}` output format).
 //!
@@ -82,6 +84,26 @@ fn readme_examples_match_evaluator() {
                 Ok(v) => failures.push(format!(
                     "{:?}: expected error {message:?}, got Ok({v})",
                     example.expr
+                )),
+            }
+            continue;
+        }
+
+        if let Some(expected_text) = example
+            .expected
+            .strip_prefix('"')
+            .and_then(|s| s.strip_suffix('"'))
+        {
+            match excalc::evaluate_value(&example.expr) {
+                Ok(excalc::Value::Text(text)) if text == expected_text => {}
+                Ok(v) => failures.push(format!(
+                    "{:?}: expected {expected_text:?}, got {v}",
+                    example.expr
+                )),
+                Err(e) => failures.push(format!(
+                    "{:?}: expected {expected_text:?}, got error {:?}",
+                    example.expr,
+                    e.to_string()
                 )),
             }
             continue;

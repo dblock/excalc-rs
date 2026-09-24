@@ -14,6 +14,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 - New standard math/general functions: `log2`, `cbrt`, `hypot`, `sign`, `clamp`, `lerp`.
 - New statistics functions: `median`, `mode`, `variance`, `stddev`, `percentile`, `covariance`, `correlation`.
 - New number theory functions: `primorial`, `digitsum`, `digitalroot`, `palindrome?`, `nextprime`.
+- Base conversion: `hex`, `oct`, `bin` functions to format a non-negative integer as text, and `0x`/`0o`/`0b`-prefixed literals to parse hex/octal/binary numbers back into ordinary numeric values. First feature to introduce a non-numeric result type (`evaluate_value`, returning a `Value` enum of `Number`/`Text`); `evaluate` remains `f64`-only for backward compatibility and errors if the result is text.
 
 ## [0.2.0] - 2026-09-24
 

@@ -36,6 +36,9 @@ pub enum CalcError {
 
     #[error("numeric overflow")]
     Overflow,
+
+    #[error("result is text and can't be used in a numeric expression")]
+    NotANumber,
 }
 
 pub type CalcResult<T> = Result<T, CalcError>;

@@ -40,13 +40,13 @@ impl ExcalcServer {
     }
 
     #[tool(
-        description = "Evaluate a math expression and return the numeric result. Supports arithmetic operators, trig/hyperbolic/log functions, and statistics functions; see excalc's README for the full list."
+        description = "Evaluate a math expression and return the result. Supports arithmetic operators, trig/hyperbolic/log functions, statistics functions, and base-conversion functions (hex/oct/bin) returning text; see excalc's README for the full list."
     )]
     fn evaluate(
         &self,
         Parameters(EvaluateRequest { expression }): Parameters<EvaluateRequest>,
     ) -> Result<CallToolResult, McpError> {
-        match excalc::evaluate(&expression) {
+        match excalc::evaluate_value(&expression) {
             Ok(value) => Ok(CallToolResult::success(vec![ContentBlock::text(
                 value.to_string(),
             )])),

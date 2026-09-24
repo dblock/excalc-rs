@@ -103,6 +103,11 @@ impl<'a> Lexer<'a> {
     }
 
     fn read_number(&mut self, start: usize, first: char) -> CalcResult<Token> {
+        if first == '0' {
+            if let Some(radix_char @ ('x' | 'X' | 'o' | 'O' | 'b' | 'B')) = self.peek_char() {
+                return self.read_radix_number(start, radix_char);
+            }
+        }
         let mut end = start + first.len_utf8();
         let mut seen_dot = first == '.';
         while let Some(c) = self.peek_char() {
@@ -137,6 +142,37 @@ impl<'a> Lexer<'a> {
         text.parse::<f64>()
             .map(Token::Number)
             .map_err(|_| CalcError::InvalidCharacter(first, start))
+    }
+
+    /// Reads a `0x`/`0o`/`0b`-prefixed radix literal (e.g. `0xff`, `0o17`,
+    /// `0b1010`), called once `read_number` has seen the leading `0` and
+    /// peeked the radix marker. Errors if no valid digits for that radix
+    /// follow the marker.
+    fn read_radix_number(&mut self, start: usize, radix_char: char) -> CalcResult<Token> {
+        self.chars.next(); // consume the radix marker (x/X/o/O/b/B)
+        let radix: u32 = match radix_char {
+            'x' | 'X' => 16,
+            'o' | 'O' => 8,
+            'b' | 'B' => 2,
+            _ => unreachable!("read_radix_number only called for x/X/o/O/b/B"),
+        };
+        let digits_start = start + 2; // past "0x"/"0o"/"0b"
+        let mut digits_end = digits_start;
+        while let Some(c) = self.peek_char() {
+            if c.is_digit(radix) {
+                digits_end += c.len_utf8();
+                self.chars.next();
+            } else {
+                break;
+            }
+        }
+        if digits_end == digits_start {
+            return Err(CalcError::InvalidCharacter(radix_char, start));
+        }
+        let digits = &self.input[digits_start..digits_end];
+        u64::from_str_radix(digits, radix)
+            .map(|n| Token::Number(n as f64))
+            .map_err(|_| CalcError::InvalidCharacter(radix_char, start))
     }
 
     /// Only treat 'e'/'E' as the start of an exponent if followed by a digit
@@ -201,6 +237,29 @@ mod tests {
             Ok(vec![Token::Number(1.5e-3), Token::Eof])
         );
         assert_eq!(tokenize("2e+3"), Ok(vec![Token::Number(2e3), Token::Eof]));
+    }
+
+    #[test]
+    fn radix_literals() {
+        assert_eq!(tokenize("0xff"), Ok(vec![Token::Number(255.0), Token::Eof]));
+        assert_eq!(tokenize("0XFF"), Ok(vec![Token::Number(255.0), Token::Eof]));
+        assert_eq!(tokenize("0o17"), Ok(vec![Token::Number(15.0), Token::Eof]));
+        assert_eq!(
+            tokenize("0b1010"),
+            Ok(vec![Token::Number(10.0), Token::Eof])
+        );
+        // A bare "0" (or "0" followed by ordinary digits) is still a
+        // regular decimal number.
+        assert_eq!(tokenize("0"), Ok(vec![Token::Number(0.0), Token::Eof]));
+        assert_eq!(tokenize("0.5"), Ok(vec![Token::Number(0.5), Token::Eof]));
+        assert_eq!(tokenize("012"), Ok(vec![Token::Number(12.0), Token::Eof]));
+    }
+
+    #[test]
+    fn radix_literal_requires_digits() {
+        assert_eq!(tokenize("0x"), Err(CalcError::InvalidCharacter('x', 0)));
+        assert_eq!(tokenize("0xzz"), Err(CalcError::InvalidCharacter('x', 0)));
+        assert_eq!(tokenize("0b2"), Err(CalcError::InvalidCharacter('b', 0)));
     }
 
     #[test]

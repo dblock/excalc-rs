@@ -1,4 +1,5 @@
 pub mod advanced;
+pub mod base;
 pub mod financial;
 pub mod general;
 pub mod integration;

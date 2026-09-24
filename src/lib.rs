@@ -14,15 +14,27 @@ pub mod lexer;
 pub mod parser;
 
 pub use error::{CalcError, CalcResult};
+pub use eval::Value;
 
 /// Parses and evaluates an expression or `;`/newline-separated sequence of
 /// statements (see [`ast::Stmt`]), returning the value of the last
-/// statement. Variables assigned with `name := expr` are visible to later
-/// statements but don't persist beyond this single call.
-pub fn evaluate(input: &str) -> CalcResult<f64> {
+/// statement, which may be a plain number or (for `hex`/`oct`/`bin`) a
+/// formatted string. Variables assigned with `name := expr` are visible to
+/// later statements but don't persist beyond this single call.
+pub fn evaluate_value(input: &str) -> CalcResult<Value> {
     let stmts = parser::parse_program(input)?;
     let mut ctx = eval::Context::new();
     eval::eval_program(&stmts, &mut ctx)
+}
+
+/// Like [`evaluate_value`], but requires the result to be a plain number,
+/// erroring with [`CalcError::NotANumber`] if the expression is (or ends
+/// in) a text result such as `hex(255)`.
+pub fn evaluate(input: &str) -> CalcResult<f64> {
+    match evaluate_value(input)? {
+        Value::Number(n) => Ok(n),
+        Value::Text(_) => Err(CalcError::NotANumber),
+    }
 }
 
 #[cfg(test)]
@@ -131,5 +143,27 @@ mod tests {
             evaluate("2 +"),
             Err(CalcError::ExpectedToken { .. })
         ));
+    }
+
+    #[test]
+    fn base_conversion_functions() {
+        assert_eq!(
+            evaluate_value("hex(255)").unwrap(),
+            Value::Text("0xff".to_string())
+        );
+        assert_eq!(
+            evaluate_value("oct(8)").unwrap(),
+            Value::Text("0o10".to_string())
+        );
+        assert_eq!(
+            evaluate_value("bin(10)").unwrap(),
+            Value::Text("0b1010".to_string())
+        );
+    }
+
+    #[test]
+    fn base_conversion_result_cannot_be_used_numerically() {
+        assert_eq!(evaluate("hex(255)"), Err(CalcError::NotANumber));
+        assert_eq!(evaluate("1 + hex(255)"), Err(CalcError::NotANumber));
     }
 }
