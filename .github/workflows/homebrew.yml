@@ -11,6 +11,15 @@ jobs:
     runs-on: macos-latest
     steps:
       - uses: actions/checkout@v4
+      - name: Cache Homebrew downloads
+        uses: actions/cache@v4
+        with:
+          path: |
+            ~/Library/Caches/Homebrew
+            /opt/homebrew/Library/Homebrew/vendor/bundle
+          key: homebrew-${{ runner.os }}-${{ hashFiles('Formula/excalc.rb') }}
+          restore-keys: |
+            homebrew-${{ runner.os }}-
       - name: Tap this checkout
         run: brew tap dblock/excalc-rs "$GITHUB_WORKSPACE"
       - name: Audit formula
