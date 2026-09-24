@@ -142,6 +142,24 @@ calc "tau(9)"              # 13        (sum of divisors of 9)
 calc "phi(12)"             # 4         (Euler's totient of 12)
 ```
 
+**Comparison and logical operators** ([details](docs/functions/logic.md)):
+
+```
+calc "2 = 3"               # 0
+calc "3 > 2"               # 1
+calc "3 < 2"               # 0
+calc "2 xor 4"             # 6
+calc "2 xnor 4"            # -7
+calc "3 and 9"             # 1
+calc "3 & 9"               # 1        (& is a synonym for and)
+calc "3 nand 9"            # -2
+calc "2 or 4"              # 6
+calc "2 nor 4"             # -7
+calc "not(1)"              # -2
+calc "shl(2, 1)"           # 4        (2 * 2^1)
+calc "shr(2, 1)"           # 1        (2 / 2^1)
+```
+
 **Constants**: `pi` and `e` (case-insensitive).
 
 **Errors** exit with status `1` and print a message, e.g.:

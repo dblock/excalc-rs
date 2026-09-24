@@ -4,7 +4,7 @@ use std::collections::HashMap;
 
 use crate::ast::{BinaryOp, Expr, UnaryOp};
 use crate::error::{CalcError, CalcResult};
-use crate::functions::{general, number_theory, stats, trig};
+use crate::functions::{general, logic, number_theory, stats, trig};
 
 /// Evaluation context: currently just variable bindings. Constants (`pi`,
 /// `e`) are always available and can't be shadowed in v1.
@@ -115,7 +115,25 @@ fn eval_binary(op: BinaryOp, l: f64, r: f64) -> CalcResult<f64> {
                 Ok(r.powf(1.0 / l))
             }
         }
+        BinaryOp::Eq => Ok(if l == r { 1.0 } else { 0.0 }),
+        BinaryOp::Gt => Ok(if l > r { 1.0 } else { 0.0 }),
+        BinaryOp::Lt => Ok(if l < r { 1.0 } else { 0.0 }),
+        BinaryOp::Or => bitwise(l, r, "or", |a, b| a | b),
+        BinaryOp::Nor => bitwise(l, r, "nor", |a, b| !(a | b)),
+        BinaryOp::Xor => bitwise(l, r, "xor", |a, b| a ^ b),
+        BinaryOp::Xnor => bitwise(l, r, "xnor", |a, b| !(a ^ b)),
+        BinaryOp::And => bitwise(l, r, "and", |a, b| a & b),
+        BinaryOp::Nand => bitwise(l, r, "nand", |a, b| !(a & b)),
     }
+}
+
+/// Truncates both operands to `i64`, applies `f`, and converts the result
+/// back to `f64`. Errors with `DomainError(name)` if either operand doesn't
+/// fit in `i64` once truncated.
+fn bitwise(l: f64, r: f64, name: &str, f: impl Fn(i64, i64) -> i64) -> CalcResult<f64> {
+    let a = logic::to_i64(l, name)?;
+    let b = logic::to_i64(r, name)?;
+    Ok(f(a, b) as f64)
 }
 
 fn call_function(name: &str, args: &[f64]) -> CalcResult<f64> {
@@ -228,6 +246,16 @@ fn call_function(name: &str, args: &[f64]) -> CalcResult<f64> {
         "sigma" => {
             expect_args(&lower, args, 2)?;
             number_theory::sigma(args[0], args[1])
+        }
+
+        "not" => one_arg(logic::not),
+        "shl" => {
+            expect_args(&lower, args, 2)?;
+            logic::shl(args[0], args[1])
+        }
+        "shr" => {
+            expect_args(&lower, args, 2)?;
+            logic::shr(args[0], args[1])
         }
 
         _ => Err(CalcError::UnknownFunction(name.to_string())),
@@ -351,5 +379,44 @@ mod tests {
                 got: 2,
             })
         );
+    }
+
+    #[test]
+    fn comparison_operators() {
+        assert_eq!(eval_binary(BinaryOp::Eq, 2.0, 2.0).unwrap(), 1.0);
+        assert_eq!(eval_binary(BinaryOp::Eq, 2.0, 3.0).unwrap(), 0.0);
+        assert_eq!(eval_binary(BinaryOp::Gt, 3.0, 2.0).unwrap(), 1.0);
+        assert_eq!(eval_binary(BinaryOp::Gt, 2.0, 3.0).unwrap(), 0.0);
+        assert_eq!(eval_binary(BinaryOp::Lt, 2.0, 3.0).unwrap(), 1.0);
+        assert_eq!(eval_binary(BinaryOp::Lt, 3.0, 2.0).unwrap(), 0.0);
+    }
+
+    #[test]
+    fn bitwise_logical_operators_match_manual_examples() {
+        assert_eq!(eval_binary(BinaryOp::Xor, 2.0, 4.0).unwrap(), 6.0);
+        assert_eq!(eval_binary(BinaryOp::Xnor, 2.0, 4.0).unwrap(), -7.0);
+        assert_eq!(eval_binary(BinaryOp::And, 3.0, 9.0).unwrap(), 1.0);
+        assert_eq!(eval_binary(BinaryOp::Nand, 3.0, 9.0).unwrap(), -2.0);
+        assert_eq!(eval_binary(BinaryOp::Or, 2.0, 4.0).unwrap(), 6.0);
+        assert_eq!(eval_binary(BinaryOp::Nor, 2.0, 4.0).unwrap(), -7.0);
+    }
+
+    #[test]
+    fn bitwise_operators_domain_error_out_of_i64_range() {
+        assert_eq!(
+            eval_binary(BinaryOp::And, 1e30, 1.0),
+            Err(CalcError::DomainError("and".to_string()))
+        );
+        assert_eq!(
+            eval_binary(BinaryOp::And, 1.0, 1e30),
+            Err(CalcError::DomainError("and".to_string()))
+        );
+    }
+
+    #[test]
+    fn not_shl_shr_functions() {
+        assert_eq!(call_function("not", &[1.0]).unwrap(), -2.0);
+        assert_eq!(call_function("shl", &[2.0, 1.0]).unwrap(), 4.0);
+        assert_eq!(call_function("shr", &[2.0, 1.0]).unwrap(), 1.0);
     }
 }

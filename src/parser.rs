@@ -1,17 +1,22 @@
 //! Recursive-descent parser using conventional calculator precedence
 //! (loosest to tightest binding):
 //!
-//! 1. Additive:        `+  -`
-//! 2. Multiplicative:  `*  /  mod`
-//! 3. Unary prefix:    `-x`
-//! 4. Power / root:    `^` (right-assoc), `\` (n-th root, left-assoc)
-//! 5. Postfix:         `!` (factorial), `%` (percent)
-//! 6. Primary:         numbers, variables, `name(args, ...)`, `( expr )`
+//! 1. Comparison:      `=  >  <`
+//! 2. Logical or:      `or  nor  xor  xnor`
+//! 3. Logical and:     `and  nand  &`
+//! 4. Additive:        `+  -`
+//! 5. Multiplicative:  `*  /  mod`
+//! 6. Unary prefix:    `-x`
+//! 7. Power / root:    `^` (right-assoc), `\` (n-th root, left-assoc)
+//! 8. Postfix:         `!` (factorial), `%` (percent)
+//! 9. Primary:         numbers, variables, `name(args, ...)`, `( expr )`
 //!
 //! This intentionally differs from the original Pascal engine, which bound
-//! `%` tighter than `* /` and `\` looser than `^`. That was a reasonable
-//! design for a button-driven 90s calculator UI, but it surprises anyone
-//! typing an expression today, so v1 normalizes to conventional precedence.
+//! `%` tighter than `* /` and `\` looser than `^`, and used `=` to mean
+//! variable assignment rather than equality. That was a reasonable design
+//! for a button-driven 90s calculator UI, but it surprises anyone typing an
+//! expression today, so v1 normalizes to conventional precedence and gives
+//! `=` the more intuitive equality meaning.
 
 use crate::ast::{BinaryOp, Expr, UnaryOp};
 use crate::error::{CalcError, CalcResult};
@@ -20,7 +25,7 @@ use crate::lexer::{tokenize, Token};
 pub fn parse(input: &str) -> CalcResult<Expr> {
     let tokens = tokenize(input)?;
     let mut parser = Parser { tokens, pos: 0 };
-    let expr = parser.parse_additive()?;
+    let expr = parser.parse_comparison()?;
     parser.expect_eof()?;
     Ok(expr)
 }
@@ -64,6 +69,55 @@ impl Parser {
                 position: self.pos,
             })
         }
+    }
+
+    fn parse_comparison(&mut self) -> CalcResult<Expr> {
+        let mut lhs = self.parse_logical_or()?;
+        loop {
+            let op = match self.peek() {
+                Token::Eq => BinaryOp::Eq,
+                Token::Gt => BinaryOp::Gt,
+                Token::Lt => BinaryOp::Lt,
+                _ => break,
+            };
+            self.advance();
+            let rhs = self.parse_logical_or()?;
+            lhs = Expr::Binary(op, Box::new(lhs), Box::new(rhs));
+        }
+        Ok(lhs)
+    }
+
+    fn parse_logical_or(&mut self) -> CalcResult<Expr> {
+        let mut lhs = self.parse_logical_and()?;
+        loop {
+            let op = match self.peek() {
+                Token::Ident(name) if name.eq_ignore_ascii_case("xnor") => BinaryOp::Xnor,
+                Token::Ident(name) if name.eq_ignore_ascii_case("xor") => BinaryOp::Xor,
+                Token::Ident(name) if name.eq_ignore_ascii_case("nor") => BinaryOp::Nor,
+                Token::Ident(name) if name.eq_ignore_ascii_case("or") => BinaryOp::Or,
+                _ => break,
+            };
+            self.advance();
+            let rhs = self.parse_logical_and()?;
+            lhs = Expr::Binary(op, Box::new(lhs), Box::new(rhs));
+        }
+        Ok(lhs)
+    }
+
+    fn parse_logical_and(&mut self) -> CalcResult<Expr> {
+        let mut lhs = self.parse_additive()?;
+        loop {
+            let op = match self.peek() {
+                Token::Amp => BinaryOp::And,
+                Token::Ident(name) if name.eq_ignore_ascii_case("nand") => BinaryOp::Nand,
+                Token::Ident(name) if name.eq_ignore_ascii_case("and") => BinaryOp::And,
+                _ => break,
+            };
+            self.advance();
+            let rhs = self.parse_additive()?;
+            lhs = Expr::Binary(op, Box::new(lhs), Box::new(rhs));
+        }
+        Ok(lhs)
     }
 
     fn parse_additive(&mut self) -> CalcResult<Expr> {
@@ -159,7 +213,7 @@ impl Parser {
             }
             Token::LParen => {
                 self.advance();
-                let inner = self.parse_additive()?;
+                let inner = self.parse_comparison()?;
                 self.expect(&Token::RParen, ")")?;
                 Ok(inner)
             }
@@ -186,10 +240,10 @@ impl Parser {
         if matches!(self.peek(), Token::RParen) {
             return Ok(args);
         }
-        args.push(self.parse_additive()?);
+        args.push(self.parse_comparison()?);
         while matches!(self.peek(), Token::Comma) {
             self.advance();
-            args.push(self.parse_additive()?);
+            args.push(self.parse_comparison()?);
         }
         Ok(args)
     }
@@ -249,6 +303,161 @@ mod tests {
         assert_eq!(
             parse("sum()").unwrap(),
             Expr::Call("sum".to_string(), vec![])
+        );
+    }
+
+    #[test]
+    fn comparison_operators_parse() {
+        assert_eq!(
+            parse("3 > 2").unwrap(),
+            Expr::Binary(
+                BinaryOp::Gt,
+                Box::new(Expr::Number(3.0)),
+                Box::new(Expr::Number(2.0))
+            )
+        );
+        assert_eq!(
+            parse("3 < 2").unwrap(),
+            Expr::Binary(
+                BinaryOp::Lt,
+                Box::new(Expr::Number(3.0)),
+                Box::new(Expr::Number(2.0))
+            )
+        );
+        assert_eq!(
+            parse("3 = 3").unwrap(),
+            Expr::Binary(
+                BinaryOp::Eq,
+                Box::new(Expr::Number(3.0)),
+                Box::new(Expr::Number(3.0))
+            )
+        );
+    }
+
+    #[test]
+    fn logical_operators_parse_with_keywords_and_ampersand() {
+        assert_eq!(
+            parse("2 xor 4").unwrap(),
+            Expr::Binary(
+                BinaryOp::Xor,
+                Box::new(Expr::Number(2.0)),
+                Box::new(Expr::Number(4.0))
+            )
+        );
+        assert_eq!(
+            parse("2 xnor 4").unwrap(),
+            Expr::Binary(
+                BinaryOp::Xnor,
+                Box::new(Expr::Number(2.0)),
+                Box::new(Expr::Number(4.0))
+            )
+        );
+        assert_eq!(
+            parse("2 nor 4").unwrap(),
+            Expr::Binary(
+                BinaryOp::Nor,
+                Box::new(Expr::Number(2.0)),
+                Box::new(Expr::Number(4.0))
+            )
+        );
+        assert_eq!(
+            parse("3 or 9").unwrap(),
+            Expr::Binary(
+                BinaryOp::Or,
+                Box::new(Expr::Number(3.0)),
+                Box::new(Expr::Number(9.0))
+            )
+        );
+        assert_eq!(
+            parse("3 nand 9").unwrap(),
+            Expr::Binary(
+                BinaryOp::Nand,
+                Box::new(Expr::Number(3.0)),
+                Box::new(Expr::Number(9.0))
+            )
+        );
+        assert_eq!(parse("3 and 9").unwrap(), parse("3 & 9").unwrap(),);
+        assert_eq!(
+            parse("3 & 9").unwrap(),
+            Expr::Binary(
+                BinaryOp::And,
+                Box::new(Expr::Number(3.0)),
+                Box::new(Expr::Number(9.0))
+            )
+        );
+    }
+
+    #[test]
+    fn logical_and_binds_tighter_than_or_and_comparison() {
+        // `1 or 2 and 4` should parse as `1 or (2 and 4)`, and the whole
+        // thing loosest under a comparison: `1 or 2 and 4 = 0` should parse
+        // as `(1 or (2 and 4)) = 0`.
+        assert_eq!(
+            parse("1 or 2 and 4").unwrap(),
+            Expr::Binary(
+                BinaryOp::Or,
+                Box::new(Expr::Number(1.0)),
+                Box::new(Expr::Binary(
+                    BinaryOp::And,
+                    Box::new(Expr::Number(2.0)),
+                    Box::new(Expr::Number(4.0))
+                ))
+            )
+        );
+        assert_eq!(
+            parse("1 or 2 and 4 = 0").unwrap(),
+            Expr::Binary(
+                BinaryOp::Eq,
+                Box::new(Expr::Binary(
+                    BinaryOp::Or,
+                    Box::new(Expr::Number(1.0)),
+                    Box::new(Expr::Binary(
+                        BinaryOp::And,
+                        Box::new(Expr::Number(2.0)),
+                        Box::new(Expr::Number(4.0))
+                    ))
+                )),
+                Box::new(Expr::Number(0.0))
+            )
+        );
+    }
+
+    #[test]
+    fn logical_and_binds_looser_than_arithmetic() {
+        // `1 and 2 + 3` should parse as `1 and (2 + 3)`.
+        assert_eq!(
+            parse("1 and 2 + 3").unwrap(),
+            Expr::Binary(
+                BinaryOp::And,
+                Box::new(Expr::Number(1.0)),
+                Box::new(Expr::Binary(
+                    BinaryOp::Add,
+                    Box::new(Expr::Number(2.0)),
+                    Box::new(Expr::Number(3.0))
+                ))
+            )
+        );
+    }
+
+    #[test]
+    fn call_args_accept_comparison_and_logical_expressions() {
+        assert_eq!(
+            parse("sum(3 > 2, 1 and 1)").unwrap(),
+            Expr::Call(
+                "sum".to_string(),
+                vec![
+                    Expr::Binary(
+                        BinaryOp::Gt,
+                        Box::new(Expr::Number(3.0)),
+                        Box::new(Expr::Number(2.0))
+                    ),
+                    Expr::Binary(
+                        BinaryOp::And,
+                        Box::new(Expr::Number(1.0)),
+                        Box::new(Expr::Number(1.0))
+                    ),
+                ]
+            )
         );
     }
 }

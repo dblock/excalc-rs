@@ -10,20 +10,23 @@ See [docs/](docs/README.md) for detailed per-function reference documentation (d
 
 Ported from `common/MCalc.pas` in the original repo, grouped by the milestone that introduces them:
 
-- **v1 (this pass):** core arithmetic engine, standard math functions, statistics functions, general/rounding functions, number theory functions.
-- **Later passes:** advanced/special functions (including named integral functions like `erf`/`dilog`/Fresnel integrals), financial functions, comparison/logic operators.
+- **v1 (this pass):** core arithmetic engine, standard math functions, statistics functions, general/rounding functions, number theory functions, comparison/logical operators.
+- **Later passes:** advanced/special functions (including named integral functions like `erf`/`dilog`/Fresnel integrals), financial functions.
 - **Not ported:** anything GUI-only (2D/3D plotting, drawing, Windows registry-based user-function storage, the Delphi `TCalcThread` threading model). None of that applies to a headless CLI/MCP tool.
 
 ## Grammar
 
 Conventional precedence, loosest to tightest binding:
 
-1. Additive: `+  -`
-2. Multiplicative: `*  /  mod`
-3. Unary prefix: `-x`
-4. Power (`^`, right-assoc) / root (`\`, left-assoc, same tier)
-5. Postfix: `!` (factorial), `%` (percent)
-6. Primary: numbers, variables/constants, `name(args, ...)`, `(expr)`
+1. Comparison: `=  >  <`
+2. Logical or-family: `or  nor  xor  xnor`
+3. Logical and-family: `and` (`&` synonym) `  nand`
+4. Additive: `+  -`
+5. Multiplicative: `*  /  mod`
+6. Unary prefix: `-x`
+7. Power (`^`, right-assoc) / root (`\`, left-assoc, same tier)
+8. Postfix: `!` (factorial), `%` (percent)
+9. Primary: numbers, variables/constants, `name(args, ...)`, `(expr)`
 
 **This differs from the original**, which bound `%` tighter than `* /` and bound root looser than power, in a chain shaped by 90s calculator-button UI design (`Term → Percentage → AnyRoot → Power → TenPower → Factor → Operator`). v1 normalizes to precedence that matches what someone typing an expression today would expect. See `git log` / conversation history for the exact original chain if we ever need to reference it.
 
@@ -40,7 +43,8 @@ v1 trig functions operate in **radians only**. The original supported a degree/r
 ## Known quirks / deviations from the original noted during the port
 
 - Original had a dead duplicate branch (`if ct('fv') ... else if ct('fv') ...`) in the function arg-count table — a copy-paste artifact, dropped.
-- Original used both full operator words (`and`, `or`, `xor`, ...) and single-letter shortcuts (`a`, `o`, `x`, ...) for the same logic operators, apparently keyboard shortcuts from the original UI. v1 will use full words only when logic operators are ported.
+- Original used both full operator words (`and`, `or`, `xor`, ...) and single-letter shortcuts (`a`, `o`, `x`, ...) for the same logic operators, apparently keyboard shortcuts from the original UI. v1 uses full words only, with one exception: `&` is kept as a shorthand for `and` since it's a common, unambiguous convention in modern calculators and programming languages.
+- Original's `=` assigned a value to a variable (not equality), and `?` tested equality. Since v1 has no variable-assignment operator, `=` was repurposed as equality and `?` was dropped entirely.
 - `mod` is spelled out as a word token in v1, rather than a single character, since we're normalizing surface syntax anyway.
 
 ## Function catalog
@@ -67,6 +71,10 @@ Full reference (domains, formulas, examples) lives in [docs/](docs/README.md); t
 
 `gcd lcm fib(onacci) isprime moebius mersenne perfect fermat safeprime primec primen mersennegen mersgen genmers sigma tau phi(eind)`
 
+### v1: Comparison and logical operators ([details](docs/functions/logic.md))
+
+`= > <`, `xor xnor and nand or nor not shl shr`, `&` synonym for `and`
+
 ### Planned: Advanced / special functions ([details](docs/functions/advanced.md))
 
 `gamma beta elliptice ellipticf pochhammer` and numeric integration (`trapezoid`, `simpson`, `newton`, `boole`, `ordersix`, `weddle`, `gauss`)
@@ -74,10 +82,6 @@ Full reference (domains, formulas, examples) lives in [docs/](docs/README.md); t
 ### Planned: Financial ([details](docs/functions/financial.md))
 
 `pv fv pmt npv nper rate term cterm sln syd ddb irate paymt fval ipaymt ppaymt pval`
-
-### Planned: Operators
-
-Comparison (`= < > !=`) and bitwise/logic (`and or xor nor xnor nand`), deferred from v1 since they're peripheral to "outsource arithmetic".
 
 ## Interfaces
 

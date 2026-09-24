@@ -14,6 +14,10 @@ pub enum Token {
     Bang,      // !  factorial (postfix)
     Percent,   // %  percent (postfix)
     Backslash, // \  nth root (binary): `n \ x` means the n-th root of x
+    Eq,        // =  equality
+    Gt,        // >  greater than
+    Lt,        // <  less than
+    Amp,       // &  bitwise and (synonym for the `and` keyword)
     LParen,
     RParen,
     Comma,
@@ -57,6 +61,10 @@ impl<'a> Lexer<'a> {
                 '!' => Token::Bang,
                 '%' => Token::Percent,
                 '\\' => Token::Backslash,
+                '=' => Token::Eq,
+                '>' => Token::Gt,
+                '<' => Token::Lt,
+                '&' => Token::Amp,
                 '(' => Token::LParen,
                 ')' => Token::RParen,
                 ',' => Token::Comma,
@@ -221,6 +229,20 @@ mod tests {
         assert_eq!(
             tokenize("e"),
             Ok(vec![Token::Ident("e".to_string()), Token::Eof])
+        );
+    }
+
+    #[test]
+    fn comparison_and_ampersand_tokens() {
+        assert_eq!(
+            tokenize("= > < &"),
+            Ok(vec![
+                Token::Eq,
+                Token::Gt,
+                Token::Lt,
+                Token::Amp,
+                Token::Eof
+            ])
         );
     }
 }

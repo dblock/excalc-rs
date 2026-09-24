@@ -32,4 +32,16 @@ pub enum BinaryOp {
     Pow,
     /// `n Root x` = the n-th root of x (`2 Root 9` = 3).
     Root,
+    /// Comparison operators; evaluate to `1.0` (true) or `0.0` (false).
+    Eq,
+    Gt,
+    Lt,
+    /// Bitwise operators; operands are truncated to `i64` before applying
+    /// the operation.
+    Or,
+    Nor,
+    Xor,
+    Xnor,
+    And,
+    Nand,
 }
