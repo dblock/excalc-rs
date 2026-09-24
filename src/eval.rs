@@ -7,7 +7,7 @@ use crate::error::{CalcError, CalcResult};
 use crate::functions::{
     advanced, base, combinatorics, financial, general, geometry,
     integration::{self, Rule},
-    logic, numbertheory, probability, rootfinding, stats, trig,
+    logic, numbertheory, probability, rootfinding, stats, trig, units,
 };
 
 /// The result of evaluating a program or expression: almost always a plain
@@ -543,6 +543,15 @@ fn call_function(name: &str, args: &[f64]) -> CalcResult<f64> {
             expect_args(&lower, args, 3)?;
             probability::zscore(args[0], args[1], args[2])
         }
+
+        "c2f" => one_arg(units::c2f),
+        "f2c" => one_arg(units::f2c),
+        "km2mi" => one_arg(units::km2mi),
+        "mi2km" => one_arg(units::mi2km),
+        "kg2lb" => one_arg(units::kg2lb),
+        "lb2kg" => one_arg(units::lb2kg),
+        "m2ft" => one_arg(units::m2ft),
+        "ft2m" => one_arg(units::ft2m),
 
         "not" => one_arg(logic::not),
         "shl" => {

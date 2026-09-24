@@ -8,7 +8,7 @@ Expression Calculator (CLI, MCP, Rust)
 
 An expression calculator CLI tool and MCP server built for AI coding agents like Claude and GitHub Copilot to outsource arithmetic, saving tokens and avoiding LLM math hallucinations.
 
-A mathematical beast with 198 functions and operators across standard math, trigonometry, statistics, probability distributions, financial (NPV, IRR), number theory (GCD, totient, primality), base conversion, combinatorics, numeric integration, root finding, geometry (n-dimensional distance/dot/norm), and advanced/special functions (gamma, elliptic integrals, dilogarithm, and more).
+A mathematical beast with 206 functions and operators across standard math, trigonometry, statistics, probability distributions, financial (NPV, IRR), number theory (GCD, totient, primality), base conversion, combinatorics, numeric integration, root finding, geometry (n-dimensional distance/dot/norm), unit conversion, and advanced/special functions (gamma, elliptic integrals, dilogarithm, and more).
 
 Spiritual successor to the Vestris Inc. shareware Expression Calculator written in 1996 in Pascal. It was also pressed on a CD-ROM, translated, and sold in Germany under the name Global Calculator in 1997. See [HISTORY.md](HISTORY.md).
 
@@ -316,6 +316,19 @@ calc "circlearea(2)"                 # ~12.566 (area of a circle)
 calc "circumference(2)"              # ~12.566 (circumference of a circle)
 calc "spherevol(3)"                  # ~113.097 (volume of a sphere)
 calc "spherearea(3)"                 # ~113.097 (surface area of a sphere)
+```
+
+**Unit conversion** ([details](docs/functions/units.md)):
+
+```
+calc "c2f(100)"     # 212     (Celsius to Fahrenheit)
+calc "f2c(212)"     # 100     (Fahrenheit to Celsius)
+calc "km2mi(1)"     # ~0.6214 (kilometers to miles)
+calc "mi2km(1)"     # 1.609344 (miles to kilometers)
+calc "kg2lb(1)"     # ~2.2046 (kilograms to pounds)
+calc "lb2kg(1)"     # 0.45359237 (pounds to kilograms)
+calc "m2ft(1)"      # ~3.2808 (meters to feet)
+calc "ft2m(1)"      # 0.3048  (feet to meters)
 ```
 
 **Financial functions** ([details](docs/functions/financial.md)):

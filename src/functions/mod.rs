@@ -11,3 +11,4 @@ pub mod probability;
 pub mod rootfinding;
 pub mod stats;
 pub mod trig;
+pub mod units;
