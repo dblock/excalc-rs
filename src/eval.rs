@@ -4,7 +4,7 @@ use std::collections::HashMap;
 
 use crate::ast::{BinaryOp, Expr, UnaryOp};
 use crate::error::{CalcError, CalcResult};
-use crate::functions::{general, logic, number_theory, stats, trig};
+use crate::functions::{advanced, general, logic, number_theory, stats, trig};
 
 /// Evaluation context: currently just variable bindings. Constants (`pi`,
 /// `e`) are always available and can't be shadowed in v1.
@@ -258,6 +258,56 @@ fn call_function(name: &str, args: &[f64]) -> CalcResult<f64> {
             logic::shr(args[0], args[1])
         }
 
+        "gamma" => one_arg(advanced::gamma),
+        "beta" => {
+            expect_args(&lower, args, 2)?;
+            advanced::beta(args[0], args[1])
+        }
+        "pochhammer" => {
+            expect_args(&lower, args, 2)?;
+            advanced::pochhammer(args[0], args[1])
+        }
+        "bth" => {
+            expect_args(&lower, args, 3)?;
+            advanced::bth(args[0], args[1], args[2])
+        }
+        "bman" => {
+            expect_args(&lower, args, 3)?;
+            advanced::bman(args[0], args[1], args[2])
+        }
+        "elliptice" => match args.len() {
+            1 => advanced::elliptic_e(args[0], 1.0),
+            2 => advanced::elliptic_e(args[0], args[1]),
+            got => Err(CalcError::WrongArgCount {
+                name: lower.clone(),
+                expected: "1 or 2".to_string(),
+                got,
+            }),
+        },
+        "ellipticf" | "elliptick" => match args.len() {
+            1 => advanced::elliptic_f(args[0], 1.0),
+            2 => advanced::elliptic_f(args[0], args[1]),
+            got => Err(CalcError::WrongArgCount {
+                name: lower.clone(),
+                expected: "1 or 2".to_string(),
+                got,
+            }),
+        },
+        "ellipticce" => one_arg(advanced::elliptic_ce),
+        "ellipticck" => one_arg(advanced::elliptic_ck),
+        "dilog" => one_arg(advanced::dilog),
+        "dawson" => one_arg(advanced::dawson),
+        "erf" => one_arg(advanced::erf),
+        "erfc" => one_arg(advanced::erfc),
+        "si" => one_arg(advanced::si),
+        "ssi" => one_arg(advanced::ssi),
+        "ci" => one_arg(advanced::ci),
+        "chi" => one_arg(advanced::chi),
+        "fresnelc" => one_arg(advanced::fresnel_c),
+        "fresnels" => one_arg(advanced::fresnel_s),
+        "fresnelf" => one_arg(advanced::fresnel_f),
+        "fresnelg" => one_arg(advanced::fresnel_g),
+
         _ => Err(CalcError::UnknownFunction(name.to_string())),
     }
 }
@@ -418,5 +468,71 @@ mod tests {
         assert_eq!(call_function("not", &[1.0]).unwrap(), -2.0);
         assert_eq!(call_function("shl", &[2.0, 1.0]).unwrap(), 4.0);
         assert_eq!(call_function("shr", &[2.0, 1.0]).unwrap(), 1.0);
+    }
+
+    #[test]
+    fn advanced_functions_dispatch() {
+        assert!(
+            (call_function("gamma", &[0.5]).unwrap() - std::f64::consts::PI.sqrt()).abs() < 1e-3
+        );
+        assert!((call_function("beta", &[1.0, 2.0]).unwrap() - 0.5).abs() < 1e-3);
+        assert!((call_function("pochhammer", &[5.0, 3.0]).unwrap() - 210.0).abs() < 1e-2);
+        assert_eq!(call_function("bth", &[2.0, 3.0, 4.0]).unwrap(), 625.0);
+        assert_eq!(call_function("bman", &[2.0, 3.0, 4.0]).unwrap(), 625.0);
+        assert!((call_function("elliptice", &[1.0]).unwrap() - 1.0).abs() < 1e-6);
+        assert!((call_function("elliptice", &[1.0, 1.0]).unwrap() - 1.0).abs() < 1e-6);
+        assert!(call_function("ellipticf", &[0.01]).unwrap() > 0.0);
+        assert!(call_function("ellipticf", &[0.01, 1.0]).unwrap() > 0.0);
+        assert!(call_function("elliptick", &[0.01]).unwrap() > 0.0);
+        assert!(call_function("ellipticce", &[1.0]).unwrap() > 0.0);
+        assert!(call_function("ellipticck", &[1.0]).unwrap() > 0.0);
+        assert_eq!(call_function("dilog", &[1.0]).unwrap(), 0.0);
+        assert_eq!(call_function("dawson", &[0.0]).unwrap(), 0.0);
+        assert_eq!(call_function("erf", &[0.0]).unwrap(), 0.0);
+        assert_eq!(call_function("erfc", &[0.0]).unwrap(), 1.0);
+        assert_eq!(call_function("si", &[0.0]).unwrap(), 0.0);
+        assert!((call_function("ssi", &[0.0]).unwrap() + std::f64::consts::FRAC_PI_2).abs() < 1e-9);
+        assert!(call_function("ci", &[1.0]).unwrap().is_finite());
+        assert!(call_function("chi", &[1.0]).unwrap().is_finite());
+        assert_eq!(call_function("fresnelc", &[0.0]).unwrap(), 0.0);
+        assert_eq!(call_function("fresnels", &[0.0]).unwrap(), 0.0);
+        assert!(call_function("fresnelf", &[1.0]).unwrap().is_finite());
+        assert!(call_function("fresnelg", &[1.0]).unwrap().is_finite());
+    }
+
+    #[test]
+    fn elliptic_wrong_arg_count() {
+        assert_eq!(
+            call_function("elliptice", &[]),
+            Err(CalcError::WrongArgCount {
+                name: "elliptice".to_string(),
+                expected: "1 or 2".to_string(),
+                got: 0,
+            })
+        );
+        assert_eq!(
+            call_function("elliptice", &[1.0, 2.0, 3.0]),
+            Err(CalcError::WrongArgCount {
+                name: "elliptice".to_string(),
+                expected: "1 or 2".to_string(),
+                got: 3,
+            })
+        );
+        assert_eq!(
+            call_function("ellipticf", &[]),
+            Err(CalcError::WrongArgCount {
+                name: "ellipticf".to_string(),
+                expected: "1 or 2".to_string(),
+                got: 0,
+            })
+        );
+        assert_eq!(
+            call_function("ellipticf", &[1.0, 2.0, 3.0]),
+            Err(CalcError::WrongArgCount {
+                name: "ellipticf".to_string(),
+                expected: "1 or 2".to_string(),
+                got: 3,
+            })
+        );
     }
 }

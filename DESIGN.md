@@ -10,8 +10,8 @@ See [docs/](docs/README.md) for detailed per-function reference documentation (d
 
 Ported from `common/MCalc.pas` in the original repo, grouped by the milestone that introduces them:
 
-- **v1 (this pass):** core arithmetic engine, standard math functions, statistics functions, general/rounding functions, number theory functions, comparison/logical operators.
-- **Later passes:** advanced/special functions (including named integral functions like `erf`/`dilog`/Fresnel integrals), financial functions.
+- **v1 (this pass):** core arithmetic engine, standard math functions, statistics functions, general/rounding functions, number theory functions, comparison/logical operators, advanced/special functions (gamma, beta, Pochhammer, elliptic integrals, named integral functions like `erf`/`dilog`/Fresnel integrals).
+- **Later passes:** financial functions.
 - **Not ported:** anything GUI-only (2D/3D plotting, drawing, Windows registry-based user-function storage, the Delphi `TCalcThread` threading model). None of that applies to a headless CLI/MCP tool.
 
 ## Grammar
@@ -46,6 +46,8 @@ v1 trig functions operate in **radians only**. The original supported a degree/r
 - Original used both full operator words (`and`, `or`, `xor`, ...) and single-letter shortcuts (`a`, `o`, `x`, ...) for the same logic operators, apparently keyboard shortcuts from the original UI. v1 uses full words only, with one exception: `&` is kept as a shorthand for `and` since it's a common, unambiguous convention in modern calculators and programming languages.
 - Original's `=` assigned a value to a variable (not equality), and `?` tested equality. Since v1 has no variable-assignment operator, `=` was repurposed as equality and `?` was dropped entirely.
 - `mod` is spelled out as a word token in v1, rather than a single character, since we're normalizing surface syntax anyway.
+- Original's `Ci`/`Chi` (cosine/hyperbolic-cosine integral) formulas reference an undefined variable `G` (presumably meant to be the Euler-Mascheroni constant), which the generic variable-lookup mechanism silently defaults to `0` — almost certainly a bug, since the results are meaningless without the real constant. v1 hardcodes the actual Euler-Mascheroni constant instead.
+- Advanced/special functions that depend on numeric integration in the original (`ellipticE`, `ellipticF`, `dilog`, `erf`, `erfc`, `si`, `ssi`, `ci`, `chi`, `dawson`, `fresnelC`/`fresnelS`) are ported using a private adaptive Simpson's-rule integrator as a stand-in for the still-deferred general-purpose numeric integration engine; see [docs/functions/advanced.md](docs/functions/advanced.md) for details and a TODO on revisiting this once that engine exists.
 
 ## Function catalog
 
@@ -75,9 +77,9 @@ Full reference (domains, formulas, examples) lives in [docs/](docs/README.md); t
 
 `= > <`, `xor xnor and nand or nor not shl shr`, `&` synonym for `and`
 
-### Planned: Advanced / special functions ([details](docs/functions/advanced.md))
+### v1: Advanced / special functions ([details](docs/functions/advanced.md))
 
-`gamma beta elliptice ellipticf pochhammer` and numeric integration (`trapezoid`, `simpson`, `newton`, `boole`, `ordersix`, `weddle`, `gauss`)
+`gamma beta pochhammer bth bman ellipticE ellipticF(ellipticK) ellipticCE ellipticCK dilog dawson erf erfc si ssi ci chi fresnelC fresnelS fresnelF fresnelG`; general-purpose numeric integration (`trapezoid`, `simpson`, `newton`, `boole`, `ordersix`, `weddle`, `gauss`, `int`) still planned
 
 ### Planned: Financial ([details](docs/functions/financial.md))
 

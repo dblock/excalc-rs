@@ -18,10 +18,13 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 - General / rounding functions: `abs`, `frac`, `intg` (alias of `trunc`), `round` (round-half-up), `trunc`, `ceil`, `floor`, `random(x)` (uniform random number in `[0, x]`, via the `rand` crate).
 - Number theory functions: `gcd`, `lcm`, `fib`, `prime?`, `moebius`, `mersenne`, `perfect`, `fermat`, `safeprime`, `primec`, `primen`, `mersennegen`, `mersgen`, `genmers`, `sigma`, `tau`, `phi`/`eind`, backed by a deterministic Miller-Rabin primality test (valid for the full `u64` range).
 - Comparison and logical/bitwise operators: `=`, `>`, `<` (comparison, returning `1`/`0`), `xor`, `xnor`, `and` (`&` synonym), `nand`, `or`, `nor` (bitwise, operating on operands truncated to `i64`), plus `not(x)`, `shl(x, y)`, `shr(x, y)`. Precedence: comparison loosest, then logical-or-family, then logical-and-family, then the existing arithmetic chain. Deviates from the original: `=` now tests equality instead of assigning a variable, and `?` (the original's equality test) was dropped since it's no longer needed.
+- Advanced / special functions: `gamma`, `beta`, `pochhammer`, `bth`, `bman`, `ellipticE`, `ellipticF` (alias `ellipticK`), `ellipticCE`, `ellipticCK`, `dilog`, `dawson`, `erf`, `erfc`, `si`, `ssi`, `ci`, `chi`, `fresnelC`, `fresnelS`, `fresnelF`, `fresnelG`. Most of these are thin wrappers around a generic numeric-integration primitive in the original engine (still deferred as a separate future pass), so this port evaluates them with a private adaptive Simpson's-rule integrator as a stand-in; see `docs/functions/advanced.md` for a TODO on revisiting this once general numeric integration lands.
 
 ### Fixed
 
 - Removed dead/unreachable `Token::Minus` arm in `parser.rs`'s `parse_primary` (unary minus is always handled earlier by `parse_unary`, so this branch could never execute).
+- The original's `Ci`/`Chi` formulas reference an undefined variable `G` (presumably meant to be the Euler-Mascheroni constant), which the generic variable-lookup mechanism silently defaults to `0`, making the original results meaningless. This port hardcodes the actual Euler-Mascheroni constant instead.
+- `docs/functions/advanced.md`'s placeholder example `ellipticCK(1) → 5.99158934050168` was wrong; corrected to `1.57079632679490` (`pi/2`), matching `ellipticCE(1)` since both reduce to the same integral at that boundary.
 
 ## [0.1.0] - 2026-09-23
 

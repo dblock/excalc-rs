@@ -1,3 +1,4 @@
+pub mod advanced;
 pub mod general;
 pub mod logic;
 pub mod number_theory;

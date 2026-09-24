@@ -140,6 +140,30 @@ calc "shr(2, 1)"           # 1        (2 / 2^1)
 
 **Constants**: `pi` and `e` (case-insensitive).
 
+**Advanced / special functions** ([details](docs/functions/advanced.md)):
+
+```
+calc "gamma(0.5)"          # ~1.7724407046383086 (sqrt(pi))
+calc "beta(1, 2)"          # 0.5
+calc "pochhammer(5, 3)"    # ~210
+calc "bth(2, 3, 4)"        # 625      (x+y)^n via binomial expansion
+calc "bman(2, 3, 4)"       # 625      (x+y)^n the "standard" way
+calc "ellipticE(1)"        # ~1
+calc "ellipticF(0.01)"     # ~1.5708355989121519
+calc "ellipticCE(1)"       # ~1.5707963267948966 (pi/2)
+calc "ellipticCK(1)"       # ~1.5707963267948966 (pi/2)
+calc "dilog(1)"            # 0
+calc "dawson(0)"           # 0
+calc "erf(1)"              # ~0.8427007929497227
+calc "erfc(1)"             # ~0.15729920705027733
+calc "si(1)"               # ~0.9460830703671972
+calc "ssi(1)"              # ~-0.6247132564276994
+calc "ci(1)"               # ~0.3374039229009618
+calc "chi(1)"              # ~0.8378669409802157
+calc "fresnelC(1)"         # ~0.7798934003768329
+calc "fresnelS(1)"         # ~0.4382591473903456
+```
+
 **Errors** exit with status `1` and print a message, e.g.:
 
 ```
