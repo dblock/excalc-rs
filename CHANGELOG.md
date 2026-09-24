@@ -6,6 +6,11 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 
 ## [Unreleased]
 
+### Added
+
+- `excalc`/`calc` read the expression from stdin when no argument is given and stdin is not a TTY, e.g. `echo "2 + 2" | calc`.
+- `--help` and usage output now credit the author.
+
 ## [0.2.0] - 2026-09-24
 
 ### Added

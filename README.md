@@ -55,6 +55,9 @@ calc "sqrt(16) + sin(pi/2)"
 
 calc "1/0"
   # error, exit code 1
+
+echo "2 + 2 * 3" | calc
+  # 8, also reads the expression from stdin when no argument is given
 ```
 
 Run `calc --help` (or `excalc --help`) for full usage.
