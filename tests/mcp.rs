@@ -116,3 +116,60 @@ fn initialize_lists_and_calls_the_evaluate_tool() {
         serde_json::json!("division by zero")
     );
 }
+
+/// Keeps the complex example in the README's MCP Server section in sync
+/// with the real evaluator, the same way `tests/readme_examples.rs` does
+/// for the CLI `### Examples` section: parses the `> what's ... ?` line and
+/// the result line right after it straight out of README.md rather than
+/// hardcoding them here, so a doc edit that goes out of sync fails this test.
+#[test]
+fn readme_mcp_example_matches_evaluator() {
+    let readme_path = std::path::Path::new(env!("CARGO_MANIFEST_DIR")).join("README.md");
+    let readme = std::fs::read_to_string(&readme_path).expect("README.md should be readable");
+
+    let mut lines = readme.lines();
+    let expression = lines
+        .by_ref()
+        .find_map(|line| {
+            line.strip_prefix("> what's ")
+                .and_then(|s| s.strip_suffix(" ?"))
+        })
+        .expect("MCP example (\"> what's ... ?\") not found in README.md");
+    let expected: f64 = lines
+        .next()
+        .expect("MCP example result line not found in README.md")
+        .trim()
+        .parse()
+        .expect("MCP example result line isn't a number");
+
+    assert_eq!(excalc::evaluate(expression).unwrap(), expected);
+
+    let mut mcp = McpProcess::spawn();
+    mcp.send(serde_json::json!({
+        "jsonrpc": "2.0",
+        "id": 1,
+        "method": "initialize",
+        "params": {
+            "protocolVersion": "2025-06-18",
+            "capabilities": {},
+            "clientInfo": {"name": "test", "version": "1.0"}
+        }
+    }));
+    mcp.send(serde_json::json!({
+        "jsonrpc": "2.0",
+        "method": "notifications/initialized"
+    }));
+
+    let result = mcp
+        .send(serde_json::json!({
+            "jsonrpc": "2.0",
+            "id": 2,
+            "method": "tools/call",
+            "params": {"name": "evaluate", "arguments": {"expression": expression}}
+        }))
+        .unwrap();
+    assert_eq!(
+        result["result"]["content"][0]["text"],
+        serde_json::json!(expected.to_string())
+    );
+}
