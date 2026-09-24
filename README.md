@@ -40,9 +40,9 @@ Everything below works today (v1). See [docs/](docs/README.md) for full referenc
 **Arithmetic operators** ([details](docs/functions/operators.md)):
 
 ```
-calc "2 + 2 * 3"          # 8
-calc "10 - 4 / 2"         # 8
-calc "7 mod 3"            # 1
+calc "2 + 2 * 3"          # 8         (addition and multiplication, standard precedence)
+calc "10 - 4 / 2"         # 8         (subtraction and division)
+calc "7 mod 3"            # 1         (modulo)
 calc "2 ^ 10"             # 1024      (power)
 calc "2 \ 9"              # 3         (n-th root: the 2nd root of 9)
 calc "5!"                 # 120       (factorial)
@@ -54,46 +54,46 @@ calc -- "-5 + 3"          # -2        (unary minus needs -- so clap doesn't trea
 **Standard math** ([details](docs/functions/standard-math.md)), all angles in radians:
 
 ```
-calc "sqrt(16)"           # 4
+calc "sqrt(16)"           # 4         (square root)
 calc "ln(e)"              # 1         (natural log)
 calc "log(100)"           # 2         (base 10)
 calc "logn(8, 2)"         # 3         (log base 2 of 8)
-calc "sin(pi/2)"          # 1
-calc "cos(0)"             # 1
-calc "tan(pi/4)"          # ~1
-calc "asin(1)"            # ~1.5708   (pi/2)
-calc "acos(0)"            # ~1.5708   (pi/2)
-calc "atan(1)"            # ~0.7854   (pi/4)
-calc "sinh(1)"            # ~1.1752
-calc "cosh(0)"            # 1
-calc "tanh(0)"            # 0
-calc "sec(0)"             # 1
-calc "csc(pi/2)"          # 1
-calc "cot(pi/4)"          # ~1
+calc "sin(pi/2)"          # 1         (sine)
+calc "cos(0)"             # 1         (cosine)
+calc "tan(pi/4)"          # ~1        (tangent)
+calc "asin(1)"            # ~1.5708   (arcsine; pi/2)
+calc "acos(0)"            # ~1.5708   (arccosine; pi/2)
+calc "atan(1)"            # ~0.7854   (arctangent; pi/4)
+calc "sinh(1)"            # ~1.1752   (hyperbolic sine)
+calc "cosh(0)"            # 1         (hyperbolic cosine)
+calc "tanh(0)"            # 0         (hyperbolic tangent)
+calc "sec(0)"             # 1         (secant)
+calc "csc(pi/2)"          # 1         (cosecant)
+calc "cot(pi/4)"          # ~1        (cotangent)
 ```
 
 **Statistics** ([details](docs/functions/statistics.md)), variadic unless noted:
 
 ```
-calc "sum(1, 2, 3, 4)"       # 10
-calc "average(2, 4, 6)"      # 4
-calc "product(1, 2, 3, 4)"   # 24
-calc "min(3, 1, 2)"          # 1
-calc "max(3, 1, 2)"          # 3
-calc "harmonic(4)"           # ~2.0833
+calc "sum(1, 2, 3, 4)"       # 10       (sum)
+calc "average(2, 4, 6)"      # 4        (average)
+calc "product(1, 2, 3, 4)"   # 24       (product)
+calc "min(3, 1, 2)"          # 1        (minimum)
+calc "max(3, 1, 2)"          # 3        (maximum)
+calc "harmonic(4)"           # ~2.0833  (harmonic mean)
 calc "binom(5, 2)"           # 10       (5 choose 2)
 ```
 
 **General / rounding** ([details](docs/functions/general.md)):
 
 ```
-calc "abs(-2)"            # 2
-calc "frac(1.345)"        # 0.345
+calc "abs(-2)"            # 2         (absolute value)
+calc "frac(1.345)"        # 0.345     (fractional part)
 calc "intg(2.1)"          # 2         (alias of trunc)
 calc "round(-2.5)"        # -2        (ties round towards +infinity)
-calc "trunc(2.1)"         # 2
-calc "ceil(-2.1)"         # -2
-calc "floor(-2.1)"        # -3
+calc "trunc(2.1)"         # 2         (truncate towards zero)
+calc "ceil(-2.1)"         # -2        (round up)
+calc "floor(-2.1)"        # -3        (round down)
 ```
 
 `random(x)` returns a uniformly distributed random number in `[0, x]`, e.g. `calc "random(8)"` — omitted above since its result isn't deterministic.
@@ -101,9 +101,9 @@ calc "floor(-2.1)"        # -3
 **Number theory** ([details](docs/functions/number-theory.md)):
 
 ```
-calc "gcd(3213, 24)"       # 3
-calc "lcm(14, 4)"          # 28
-calc "fib(10)"             # 55
+calc "gcd(3213, 24)"       # 3        (greatest common divisor)
+calc "lcm(14, 4)"          # 28       (least common multiple)
+calc "fib(10)"             # 55       (10th Fibonacci number)
 calc "prime?(86)"          # 83        (closest prime <= 86)
 calc "moebius(2)"          # -1        (Mobius function)
 calc "mersenne(7)"         # 127       (2^7 - 1)
@@ -123,17 +123,17 @@ calc "phi(12)"             # 4         (Euler's totient of 12)
 **Comparison and logical operators** ([details](docs/functions/logic.md)):
 
 ```
-calc "2 = 3"               # 0
-calc "3 > 2"               # 1
-calc "3 < 2"               # 0
-calc "2 xor 4"             # 6
-calc "2 xnor 4"            # -7
-calc "3 and 9"             # 1
+calc "2 = 3"               # 0        (equality test)
+calc "3 > 2"               # 1        (greater than)
+calc "3 < 2"               # 0        (less than)
+calc "2 xor 4"             # 6        (bitwise xor)
+calc "2 xnor 4"            # -7       (bitwise xnor)
+calc "3 and 9"             # 1        (bitwise and)
 calc "3 & 9"               # 1        (& is a synonym for and)
-calc "3 nand 9"            # -2
-calc "2 or 4"              # 6
-calc "2 nor 4"             # -7
-calc "not(1)"              # -2
+calc "3 nand 9"            # -2       (bitwise nand)
+calc "2 or 4"              # 6        (bitwise or)
+calc "2 nor 4"             # -7       (bitwise nor)
+calc "not(1)"              # -2       (bitwise not)
 calc "shl(2, 1)"           # 4        (2 * 2^1)
 calc "shr(2, 1)"           # 1        (2 / 2^1)
 ```
@@ -143,25 +143,25 @@ calc "shr(2, 1)"           # 1        (2 / 2^1)
 **Advanced / special functions** ([details](docs/functions/advanced.md)):
 
 ```
-calc "gamma(0.5)"          # ~1.7724407046383086 (sqrt(pi))
-calc "beta(1, 2)"          # 0.5
-calc "pochhammer(5, 3)"    # ~210
+calc "gamma(0.5)"          # ~1.7724407046383086 (Euler's gamma function; sqrt(pi))
+calc "beta(1, 2)"          # 0.5      (Euler's beta function)
+calc "pochhammer(5, 3)"    # ~210     (rising factorial)
 calc "bth(2, 3, 4)"        # 625      (x+y)^n via binomial expansion
 calc "bman(2, 3, 4)"       # 625      (x+y)^n the "standard" way
-calc "ellipticE(1)"        # ~1
-calc "ellipticF(0.01)"     # ~1.5708355989121519
-calc "ellipticCE(1)"       # ~1.5707963267948966 (pi/2)
-calc "ellipticCK(1)"       # ~1.5707963267948966 (pi/2)
-calc "dilog(1)"            # 0
-calc "dawson(0)"           # 0
-calc "erf(1)"              # ~0.8427007929497227
-calc "erfc(1)"             # ~0.15729920705027733
-calc "si(1)"               # ~0.9460830703671972
-calc "ssi(1)"              # ~-0.6247132564276994
-calc "ci(1)"               # ~0.3374039229009618
-calc "chi(1)"              # ~0.8378669409802157
-calc "fresnelC(1)"         # ~0.7798934003768329
-calc "fresnelS(1)"         # ~0.4382591473903456
+calc "ellipticE(1)"        # ~1       (complete elliptic integral of the second kind)
+calc "ellipticF(0.01)"     # ~1.5708355989121519 (incomplete elliptic integral of the first kind)
+calc "ellipticCE(1)"       # ~1.5707963267948966 (complementary elliptic integral of the second kind; pi/2)
+calc "ellipticCK(1)"       # ~1.5707963267948966 (complementary elliptic integral of the first kind; pi/2)
+calc "dilog(1)"            # 0        (dilogarithm)
+calc "dawson(0)"           # 0        (Dawson function)
+calc "erf(1)"              # ~0.8427007929497227 (error function)
+calc "erfc(1)"             # ~0.15729920705027733 (complementary error function)
+calc "si(1)"               # ~0.9460830703671972 (sine integral)
+calc "ssi(1)"              # ~-0.6247132564276994 (shifted sine integral)
+calc "ci(1)"               # ~0.3374039229009618 (cosine integral)
+calc "chi(1)"              # ~0.8378669409802157 (hyperbolic cosine integral)
+calc "fresnelC(1)"         # ~0.7798934003768329 (Fresnel cosine integral)
+calc "fresnelS(1)"         # ~0.4382591473903456 (Fresnel sine integral)
 ```
 
 **Numeric integration** ([details](docs/functions/numeric-integration.md)) — takes an expression and a bare variable, unlike every other function:
