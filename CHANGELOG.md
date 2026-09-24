@@ -8,6 +8,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 
 ### Added
 
+- New number theory functions: `carmichael(n)` (Carmichael function), `aliquot(n)` (sum of proper divisors), `amicable?(n)`, `coprime?(a, b)`, `order(a, n)` (multiplicative order), `jacobi(a, n)` (Jacobi symbol).
 - Root-finding functions `bisect(expr, var, a, b, tolerance)` (bisection method) and `secant(expr, var, x0, x1, tolerance)` (secant method), sharing the same expression-and-bare-variable calling convention as the numeric-integration functions.
 - New sequence/figurate-number functions: `lucas(n)` (Lucas numbers, sibling to `fib`), `triangular(n)`, `pentagonal(n)`, `hexagonal(n)`.
 - Bit manipulation functions: `popcount(n)`, `bitlen(n)`, `bitreverse(n, width)`.

@@ -28,6 +28,12 @@
 | `triangular(n)` | The `n`-th triangular number, `n(n+1)/2` | `N -> N` | `triangular(10)` → `55` |
 | `pentagonal(n)` | The `n`-th pentagonal number, `n(3n-1)/2` | `N -> N` | `pentagonal(10)` → `145` |
 | `hexagonal(n)` | The `n`-th hexagonal number, `n(2n-1)` | `N -> N` | `hexagonal(10)` → `190` |
+| `carmichael(n)` | The Carmichael function `λ(n)`, the smallest `m` such that `a^m == 1 (mod n)` for every `a` coprime to `n` | `N+ -> N` | `carmichael(561)` → `80` |
+| `aliquot(n)` | Sum of `n`'s proper divisors (all divisors except `n` itself), i.e. `sigma(n, 1) - n` | `N+ -> N` | `aliquot(220)` → `284` |
+| `amicable?(n)` | Whether `n` is part of an amicable pair (`n != m` where `m = aliquot(n)` and `aliquot(m) = n`) | `N+ -> {0, 1}` | `amicable?(220)` → `1` |
+| `coprime?(a, b)` | Whether `a` and `b` share no common factor other than `1` (`gcd(a, b) = 1`) | `N x N -> {0, 1}` | `coprime?(14, 15)` → `1` |
+| `order(a, n)` | Multiplicative order of `a` modulo `n`: the smallest `k` such that `a^k == 1 (mod n)`. Requires `gcd(a, n) = 1` | `N x N+ -> N+` | `order(2, 5)` → `4` |
+| `jacobi(a, n)` | The Jacobi symbol `(a/n)` for odd positive `n`, generalizing the Legendre symbol to composite moduli | `Z x N+ -> {-1, 0, 1}` | `jacobi(1001, 9907)` → `-1` |
 
 ## Notes and implementation details
 
@@ -39,3 +45,6 @@
 - `mersennegen`/`mersgen`/`genmers` search generators `p` in `[2, 63]` (the largest range for which `2^p - 1` fits exactly in a `u64`), rather than a hardcoded list of known Mersenne primes.
 - `perfect` relates directly to Mersenne primes: if `2^p - 1` is prime, then `2^(p-1) * (2^p - 1)` is an even perfect number, and every known even perfect number arises this way.
 - `fermat(k)` computes the formula generically for any `k` in `[0, 9]` (`2^512 + 1` at `k = 9` is the largest representable in `f64`), even though only `k <= 4` are known to be prime.
+- `carmichael(n)` factors `n` into prime powers and takes the `lcm` of `λ(p^e)` over each factor.
+- `order(a, n)` brute-forces `k` from `1` up to `phi(n)` (the order is guaranteed to divide `phi(n)` when `gcd(a, n) = 1`).
+- `jacobi(a, n)` uses the standard iterative reciprocity algorithm (repeated factoring out powers of `2` with sign flips based on `n mod 8`, then swapping via reciprocity), not a naive Legendre-symbol-per-prime-factor approach.

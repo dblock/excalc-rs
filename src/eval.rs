@@ -486,6 +486,21 @@ fn call_function(name: &str, args: &[f64]) -> CalcResult<f64> {
         "triangular" => one_arg(numbertheory::triangular),
         "pentagonal" => one_arg(numbertheory::pentagonal),
         "hexagonal" => one_arg(numbertheory::hexagonal),
+        "carmichael" => one_arg(numbertheory::carmichael),
+        "aliquot" => one_arg(numbertheory::aliquot),
+        "amicable?" => one_arg(numbertheory::isamicable),
+        "coprime?" => {
+            expect_args(&lower, args, 2)?;
+            numbertheory::iscoprime(args[0], args[1])
+        }
+        "order" => {
+            expect_args(&lower, args, 2)?;
+            numbertheory::order(args[0], args[1])
+        }
+        "jacobi" => {
+            expect_args(&lower, args, 2)?;
+            numbertheory::jacobi(args[0], args[1])
+        }
 
         "not" => one_arg(logic::not),
         "shl" => {

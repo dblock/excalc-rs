@@ -77,6 +77,48 @@ fn gcd_two(a: u64, b: u64) -> u64 {
     }
 }
 
+/// `lcm(a, b)`, guarding against overflow and the `a == 0 || b == 0` edge
+/// case (by convention `lcm(0, x) = 0`).
+fn lcm_two(a: u64, b: u64) -> CalcResult<u64> {
+    if a == 0 || b == 0 {
+        return Ok(0);
+    }
+    let g = gcd_two(a, b);
+    (a / g).checked_mul(b).ok_or(CalcError::Overflow)
+}
+
+/// The prime factorization of `n` as `(prime, exponent)` pairs in
+/// increasing order of prime, via trial division. `n = 1` yields an empty
+/// list (the empty product).
+fn prime_factorize(mut n: u64) -> Vec<(u64, u32)> {
+    let mut factors = Vec::new();
+    let mut p = 2u64;
+    while p * p <= n {
+        if n.is_multiple_of(p) {
+            let mut exp = 0u32;
+            while n.is_multiple_of(p) {
+                n /= p;
+                exp += 1;
+            }
+            factors.push((p, exp));
+        }
+        p += 1;
+    }
+    if n > 1 {
+        factors.push((n, 1));
+    }
+    factors
+}
+
+/// Parses an argument as a plain (possibly negative) integer, erroring with
+/// `DomainError(name)` if it's not a whole number or doesn't fit in `i64`.
+fn integer_arg(name: &str, x: f64) -> CalcResult<i64> {
+    if !x.is_finite() || x.fract() != 0.0 || x.abs() > i64::MAX as f64 {
+        return Err(CalcError::DomainError(name.to_string()));
+    }
+    Ok(x as i64)
+}
+
 /// Greatest common divisor of all arguments (Euclid's algorithm, folded
 /// pairwise across the argument list).
 pub fn gcd(args: &[f64]) -> CalcResult<f64> {
@@ -471,6 +513,125 @@ pub fn hexagonal(n: f64) -> CalcResult<f64> {
     Ok(n * (2.0 * n - 1.0))
 }
 
+/// The Carmichael function `lambda(n)`: the smallest positive integer `m`
+/// such that `a^m == 1 (mod n)` for every `a` coprime to `n`. Computed via
+/// the prime factorization of `n`, taking the `lcm` of `lambda(p^e)` over
+/// each prime power factor (`lambda(2) = 1`, `lambda(4) = 2`,
+/// `lambda(2^e) = 2^(e-2)` for `e >= 3`; `lambda(p^e) = p^(e-1)(p-1)` for
+/// odd primes `p`).
+pub fn carmichael(n: f64) -> CalcResult<f64> {
+    let n = non_negative_integer("carmichael", n)?;
+    if n == 0 {
+        return Err(CalcError::DomainError("carmichael".to_string()));
+    }
+    if n == 1 {
+        return Ok(1.0);
+    }
+    let mut result = 1u64;
+    for (p, e) in prime_factorize(n) {
+        let lambda_pe = if p == 2 {
+            match e {
+                1 => 1,
+                2 => 2,
+                _ => 1u64 << (e - 2),
+            }
+        } else {
+            let pow = p.checked_pow(e - 1).ok_or(CalcError::Overflow)?;
+            pow.checked_mul(p - 1).ok_or(CalcError::Overflow)?
+        };
+        result = lcm_two(result, lambda_pe)?;
+    }
+    Ok(result as f64)
+}
+
+/// The sum of `n`'s proper divisors (all divisors except `n` itself), i.e.
+/// `sigma(n, 1) - n`. `aliquot(1) = 0` (no proper divisors).
+pub fn aliquot(n: f64) -> CalcResult<f64> {
+    let nn = non_negative_integer("aliquot", n)?;
+    if nn == 0 {
+        return Err(CalcError::DomainError("aliquot".to_string()));
+    }
+    let total = sigma(n, 1.0)?;
+    Ok(total - nn as f64)
+}
+
+/// Whether `n` is part of an amicable pair: `n != m` where `m = aliquot(n)`
+/// and `aliquot(m) == n`. Returns `1` (true) or `0` (false).
+pub fn isamicable(n: f64) -> CalcResult<f64> {
+    let nn = non_negative_integer("amicable?", n)?;
+    if nn == 0 {
+        return Err(CalcError::DomainError("amicable?".to_string()));
+    }
+    let m = aliquot(n)?;
+    let m_u = m as u64;
+    if m_u == 0 || m_u == nn {
+        return Ok(0.0);
+    }
+    let back = aliquot(m)?;
+    Ok(if back as u64 == nn { 1.0 } else { 0.0 })
+}
+
+/// Whether `a` and `b` share no common factor other than `1` (`gcd(a, b) == 1`).
+/// Returns `1` (true) or `0` (false).
+pub fn iscoprime(a: f64, b: f64) -> CalcResult<f64> {
+    let a = non_negative_integer("coprime?", a)?;
+    let b = non_negative_integer("coprime?", b)?;
+    if a == 0 && b == 0 {
+        return Err(CalcError::DomainError("coprime?".to_string()));
+    }
+    Ok(if gcd_two(a, b) == 1 { 1.0 } else { 0.0 })
+}
+
+/// The multiplicative order of `a` modulo `n`: the smallest positive `k`
+/// such that `a^k == 1 (mod n)`. Requires `n >= 2` and `gcd(a, n) == 1`.
+pub fn order(a: f64, n: f64) -> CalcResult<f64> {
+    let n_u = non_negative_integer("order", n)?;
+    if n_u < 2 {
+        return Err(CalcError::DomainError("order".to_string()));
+    }
+    let a_u = non_negative_integer("order", a)? % n_u;
+    if gcd_two(a_u, n_u) != 1 {
+        return Err(CalcError::DomainError("order".to_string()));
+    }
+    let phi_n = phi(n)? as u64;
+    for k in 1..=phi_n {
+        if mod_pow(a_u, k, n_u) == 1 {
+            return Ok(k as f64);
+        }
+    }
+    // Unreachable: the multiplicative order always divides phi(n) when
+    // gcd(a, n) == 1, so the loop above is guaranteed to find it.
+    Err(CalcError::Overflow)
+}
+
+/// The Jacobi symbol `(a/n)` for odd positive `n`, generalizing the
+/// Legendre symbol to composite moduli via the standard iterative
+/// reciprocity algorithm. Returns `-1`, `0`, or `1`.
+pub fn jacobi(a: f64, n: f64) -> CalcResult<f64> {
+    let n_i = integer_arg("jacobi", n)?;
+    if n_i <= 0 || n_i % 2 == 0 {
+        return Err(CalcError::DomainError("jacobi".to_string()));
+    }
+    let mut nn = n_i;
+    let mut aa = integer_arg("jacobi", a)?.rem_euclid(nn);
+    let mut result = 1i64;
+    while aa != 0 {
+        while aa % 2 == 0 {
+            aa /= 2;
+            let r = nn % 8;
+            if r == 3 || r == 5 {
+                result = -result;
+            }
+        }
+        std::mem::swap(&mut aa, &mut nn);
+        if aa % 4 == 3 && nn % 4 == 3 {
+            result = -result;
+        }
+        aa %= nn;
+    }
+    Ok(if nn == 1 { result as f64 } else { 0.0 })
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
@@ -742,5 +903,87 @@ mod tests {
         assert!(matches!(triangular(-1.0), Err(CalcError::DomainError(_))));
         assert!(matches!(pentagonal(1.5), Err(CalcError::DomainError(_))));
         assert!(matches!(hexagonal(-1.0), Err(CalcError::DomainError(_))));
+    }
+
+    #[test]
+    fn carmichael_matches_known_values() {
+        assert_eq!(carmichael(1.0).unwrap(), 1.0);
+        assert_eq!(carmichael(8.0).unwrap(), 2.0);
+        assert_eq!(carmichael(15.0).unwrap(), 4.0);
+        assert_eq!(carmichael(561.0).unwrap(), 80.0);
+    }
+
+    #[test]
+    fn carmichael_rejects_zero() {
+        assert!(matches!(carmichael(0.0), Err(CalcError::DomainError(_))));
+    }
+
+    #[test]
+    fn aliquot_matches_known_values() {
+        assert_eq!(aliquot(1.0).unwrap(), 0.0);
+        assert_eq!(aliquot(6.0).unwrap(), 6.0); // 6 is perfect: 1+2+3 = 6
+        assert_eq!(aliquot(10.0).unwrap(), 8.0); // 1+2+5 = 8
+        assert_eq!(aliquot(7.0).unwrap(), 1.0); // prime: only divisor is 1
+    }
+
+    #[test]
+    fn isamicable_finds_known_pair() {
+        // 220 and 284 are the smallest amicable pair.
+        assert_eq!(isamicable(220.0).unwrap(), 1.0);
+        assert_eq!(isamicable(284.0).unwrap(), 1.0);
+    }
+
+    #[test]
+    fn isamicable_rejects_perfect_and_primes() {
+        assert_eq!(isamicable(6.0).unwrap(), 0.0); // perfect, not amicable
+        assert_eq!(isamicable(7.0).unwrap(), 0.0); // prime
+        assert_eq!(isamicable(10.0).unwrap(), 0.0);
+    }
+
+    #[test]
+    fn iscoprime_matches_known_values() {
+        assert_eq!(iscoprime(14.0, 15.0).unwrap(), 1.0);
+        assert_eq!(iscoprime(14.0, 21.0).unwrap(), 0.0);
+        assert_eq!(iscoprime(1.0, 5.0).unwrap(), 1.0);
+    }
+
+    #[test]
+    fn iscoprime_rejects_both_zero() {
+        assert!(matches!(
+            iscoprime(0.0, 0.0),
+            Err(CalcError::DomainError(_))
+        ));
+    }
+
+    #[test]
+    fn order_matches_known_values() {
+        // 2 has order 4 mod 5 since 2^4 = 16 = 1 (mod 5), and no smaller
+        // power works (2, 4, 3, 1).
+        assert_eq!(order(2.0, 5.0).unwrap(), 4.0);
+        assert_eq!(order(1.0, 7.0).unwrap(), 1.0);
+    }
+
+    #[test]
+    fn order_rejects_non_coprime_args() {
+        assert!(matches!(order(2.0, 4.0), Err(CalcError::DomainError(_))));
+        assert!(matches!(order(2.0, 1.0), Err(CalcError::DomainError(_))));
+    }
+
+    #[test]
+    fn jacobi_matches_known_values() {
+        // Legendre symbol cases (n prime): known quadratic residues mod 7
+        // are {1, 2, 4}.
+        assert_eq!(jacobi(1.0, 7.0).unwrap(), 1.0);
+        assert_eq!(jacobi(2.0, 7.0).unwrap(), 1.0);
+        assert_eq!(jacobi(3.0, 7.0).unwrap(), -1.0);
+        assert_eq!(jacobi(7.0, 7.0).unwrap(), 0.0);
+        // A well-known composite-modulus example.
+        assert_eq!(jacobi(1001.0, 9907.0).unwrap(), -1.0);
+    }
+
+    #[test]
+    fn jacobi_rejects_even_or_non_positive_modulus() {
+        assert!(matches!(jacobi(1.0, 8.0), Err(CalcError::DomainError(_))));
+        assert!(matches!(jacobi(1.0, -3.0), Err(CalcError::DomainError(_))));
     }
 }

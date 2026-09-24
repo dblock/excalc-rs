@@ -8,7 +8,7 @@ Expression Calculator (CLI, MCP, Rust)
 
 An expression calculator CLI tool and MCP server built for AI coding agents like Claude and GitHub Copilot to outsource arithmetic, saving tokens and avoiding LLM math hallucinations.
 
-A mathematical beast with 176 functions and operators across standard math, trigonometry, statistics, financial (NPV, IRR), number theory (GCD, totient, primality), base conversion, combinatorics, numeric integration, root finding, and advanced/special functions (gamma, elliptic integrals, dilogarithm, and more).
+A mathematical beast with 182 functions and operators across standard math, trigonometry, statistics, financial (NPV, IRR), number theory (GCD, totient, primality), base conversion, combinatorics, numeric integration, root finding, and advanced/special functions (gamma, elliptic integrals, dilogarithm, and more).
 
 Spiritual successor to the Vestris Inc. shareware Expression Calculator written in 1996 in Pascal. It was also pressed on a CD-ROM, translated, and sold in Germany under the name Global Calculator in 1997. See [HISTORY.md](HISTORY.md).
 
@@ -189,6 +189,12 @@ calc "nextprime(10)"    # 11    (smallest prime > 10)
 calc "triangular(10)"   # 55    (10th triangular number)
 calc "pentagonal(10)"   # 145   (10th pentagonal number)
 calc "hexagonal(10)"    # 190   (10th hexagonal number)
+calc "carmichael(561)"  # 80    (Carmichael function of 561)
+calc "aliquot(220)"     # 284   (sum of proper divisors of 220)
+calc "amicable?(220)"   # 1     (true; 220 and 284 are an amicable pair)
+calc "coprime?(14, 15)" # 1     (true; gcd(14, 15) = 1)
+calc "order(2, 5)"      # 4     (multiplicative order of 2 mod 5)
+calc "jacobi(1001, 9907)"  # -1 (Jacobi symbol)
 ```
 
 **Base conversion** ([details](docs/functions/base-conversion.md)):
