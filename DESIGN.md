@@ -31,6 +31,8 @@ Conventional precedence, loosest to tightest binding:
 
 `n \ x` means "the n-th root of x", e.g. `2 \ 9` = 3, `3 \ 27` = 3.
 
+Above expressions sits one more layer: a full input is a `;`/newline-separated sequence of **statements**, each either `name := expr` (variable assignment) or a plain expression; the value of the last statement is the result — see [Variables](README.md#variables). Assignment is deliberately a statement, not an expression, so it can't be chained (`x := y := 5`) or nested inside a larger expression; this keeps `:=` unambiguous and out of the operator-precedence table above.
+
 ## Numeric model
 
 v1 uses `f64` throughout. Arbitrary-precision support (`math`/big-decimal style, for exact integer/rational results) is planned but not yet implemented — tracked as a follow-up, not blocking v1.
@@ -43,7 +45,7 @@ v1 trig functions operate in **radians only**. The original supported a degree/r
 
 - Original had a dead duplicate branch (`if ct('fv') ... else if ct('fv') ...`) in the function arg-count table — a copy-paste artifact, dropped.
 - Original used both full operator words (`and`, `or`, `xor`, ...) and single-letter shortcuts (`a`, `o`, `x`, ...) for the same logic operators, apparently keyboard shortcuts from the original UI. v1 uses full words only, with one exception: `&` is kept as a shorthand for `and` since it's a common, unambiguous convention in modern calculators and programming languages.
-- Original's `=` assigned a value to a variable (not equality), and `?` tested equality. Since v1 has no variable-assignment operator, `=` was repurposed as equality and `?` was dropped entirely.
+- Original's `=` assigned a value to a variable (not equality), and `?` tested equality. v1 gives `=` the more intuitive equality meaning and drops `?` entirely; variable assignment instead uses a dedicated `:=` statement (see [Variables](docs/README.md#variables)), kept out of expression grammar so it's never ambiguous with equality.
 - `mod` is spelled out as a word token in v1, rather than a single character, since we're normalizing surface syntax anyway.
 - Original's `Ci`/`Chi` (cosine/hyperbolic-cosine integral) formulas reference an undefined variable `G` (presumably meant to be the Euler-Mascheroni constant), which the generic variable-lookup mechanism silently defaults to `0` — almost certainly a bug, since the results are meaningless without the real constant. v1 hardcodes the actual Euler-Mascheroni constant instead.
 - Advanced/special functions that depend on a numeric integral in the original (`ellipticE`, `ellipticF`, `dilog`, `erf`, `erfc`, `si`, `ssi`, `ci`, `chi`, `dawson`, `fresnelC`/`fresnelS`) are ported using a private adaptive Simpson's-rule integrator rather than the general-purpose numeric integration engine (see below); see [docs/functions/advanced.md](docs/functions/advanced.md) for details and a TODO on unifying the two.

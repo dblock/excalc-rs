@@ -18,6 +18,8 @@ pub enum Token {
     Gt,        // >  greater than
     Lt,        // <  less than
     Amp,       // &  bitwise and (synonym for the `and` keyword)
+    Assign,    // := variable assignment
+    Semi,      // ;  or a newline: statement separator
     LParen,
     RParen,
     Comma,
@@ -65,6 +67,15 @@ impl<'a> Lexer<'a> {
                 '>' => Token::Gt,
                 '<' => Token::Lt,
                 '&' => Token::Amp,
+                ':' => {
+                    if self.peek_char() == Some('=') {
+                        self.chars.next();
+                        Token::Assign
+                    } else {
+                        return Err(CalcError::InvalidCharacter(':', pos));
+                    }
+                }
+                ';' | '\n' => Token::Semi,
                 '(' => Token::LParen,
                 ')' => Token::RParen,
                 ',' => Token::Comma,
@@ -77,9 +88,13 @@ impl<'a> Lexer<'a> {
         Ok(tokens)
     }
 
+    /// Skips ordinary whitespace, but stops at (doesn't consume) a newline —
+    /// callers treat `\n` as a statement separator token, not whitespace.
     fn skip_whitespace(&mut self) {
         while let Some(c) = self.peek_char() {
-            if c.is_whitespace() {
+            if c == '\n' {
+                break;
+            } else if c.is_whitespace() {
                 self.chars.next();
             } else {
                 break;
@@ -261,5 +276,37 @@ mod tests {
                 Token::Eof
             ])
         );
+    }
+
+    #[test]
+    fn assign_and_statement_separator_tokens() {
+        assert_eq!(
+            tokenize("x := 5; y"),
+            Ok(vec![
+                Token::Ident("x".to_string()),
+                Token::Assign,
+                Token::Number(5.0),
+                Token::Semi,
+                Token::Ident("y".to_string()),
+                Token::Eof
+            ])
+        );
+        assert_eq!(
+            tokenize("x := 5\ny"),
+            Ok(vec![
+                Token::Ident("x".to_string()),
+                Token::Assign,
+                Token::Number(5.0),
+                Token::Semi,
+                Token::Ident("y".to_string()),
+                Token::Eof
+            ])
+        );
+    }
+
+    #[test]
+    fn lone_colon_is_invalid() {
+        assert_eq!(tokenize(":"), Err(CalcError::InvalidCharacter(':', 0)));
+        assert_eq!(tokenize("x : 5"), Err(CalcError::InvalidCharacter(':', 2)));
     }
 }

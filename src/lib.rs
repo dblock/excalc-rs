@@ -15,11 +15,14 @@ pub mod parser;
 
 pub use error::{CalcError, CalcResult};
 
-/// Parses and evaluates an expression with no variable bindings.
+/// Parses and evaluates an expression or `;`/newline-separated sequence of
+/// statements (see [`ast::Stmt`]), returning the value of the last
+/// statement. Variables assigned with `name := expr` are visible to later
+/// statements but don't persist beyond this single call.
 pub fn evaluate(input: &str) -> CalcResult<f64> {
-    let expr = parser::parse(input)?;
-    let ctx = eval::Context::new();
-    eval::eval(&expr, &ctx)
+    let stmts = parser::parse_program(input)?;
+    let mut ctx = eval::Context::new();
+    eval::eval_program(&stmts, &mut ctx)
 }
 
 #[cfg(test)]
@@ -67,6 +70,31 @@ mod tests {
     fn constants() {
         assert!((evaluate("pi").unwrap() - std::f64::consts::PI).abs() < 1e-12);
         assert!((evaluate("e").unwrap() - std::f64::consts::E).abs() < 1e-12);
+    }
+
+    #[test]
+    fn variable_assignment() {
+        assert_eq!(evaluate("x := 5; x * 2").unwrap(), 10.0);
+        assert_eq!(evaluate("x := 5\ny := x^2 + 1\ny").unwrap(), 26.0);
+        // Assignment is a statement, not an expression: its value is the
+        // assigned value when it's the last (or only) statement.
+        assert_eq!(evaluate("x := 41 + 1").unwrap(), 42.0);
+    }
+
+    #[test]
+    fn variable_assignment_errors() {
+        assert_eq!(
+            evaluate("x + 1"),
+            Err(CalcError::UnknownVariable("x".to_string()))
+        );
+        assert_eq!(
+            evaluate("pi := 5"),
+            Err(CalcError::ReservedIdentifier("pi".to_string()))
+        );
+        assert_eq!(
+            evaluate("e := 5"),
+            Err(CalcError::ReservedIdentifier("e".to_string()))
+        );
     }
 
     #[test]

@@ -16,9 +16,16 @@
 //! variable assignment rather than equality. That was a reasonable design
 //! for a button-driven 90s calculator UI, but it surprises anyone typing an
 //! expression today, so v1 normalizes to conventional precedence and gives
-//! `=` the more intuitive equality meaning.
+//! `=` the more intuitive equality meaning; assignment instead uses `:=`
+//! (see [`Stmt::Assign`]) at the statement level, outside expression
+//! grammar entirely, so it's never ambiguous with equality.
+//!
+//! Above expressions sits one more layer: a full input is a `;`- or
+//! newline-separated sequence of statements (`parse_program`), each either
+//! `name := expr` or a plain expression; the value of the last statement is
+//! the program's result.
 
-use crate::ast::{BinaryOp, Expr, UnaryOp};
+use crate::ast::{BinaryOp, Expr, Program, Stmt, UnaryOp};
 use crate::error::{CalcError, CalcResult};
 use crate::lexer::{tokenize, Token};
 
@@ -28,6 +35,15 @@ pub fn parse(input: &str) -> CalcResult<Expr> {
     let expr = parser.parse_comparison()?;
     parser.expect_eof()?;
     Ok(expr)
+}
+
+/// Parses a full program: a `;`/newline-separated sequence of statements.
+pub fn parse_program(input: &str) -> CalcResult<Program> {
+    let tokens = tokenize(input)?;
+    let mut parser = Parser { tokens, pos: 0 };
+    let stmts = parser.parse_statements()?;
+    parser.expect_eof()?;
+    Ok(stmts)
 }
 
 struct Parser {
@@ -69,6 +85,42 @@ impl Parser {
                 position: self.pos,
             })
         }
+    }
+
+    fn skip_semis(&mut self) {
+        while matches!(self.peek(), Token::Semi) {
+            self.advance();
+        }
+    }
+
+    /// Parses a `;`/newline-separated sequence of statements, tolerating
+    /// (and skipping) any number of leading, trailing, or blank/empty
+    /// separators between statements.
+    fn parse_statements(&mut self) -> CalcResult<Program> {
+        let mut stmts = Vec::new();
+        self.skip_semis();
+        while !matches!(self.peek(), Token::Eof) {
+            stmts.push(self.parse_statement()?);
+            self.skip_semis();
+        }
+        if stmts.is_empty() {
+            return Err(CalcError::UnexpectedEof);
+        }
+        Ok(stmts)
+    }
+
+    /// `name := expr` (assignment) if the next two tokens are an identifier
+    /// followed by `:=`, otherwise a plain expression.
+    fn parse_statement(&mut self) -> CalcResult<Stmt> {
+        if let Token::Ident(name) = self.peek().clone() {
+            if matches!(self.tokens.get(self.pos + 1), Some(Token::Assign)) {
+                self.advance(); // identifier
+                self.advance(); // :=
+                let expr = self.parse_comparison()?;
+                return Ok(Stmt::Assign(name, expr));
+            }
+        }
+        Ok(Stmt::Expr(self.parse_comparison()?))
     }
 
     fn parse_comparison(&mut self) -> CalcResult<Expr> {
@@ -458,6 +510,73 @@ mod tests {
                     ),
                 ]
             )
+        );
+    }
+
+    #[test]
+    fn parse_program_single_expression_is_one_statement() {
+        assert_eq!(
+            parse_program("2 + 2").unwrap(),
+            vec![Stmt::Expr(Expr::Binary(
+                BinaryOp::Add,
+                Box::new(Expr::Number(2.0)),
+                Box::new(Expr::Number(2.0))
+            ))]
+        );
+    }
+
+    #[test]
+    fn parse_program_assignment_statement() {
+        assert_eq!(
+            parse_program("x := 5").unwrap(),
+            vec![Stmt::Assign("x".to_string(), Expr::Number(5.0))]
+        );
+    }
+
+    #[test]
+    fn parse_program_semicolon_and_newline_separated_statements() {
+        let expected = vec![
+            Stmt::Assign("x".to_string(), Expr::Number(5.0)),
+            Stmt::Assign(
+                "y".to_string(),
+                Expr::Binary(
+                    BinaryOp::Pow,
+                    Box::new(Expr::Variable("x".to_string())),
+                    Box::new(Expr::Number(2.0)),
+                ),
+            ),
+            Stmt::Expr(Expr::Variable("y".to_string())),
+        ];
+        assert_eq!(parse_program("x := 5; y := x^2; y").unwrap(), expected);
+        assert_eq!(parse_program("x := 5\ny := x^2\ny").unwrap(), expected);
+    }
+
+    #[test]
+    fn parse_program_tolerates_blank_statements() {
+        assert_eq!(
+            parse_program(";;\n\nx := 5;;\n").unwrap(),
+            vec![Stmt::Assign("x".to_string(), Expr::Number(5.0))]
+        );
+    }
+
+    #[test]
+    fn parse_program_empty_input_is_an_error() {
+        assert_eq!(parse_program("  ;\n; "), Err(CalcError::UnexpectedEof));
+    }
+
+    #[test]
+    fn identifier_followed_by_assign_is_not_confused_with_comparison() {
+        // `x := y = 5` should be an assignment of `y = 5` (equality) to `x`.
+        assert_eq!(
+            parse_program("x := y = 5").unwrap(),
+            vec![Stmt::Assign(
+                "x".to_string(),
+                Expr::Binary(
+                    BinaryOp::Eq,
+                    Box::new(Expr::Variable("y".to_string())),
+                    Box::new(Expr::Number(5.0))
+                )
+            )]
         );
     }
 }

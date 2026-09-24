@@ -2,7 +2,7 @@
 
 use std::collections::HashMap;
 
-use crate::ast::{BinaryOp, Expr, UnaryOp};
+use crate::ast::{BinaryOp, Expr, Stmt, UnaryOp};
 use crate::error::{CalcError, CalcResult};
 use crate::functions::{
     advanced, financial, general,
@@ -25,6 +25,32 @@ impl Context {
     pub fn set(&mut self, name: impl Into<String>, value: f64) {
         self.variables.insert(name.into(), value);
     }
+}
+
+/// Evaluates a full program: a sequence of statements executed in order,
+/// with variable assignments visible to later statements. Returns the value
+/// of the last statement (an assignment's value is the value assigned, so a
+/// program that ends in `x := 5` evaluates to `5`).
+pub fn eval_program(stmts: &[Stmt], ctx: &mut Context) -> CalcResult<f64> {
+    let mut last = 0.0;
+    for stmt in stmts {
+        last = match stmt {
+            Stmt::Assign(name, expr) => {
+                if is_reserved_constant(name) {
+                    return Err(CalcError::ReservedIdentifier(name.clone()));
+                }
+                let value = eval(expr, ctx)?;
+                ctx.set(name.clone(), value);
+                value
+            }
+            Stmt::Expr(expr) => eval(expr, ctx)?,
+        };
+    }
+    Ok(last)
+}
+
+fn is_reserved_constant(name: &str) -> bool {
+    matches!(name.to_ascii_lowercase().as_str(), "pi" | "e")
 }
 
 pub fn eval(expr: &Expr, ctx: &Context) -> CalcResult<f64> {
@@ -493,6 +519,41 @@ mod tests {
         let mut ctx = Context::new();
         ctx.set("x", 42.0);
         assert_eq!(eval(&Expr::Variable("x".to_string()), &ctx).unwrap(), 42.0);
+    }
+
+    #[test]
+    fn eval_program_assignment_visible_to_later_statements() {
+        let stmts = crate::parser::parse_program("x := 5; y := x^2 + 1; y").unwrap();
+        let mut ctx = Context::new();
+        assert_eq!(eval_program(&stmts, &mut ctx).unwrap(), 26.0);
+        assert_eq!(ctx.variables.get("x"), Some(&5.0));
+        assert_eq!(ctx.variables.get("y"), Some(&26.0));
+    }
+
+    #[test]
+    fn eval_program_trailing_assignment_returns_assigned_value() {
+        let stmts = crate::parser::parse_program("x := 5").unwrap();
+        let mut ctx = Context::new();
+        assert_eq!(eval_program(&stmts, &mut ctx).unwrap(), 5.0);
+    }
+
+    #[test]
+    fn eval_program_rejects_assigning_to_reserved_constants() {
+        for name in ["pi", "PI", "e", "E"] {
+            let stmts = vec![Stmt::Assign(name.to_string(), Expr::Number(1.0))];
+            let mut ctx = Context::new();
+            assert_eq!(
+                eval_program(&stmts, &mut ctx),
+                Err(CalcError::ReservedIdentifier(name.to_string()))
+            );
+        }
+    }
+
+    #[test]
+    fn eval_program_single_expression_still_works() {
+        let stmts = crate::parser::parse_program("2 + 2").unwrap();
+        let mut ctx = Context::new();
+        assert_eq!(eval_program(&stmts, &mut ctx).unwrap(), 4.0);
     }
 
     #[test]

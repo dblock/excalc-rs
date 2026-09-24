@@ -13,6 +13,21 @@ pub enum Expr {
     Binary(BinaryOp, Box<Expr>, Box<Expr>),
 }
 
+/// One statement in a program: either a variable assignment or a plain
+/// expression to evaluate. A full input is a `;`/newline-separated sequence
+/// of these (see [`Program`]); the value of the last statement is the
+/// program's result.
+#[derive(Debug, Clone, PartialEq)]
+pub enum Stmt {
+    /// `name := expr` — evaluates `expr` and binds it to `name`, visible to
+    /// later statements in the same program. `pi`/`e` can't be assigned to.
+    Assign(String, Expr),
+    Expr(Expr),
+}
+
+/// A full program: a sequence of statements evaluated in order.
+pub type Program = Vec<Stmt>;
+
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub enum UnaryOp {
     Neg,

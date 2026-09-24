@@ -140,6 +140,19 @@ calc "shr(2, 1)"           # 1        (2 / 2^1)
 
 **Constants**: `pi` and `e` (case-insensitive).
 
+**Variables**:
+
+```
+calc "x := 5; x * 2"                # 10        (assign then use in a later statement)
+calc "x := 5
+y := x^2 + 1
+y"                                   # 26        (statements can also be newline-separated)
+calc "x := 41 + 1"                   # 42        (assignment's value is the assigned value)
+calc "pi := 5"                       # error: cannot assign to reserved constant: pi
+```
+
+`name := expr` assigns to a variable, visible to later statements in the same input (separated by `;` or a newline); the value of the last statement is the result. Assignment is a statement, not an expression — it can't be nested inside a larger expression or chained (`x := y := 5`). Variables don't persist across separate `calc` invocations or MCP tool calls; `pi`/`e` are reserved and can't be reassigned.
+
 **Advanced / special functions** ([details](docs/functions/advanced.md)):
 
 ```

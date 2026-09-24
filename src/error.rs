@@ -18,6 +18,9 @@ pub enum CalcError {
     #[error("unknown variable: {0}")]
     UnknownVariable(String),
 
+    #[error("cannot assign to reserved constant: {0}")]
+    ReservedIdentifier(String),
+
     #[error("wrong number of arguments for {name}: expected {expected}, got {got}")]
     WrongArgCount {
         name: String,
