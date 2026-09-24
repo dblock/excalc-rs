@@ -18,8 +18,26 @@ path = "src/main.rs"
 name = "calc"
 path = "src/main.rs"
 
+[[bin]]
+name = "excalc-mcp"
+path = "src/bin/excalc-mcp.rs"
+required-features = ["mcp"]
+
+[[test]]
+name = "mcp"
+path = "tests/mcp.rs"
+required-features = ["mcp"]
+
+[features]
+mcp = ["dep:rmcp", "dep:tokio", "dep:serde", "dep:anyhow"]
+
 [dependencies]
 thiserror = "1"
 clap = { version = "4", features = ["derive"] }
+rmcp = { version = "3.4", features = ["server", "macros", "transport-io"], optional = true }
+tokio = { version = "1", features = ["full"], optional = true }
+serde = { version = "1", features = ["derive"], optional = true }
+anyhow = { version = "1", optional = true }
 
 [dev-dependencies]
+serde_json = "1"

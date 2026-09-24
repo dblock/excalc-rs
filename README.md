@@ -4,7 +4,7 @@ Expression Calculator (Rust)
 [![CI](https://github.com/dblock/excalc-rs/actions/workflows/ci.yml/badge.svg)](https://github.com/dblock/excalc-rs/actions/workflows/ci.yml)
 [![Coverage Status](https://coveralls.io/repos/github/dblock/excalc-rs/badge.svg?branch=master)](https://coveralls.io/github/dblock/excalc-rs?branch=master)
 
-A portable expression calculator, built as a CLI tool (and soon an MCP server) so AI coding agents like Claude and GitHub Copilot can outsource arithmetic instead of computing it themselves — saving tokens and avoiding LLM math mistakes.
+A portable expression calculator, built as a CLI tool and an MCP server so AI coding agents like Claude and GitHub Copilot can outsource arithmetic instead of computing it themselves — saving tokens and avoiding LLM math mistakes.
 
 Spiritual successor to [excalc](https://github.com/dblock/excalc) (Vestris Inc. Expression Calculator, Pascal, 1996). See [DESIGN.md](DESIGN.md) for the grammar, function catalog, and what's ported vs. deferred vs. skipped, and [docs/](docs/README.md) for detailed per-function reference documentation.
 
@@ -17,6 +17,12 @@ cargo install excalc
 This installs both the `excalc` and `calc` binaries (identical, `calc` is just a shorter alias) to `~/.cargo/bin` (make sure it's on your `PATH`). Requires a [Rust toolchain](https://rustup.rs/).
 
 If you already have another `calc` on your `PATH`, check `which calc` after installing — `cargo install` won't warn you if it shadows an existing command.
+
+To also install the [MCP server](#mcp-server) binary, `excalc-mcp`:
+
+```bash
+cargo install excalc --features mcp
+```
 
 ## Usage
 
@@ -100,5 +106,21 @@ calc "1/0"                # error: division by zero
 calc "sqrt(-1)"           # error: domain error in sqrt
 calc "unknownfn(1)"       # error: unknown function: unknownfn
 ```
+
+## MCP Server
+
+`excalc-mcp` exposes the same evaluator as a single `evaluate` tool over stdio, for AI agents that speak [MCP](https://modelcontextprotocol.io/) instead of shelling out to the CLI. Install it with `cargo install excalc --features mcp` (see [Install](#install)), then point your MCP client at the `excalc-mcp` binary, e.g. in Claude Desktop/Code's `mcp.json` or Copilot's `mcp-config.json`:
+
+```json
+{
+  "mcpServers": {
+    "excalc": {
+      "command": "excalc-mcp"
+    }
+  }
+}
+```
+
+`evaluate` takes a single `expression` string argument and returns the numeric result as text, or a tool error with the same message the CLI would print (e.g. `division by zero`, `domain error in sqrt`).
 
 See [CHANGELOG.md](CHANGELOG.md) for release history, [RELEASING.md](RELEASING.md) for how to cut a new release, and [CONTRIBUTING.md](CONTRIBUTING.md) for how to build, test, and contribute.

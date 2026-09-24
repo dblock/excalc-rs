@@ -1,6 +1,6 @@
 # Agents
 
-excalc is a Rust library, CLI, and (planned) MCP server implementing a portable expression calculator — see [DESIGN.md](DESIGN.md) for scope, grammar, and the function catalog (what's ported, deferred, or skipped).
+excalc is a Rust library, CLI, and MCP server implementing a portable expression calculator — see [DESIGN.md](DESIGN.md) for scope, grammar, and the function catalog (what's ported, deferred, or skipped).
 
 ## Before Committing
 
@@ -9,7 +9,7 @@ Run these and fix anything they report:
 ```bash
 cargo fmt --all -- --check
 cargo clippy --all-targets --all-features -- -D warnings
-cargo test
+cargo test --all-features
 ```
 
 CI runs the same checks on Linux, macOS, and Windows; don't push code that fails any of them locally.
@@ -29,6 +29,10 @@ When adding new functions/features, add tests that exercise them rather than rel
 ## Markdown
 
 Do not hard-wrap prose in Markdown files. Write each paragraph as a single long line and let the reader's editor/viewer soft-wrap it. Only break lines for actual structure: headings, lists, code blocks, tables.
+
+## MCP server
+
+`src/bin/excalc-mcp.rs` is a separate binary target gated behind the `mcp` Cargo feature (it pulls in `rmcp`/`tokio`, which aren't needed by the plain CLI). It must build and pass tests both with and without `--features mcp`; don't move MCP-only code into files that compile unconditionally, and don't make `mcp` a default feature. Its integration test (`tests/mcp.rs`) closes stdin (rather than killing the child process) before waiting on exit, so the MCP server shuts down normally and `cargo llvm-cov` can flush its coverage profile — follow the same pattern for any new subprocess-based tests.
 
 ## Releasing
 

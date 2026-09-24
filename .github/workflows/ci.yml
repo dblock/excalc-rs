@@ -22,9 +22,9 @@ jobs:
       - uses: dtolnay/rust-toolchain@stable
       - uses: Swatinem/rust-cache@v2
       - name: Build
-        run: cargo build --verbose
+        run: cargo build --all-features --verbose
       - name: Test
-        run: cargo test --verbose
+        run: cargo test --all-features --verbose
 
   lint:
     name: Format & Clippy

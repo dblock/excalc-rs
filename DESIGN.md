@@ -79,4 +79,4 @@ Comparison (`= < > !=`) and bitwise/logic (`and or xor nor xnor nand`), deferred
 
 - **Library** (`excalc::evaluate`) — the core.
 - **CLI** (`excalc "2 + 2 * 3"`, also installed as `calc`) — done in v1.
-- **MCP server** — planned; will expose an `evaluate` tool over stdio so Claude/Copilot/etc. can call it uniformly instead of shelling out.
+- **MCP server** (`excalc-mcp`, built with `cargo build --features mcp`) — done. Exposes a single `evaluate` tool over stdio via [rmcp](https://crates.io/crates/rmcp) so Claude/Copilot/etc. can call it uniformly instead of shelling out. See the README's [MCP Server](README.md#mcp-server) section.
