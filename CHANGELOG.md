@@ -11,6 +11,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 - `calc` binary alias for `excalc` (same CLI, shorter name).
 - `docs/` reference documentation, per function category, marked v1 (implemented) vs. planned (extracted from the original Pascal source as a porting reference).
 - README `### Examples` section covering every v1 operator and function, verified against the evaluator by `tests/readme_examples.rs` so it can't silently drift out of sync.
+- `CONTRIBUTING.md` with build/test/PR instructions, replacing the README's `## Development` section.
 
 ## [0.1.0] - 2026-09-23
 

@@ -5,7 +5,7 @@ A portable expression calculator, built as a CLI tool (and soon an MCP server) s
 
 Spiritual successor to [excalc](https://github.com/dblock/excalc) (Vestris Inc. Expression Calculator, Pascal, 1996). See [DESIGN.md](DESIGN.md) for the grammar, function catalog, and what's ported vs. deferred vs. skipped, and [docs/](docs/README.md) for detailed per-function reference documentation.
 
-See [CHANGELOG.md](CHANGELOG.md) for release history and [RELEASING.md](RELEASING.md) for how to cut a new release.
+See [CHANGELOG.md](CHANGELOG.md) for release history, [RELEASING.md](RELEASING.md) for how to cut a new release, and [CONTRIBUTING.md](CONTRIBUTING.md) for how to build, test, and contribute.
 
 ## Install
 
@@ -98,11 +98,4 @@ calc "binom(5, 2)"           # 10       (5 choose 2)
 calc "1/0"                # error: division by zero
 calc "sqrt(-1)"           # error: domain error in sqrt
 calc "unknownfn(1)"       # error: unknown function: unknownfn
-```
-
-## Development
-
-```
-cargo build
-cargo test
 ```
