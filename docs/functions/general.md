@@ -10,6 +10,9 @@
 | `ceil(x)` | Ceiling, closest integer `>= x` | `R -> Z` | `ceil(-2.1)` | `-2` |
 | `floor(x)` | Floor, closest integer `<= x` | `R -> Z` | `floor(-2.1)` | `-3` |
 | `random(x)` | Uniformly distributed random number in `[0, x]` | `R+ -> R+` | `random(8)` | non-deterministic, in `[0, 8]` |
+| `sign(x)` | Sign of `x`: `-1`, `0`, or `1` | `R -> {-1, 0, 1}` | `sign(-5)` | `-1` |
+| `clamp(x, lo, hi)` | Restricts `x` to `[lo, hi]` | `R x R x R -> R`, `lo <= hi` | `clamp(15, 0, 10)` | `10` |
+| `lerp(a, b, t)` | Linear interpolation from `a` to `b` at `t` | `R x R x R -> R` | `lerp(0, 10, 0.5)` | `5` |
 
 Notes:
 

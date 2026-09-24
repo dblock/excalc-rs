@@ -8,7 +8,7 @@ Expression Calculator (CLI, MCP, Rust)
 
 An expression calculator CLI tool and MCP server built for AI coding agents like Claude and GitHub Copilot to outsource arithmetic, saving tokens and avoiding LLM math hallucinations.
 
-A mathematical beast with 138 functions and operators across standard math, trigonometry, statistics, financial (NPV, IRR), number theory (GCD, totient, primality), numeric integration, and advanced/special functions (gamma, elliptic integrals, dilogarithm, and more).
+A mathematical beast with 144 functions and operators across standard math, trigonometry, statistics, financial (NPV, IRR), number theory (GCD, totient, primality), numeric integration, and advanced/special functions (gamma, elliptic integrals, dilogarithm, and more).
 
 Spiritual successor to the Vestris Inc. shareware Expression Calculator written in 1996 in Pascal. It was also pressed on a CD-ROM, translated, and sold in Germany under the name Global Calculator in 1997. See [HISTORY.md](HISTORY.md).
 
@@ -86,9 +86,12 @@ calc -- "-5 + 3"    # -2   (unary minus needs -- so clap doesn't treat it as a f
 
 ```
 calc "sqrt(16)"    # 4       (square root)
+calc "cbrt(-8)"    # -2      (cube root)
 calc "ln(e)"       # 1       (natural log)
 calc "log(100)"    # 2       (base 10)
+calc "log2(8)"     # 3       (base 2)
 calc "logn(8, 2)"  # 3       (log base 2 of 8)
+calc "hypot(3, 4)" # 5       (euclidean distance)
 calc "sin(pi/2)"   # 1       (sine)
 calc "cos(0)"      # 1       (cosine)
 calc "tan(pi/4)"   # ~1      (tangent)
@@ -130,6 +133,9 @@ calc "round(-2.5)"  # -2    (ties round towards +infinity)
 calc "trunc(2.1)"   # 2     (truncate towards zero)
 calc "ceil(-2.1)"   # -2    (round up)
 calc "floor(-2.1)"  # -3    (round down)
+calc "sign(-5)"     # -1    (sign)
+calc "clamp(15, 0, 10)"  # 10 (restrict to a range)
+calc "lerp(0, 10, 0.5)"  # 5  (linear interpolation)
 ```
 
 `random(x)` returns a uniformly distributed random number in `[0, x]`, e.g. `calc "random(8)"` — omitted above since its result isn't deterministic.

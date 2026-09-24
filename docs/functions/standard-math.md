@@ -59,13 +59,16 @@ The circular trig functions below operate in **radians only**. Rather than a glo
 | `acsch(x)` | Inverse hyperbolic cosecant | `x != 0` | `acsch(1)` → `~0.881` |
 | `acoth(x)` | Inverse hyperbolic cotangent | `\|x\| > 1` | `acoth(2)` → `~0.549` |
 
-## Logarithmic and root
+## Logarithmic, root, and distance
 
 | Function | Meaning | Domain | Example |
 |----------|---------|--------|---------|
 | `sqrt(x)` | Square root | `x >= 0` | `sqrt(16)` → `4` |
+| `cbrt(x)` | Cube root | all reals | `cbrt(-8)` → `-2` |
 | `ln(x)` | Natural logarithm (base e) | `x > 0` | `ln(e)` → `1` |
 | `log(x)` | Common logarithm (base 10) | `x > 0` | `log(100)` → `2` |
+| `log2(x)` | Binary logarithm (base 2) | `x > 0` | `log2(8)` → `3` |
 | `logn(x, b)` | Logarithm of `x` in base `b` | `x > 0`, `b > 0`, `b != 1` | `logn(8, 2)` → `3` |
+| `hypot(x, y)` | Euclidean distance, `sqrt(x^2 + y^2)` | all reals | `hypot(3, 4)` → `5` |
 
 Note: in the original Pascal source, `MyLog` computes base-10 log (not natural log) — `log` in this port preserves that semantics deliberately, despite the name looking like it could mean `ln`. Use `ln` for natural log.

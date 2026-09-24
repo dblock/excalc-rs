@@ -330,6 +330,21 @@ fn call_function(name: &str, args: &[f64]) -> CalcResult<f64> {
         "ceil" => one_arg(general::ceil),
         "floor" => one_arg(general::floor),
         "random" => one_arg(general::random),
+        "log2" => one_arg(general::log2),
+        "cbrt" => one_arg(general::cbrt),
+        "sign" => one_arg(general::sign),
+        "hypot" => {
+            expect_args(&lower, args, 2)?;
+            general::hypot(args[0], args[1])
+        }
+        "clamp" => {
+            expect_args(&lower, args, 3)?;
+            general::clamp(args[0], args[1], args[2])
+        }
+        "lerp" => {
+            expect_args(&lower, args, 3)?;
+            general::lerp(args[0], args[1], args[2])
+        }
 
         "fib" | "fibonacci" => one_arg(number_theory::fib),
         "prime?" => one_arg(number_theory::isprime),
