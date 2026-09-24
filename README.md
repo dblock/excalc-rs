@@ -386,10 +386,6 @@ If you already have another `calc` on your `PATH`, check `which calc` after inst
 
 See [CONTRIBUTING.md](CONTRIBUTING.md) for how to build, test, and contribute, [RELEASING.md](RELEASING.md) for how to cut a new release, and [CHANGELOG.md](CHANGELOG.md) for release history. See [port/DESIGN.md](port/DESIGN.md) for the grammar, function catalog, and what's ported vs. deferred vs. skipped.
 
-## Notes
-
-See [port/DESIGN.md](port/DESIGN.md#function-catalog) for what's implemented vs. planned.
-
 ## License
 
 MIT License, see [LICENSE](LICENSE) for details.
