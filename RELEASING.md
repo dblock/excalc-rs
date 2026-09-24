@@ -53,7 +53,12 @@ git push origin v0.2.0
 
 ## 6. Publish to crates.io
 
-Requires a crates.io API token to already be configured locally (one-time setup: crates.io → Account Settings → API Tokens → New Token with "publish-new" scope, then `cargo login <token>`). If `cargo login` hasn't been run, stop and ask the maintainer to do it — don't attempt to work around missing credentials.
+Requires, one-time, on the maintainer's machine:
+
+- A crates.io account with a **verified email address** (crates.io → Account Settings → Profile → set and verify email). `cargo publish` fails with a 400 error until this is done.
+- An API token with the "publish-new" scope (crates.io → Account Settings → API Tokens → New Token), logged in locally with `cargo login` (it reads the token from stdin — do not pass it as a command-line argument).
+
+Check whether login has already happened with `cat ~/.cargo/credentials.toml`. If there's no token configured, stop and ask the maintainer to run `cargo login` themselves — don't attempt to work around missing credentials.
 
 ```bash
 cargo publish --dry-run   # sanity check packaging first
