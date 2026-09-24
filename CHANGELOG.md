@@ -6,6 +6,8 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 
 ## [Unreleased]
 
+## [0.1.0] - 2026-09-23
+
 ### Added
 
 - Initial scaffold: lexer, parser, AST, evaluator.
@@ -15,4 +17,5 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 - CLI binary (`excalc "2 + 2 * 3"`).
 - CI: build/test on Linux, macOS, Windows; `cargo fmt` and `cargo clippy` checks.
 
-[Unreleased]: https://github.com/dblock/excalc-rs/commits/master
+[Unreleased]: https://github.com/dblock/excalc-rs/compare/v0.1.0...HEAD
+[0.1.0]: https://github.com/dblock/excalc-rs/releases/tag/v0.1.0
