@@ -8,7 +8,7 @@ Expression Calculator (CLI, MCP, Rust)
 
 An expression calculator CLI tool and MCP server built for AI coding agents like Claude and GitHub Copilot to outsource arithmetic, saving tokens and avoiding LLM math hallucinations.
 
-A mathematical beast with 182 functions and operators across standard math, trigonometry, statistics, financial (NPV, IRR), number theory (GCD, totient, primality), base conversion, combinatorics, numeric integration, root finding, and advanced/special functions (gamma, elliptic integrals, dilogarithm, and more).
+A mathematical beast with 191 functions and operators across standard math, trigonometry, statistics, financial (NPV, IRR), number theory (GCD, totient, primality), base conversion, combinatorics, numeric integration, root finding, geometry (n-dimensional distance/dot/norm), and advanced/special functions (gamma, elliptic integrals, dilogarithm, and more).
 
 Spiritual successor to the Vestris Inc. shareware Expression Calculator written in 1996 in Pascal. It was also pressed on a CD-ROM, translated, and sold in Germany under the name Global Calculator in 1997. See [HISTORY.md](HISTORY.md).
 
@@ -289,6 +289,21 @@ calc "int(log(x^3), x, 1, 10, 0.0000001)"  # ~18.274048987232057 (adaptive quadr
 ```
 calc "bisect(x^2 - 2, x, 0, 2, 0.000001)"  # ~1.4142141342163086 (bisection method; approximates sqrt(2))
 calc "secant(x^2 - 2, x, 0, 2, 0.000001)"  # ~1.4142135623730947 (secant method; approximates sqrt(2))
+```
+
+**Geometry** ([details](docs/functions/geometry.md)) — `distance`/`manhattan`/`dot` work in any dimension, split their argument list in half between the two points/vectors:
+
+```
+calc "distance(0, 0, 3, 4)"          # 5       (2D Euclidean distance)
+calc "distance(0, 0, 0, 1, 1, 1)"    # ~1.732  (3D Euclidean distance)
+calc "manhattan(0, 0, 3, 4)"         # 7       (2D Manhattan/taxicab distance)
+calc "dot(1, 2, 3, 4)"               # 11      (2D dot product)
+calc "norm(3, 4)"                    # 5       (Euclidean magnitude of a vector)
+calc "triarea(3, 4, 5)"              # 6       (triangle area via Heron's formula)
+calc "circlearea(2)"                 # ~12.566 (area of a circle)
+calc "circumference(2)"              # ~12.566 (circumference of a circle)
+calc "spherevol(3)"                  # ~113.097 (volume of a sphere)
+calc "spherearea(3)"                 # ~113.097 (surface area of a sphere)
 ```
 
 **Financial functions** ([details](docs/functions/financial.md)):

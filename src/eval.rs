@@ -5,7 +5,7 @@ use std::collections::HashMap;
 use crate::ast::{BinaryOp, Expr, Stmt, UnaryOp};
 use crate::error::{CalcError, CalcResult};
 use crate::functions::{
-    advanced, base, combinatorics, financial, general,
+    advanced, base, combinatorics, financial, general, geometry,
     integration::{self, Rule},
     logic, numbertheory, rootfinding, stats, trig,
 };
@@ -333,6 +333,10 @@ fn call_function(name: &str, args: &[f64]) -> CalcResult<f64> {
         "gcd" => return numbertheory::gcd(args),
         "lcm" => return numbertheory::lcm(args),
         "multinomial" => return combinatorics::multinomial(args),
+        "distance" => return geometry::distance(args),
+        "manhattan" => return geometry::manhattan(args),
+        "dot" => return geometry::dot(args),
+        "norm" => return geometry::norm(args),
         _ => {}
     }
 
@@ -501,6 +505,15 @@ fn call_function(name: &str, args: &[f64]) -> CalcResult<f64> {
             expect_args(&lower, args, 2)?;
             numbertheory::jacobi(args[0], args[1])
         }
+
+        "triarea" => {
+            expect_args(&lower, args, 3)?;
+            geometry::triarea(args[0], args[1], args[2])
+        }
+        "circlearea" => one_arg(geometry::circlearea),
+        "circumference" => one_arg(geometry::circumference),
+        "spherevol" => one_arg(geometry::spherevol),
+        "spherearea" => one_arg(geometry::spherearea),
 
         "not" => one_arg(logic::not),
         "shl" => {

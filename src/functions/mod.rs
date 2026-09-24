@@ -3,6 +3,7 @@ pub mod base;
 pub mod combinatorics;
 pub mod financial;
 pub mod general;
+pub mod geometry;
 pub mod integration;
 pub mod logic;
 pub mod numbertheory;
