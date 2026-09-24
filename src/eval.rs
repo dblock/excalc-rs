@@ -216,3 +216,111 @@ fn expect_args(name: &str, args: &[f64], n: usize) -> CalcResult<()> {
         })
     }
 }
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use crate::ast::Expr;
+
+    #[test]
+    fn context_set_and_resolve_variable() {
+        let mut ctx = Context::new();
+        ctx.set("x", 5.0);
+        assert_eq!(resolve_variable("x", &ctx).unwrap(), 5.0);
+    }
+
+    #[test]
+    fn resolve_unknown_variable_errors() {
+        let ctx = Context::new();
+        assert_eq!(
+            resolve_variable("nope", &ctx),
+            Err(CalcError::UnknownVariable("nope".to_string()))
+        );
+    }
+
+    #[test]
+    fn eval_variable_expr_through_context() {
+        let mut ctx = Context::new();
+        ctx.set("x", 42.0);
+        assert_eq!(eval(&Expr::Variable("x".to_string()), &ctx).unwrap(), 42.0);
+    }
+
+    #[test]
+    fn factorial_domain_and_overflow() {
+        assert_eq!(factorial(5.0).unwrap(), 120.0);
+        assert_eq!(
+            factorial(-1.0),
+            Err(CalcError::DomainError("factorial".to_string()))
+        );
+        assert_eq!(
+            factorial(2.5),
+            Err(CalcError::DomainError("factorial".to_string()))
+        );
+        assert_eq!(factorial(2000.0), Err(CalcError::Overflow));
+    }
+
+    #[test]
+    fn binary_division_and_mod_by_zero() {
+        assert_eq!(
+            eval_binary(BinaryOp::Div, 1.0, 0.0),
+            Err(CalcError::DivisionByZero)
+        );
+        assert_eq!(
+            eval_binary(BinaryOp::Mod, 1.0, 0.0),
+            Err(CalcError::DivisionByZero)
+        );
+        assert_eq!(eval_binary(BinaryOp::Mod, 7.0, 2.0).unwrap(), 1.0);
+        assert_eq!(eval_binary(BinaryOp::Pow, 2.0, 3.0).unwrap(), 8.0);
+    }
+
+    #[test]
+    fn binary_root_errors_and_ok() {
+        assert_eq!(
+            eval_binary(BinaryOp::Root, 0.0, 8.0),
+            Err(CalcError::DivisionByZero)
+        );
+        assert_eq!(
+            eval_binary(BinaryOp::Root, 2.0, -8.0),
+            Err(CalcError::DomainError("root".to_string()))
+        );
+        assert_eq!(eval_binary(BinaryOp::Root, 3.0, 8.0).unwrap(), 2.0);
+        assert_eq!(eval_binary(BinaryOp::Root, 1.0, -8.0).unwrap(), -8.0);
+    }
+
+    #[test]
+    fn log_family_domain_errors() {
+        assert_eq!(
+            call_function("ln", &[0.0]),
+            Err(CalcError::DomainError("ln".to_string()))
+        );
+        assert_eq!(
+            call_function("log", &[-1.0]),
+            Err(CalcError::DomainError("log".to_string()))
+        );
+        assert_eq!(
+            call_function("logn", &[0.0, 2.0]),
+            Err(CalcError::DomainError("logn".to_string()))
+        );
+        assert_eq!(
+            call_function("logn", &[2.0, 0.0]),
+            Err(CalcError::DomainError("logn".to_string()))
+        );
+        assert_eq!(
+            call_function("logn", &[2.0, 1.0]),
+            Err(CalcError::DomainError("logn".to_string()))
+        );
+        assert_eq!(call_function("logn", &[8.0, 2.0]).unwrap(), 3.0);
+    }
+
+    #[test]
+    fn wrong_arg_count_error() {
+        assert_eq!(
+            call_function("sqrt", &[1.0, 2.0]),
+            Err(CalcError::WrongArgCount {
+                name: "sqrt".to_string(),
+                expected: "1".to_string(),
+                got: 2,
+            })
+        );
+    }
+}

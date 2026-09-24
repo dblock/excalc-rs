@@ -174,12 +174,6 @@ impl Parser {
                     Ok(Expr::Variable(name))
                 }
             }
-            Token::Minus => {
-                // Allow nested unary via primary -> unary re-entry, e.g. (-x)
-                self.advance();
-                let operand = self.parse_unary()?;
-                Ok(Expr::Unary(UnaryOp::Neg, Box::new(operand)))
-            }
             _ => Err(CalcError::ExpectedToken {
                 expected: "number, variable, or function call".to_string(),
                 position: self.pos,
@@ -198,5 +192,63 @@ impl Parser {
             args.push(self.parse_additive()?);
         }
         Ok(args)
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn missing_closing_paren_errors() {
+        assert_eq!(
+            parse("(2 + 3"),
+            Err(CalcError::ExpectedToken {
+                expected: ")".to_string(),
+                position: 4,
+            })
+        );
+        assert_eq!(
+            parse("sqrt(4"),
+            Err(CalcError::ExpectedToken {
+                expected: ")".to_string(),
+                position: 3,
+            })
+        );
+    }
+
+    #[test]
+    fn trailing_tokens_error_at_eof() {
+        assert_eq!(
+            parse("2 3"),
+            Err(CalcError::ExpectedToken {
+                expected: "end of expression".to_string(),
+                position: 1,
+            })
+        );
+    }
+
+    #[test]
+    fn unary_plus_is_a_no_op() {
+        assert_eq!(parse("+5").unwrap(), Expr::Number(5.0));
+    }
+
+    #[test]
+    fn primary_fallthrough_error() {
+        assert_eq!(
+            parse("*5"),
+            Err(CalcError::ExpectedToken {
+                expected: "number, variable, or function call".to_string(),
+                position: 0,
+            })
+        );
+    }
+
+    #[test]
+    fn empty_call_args() {
+        assert_eq!(
+            parse("sum()").unwrap(),
+            Expr::Call("sum".to_string(), vec![])
+        );
     }
 }

@@ -17,6 +17,9 @@ pub fn cos(x: f64) -> CalcResult<f64> {
 
 pub fn tan(x: f64) -> CalcResult<f64> {
     let c = x.cos();
+    // In practice `c == 0.0` is unreachable for any finite f64 input (no
+    // exact IEEE-754 zero of cos exists), so this guard is defensive and
+    // untestable; kept for symmetry/documentation of the mathematical domain.
     if c == 0.0 {
         return Err(CalcError::DomainError("tan".to_string()));
     }
@@ -73,6 +76,7 @@ pub fn atanh(x: f64) -> CalcResult<f64> {
 
 pub fn sec(x: f64) -> CalcResult<f64> {
     let c = x.cos();
+    // See `tan`: unreachable in practice, kept for domain documentation.
     if c == 0.0 {
         return Err(CalcError::DivisionByZero);
     }
@@ -118,6 +122,8 @@ pub fn acot(x: f64) -> CalcResult<f64> {
 
 pub fn sech(x: f64) -> CalcResult<f64> {
     let c = x.cosh();
+    // cosh(x) >= 1 for every real x, so this is mathematically unreachable;
+    // kept as a defensive guard rather than an `unwrap`/panic.
     if c == 0.0 {
         return Err(CalcError::DivisionByZero);
     }
@@ -159,4 +165,90 @@ pub fn acoth(x: f64) -> CalcResult<f64> {
         return Err(CalcError::DomainError("acoth".to_string()));
     }
     atanh(1.0 / x)
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn plain_trig_functions() {
+        assert!((sin(0.0).unwrap() - 0.0).abs() < 1e-12);
+        assert!((cos(0.0).unwrap() - 1.0).abs() < 1e-12);
+        assert!((tan(0.0).unwrap() - 0.0).abs() < 1e-12);
+        assert!((atan(1.0).unwrap() - std::f64::consts::FRAC_PI_4).abs() < 1e-12);
+    }
+
+    #[test]
+    fn inverse_trig_domain() {
+        assert!(asin(0.5).is_ok());
+        assert_eq!(asin(2.0), Err(CalcError::DomainError("asin".to_string())));
+        assert_eq!(asin(-2.0), Err(CalcError::DomainError("asin".to_string())));
+        assert!(acos(0.5).is_ok());
+        assert_eq!(acos(2.0), Err(CalcError::DomainError("acos".to_string())));
+        assert_eq!(acos(-2.0), Err(CalcError::DomainError("acos".to_string())));
+    }
+
+    #[test]
+    fn hyperbolic_functions() {
+        assert!((sinh(0.0).unwrap() - 0.0).abs() < 1e-12);
+        assert!((cosh(0.0).unwrap() - 1.0).abs() < 1e-12);
+        assert!((tanh(0.0).unwrap() - 0.0).abs() < 1e-12);
+        assert!((asinh(0.0).unwrap() - 0.0).abs() < 1e-12);
+    }
+
+    #[test]
+    fn inverse_hyperbolic_domain() {
+        assert!(acosh(2.0).is_ok());
+        assert_eq!(acosh(0.5), Err(CalcError::DomainError("acosh".to_string())));
+        assert!(atanh(0.5).is_ok());
+        assert_eq!(atanh(1.5), Err(CalcError::DomainError("atanh".to_string())));
+        assert_eq!(
+            atanh(-1.5),
+            Err(CalcError::DomainError("atanh".to_string()))
+        );
+    }
+
+    #[test]
+    fn reciprocal_trig_functions() {
+        assert!((sec(0.0).unwrap() - 1.0).abs() < 1e-12);
+        assert_eq!(csc(0.0), Err(CalcError::DivisionByZero));
+        assert_eq!(cot(0.0), Err(CalcError::DivisionByZero));
+        assert!((csc(std::f64::consts::FRAC_PI_2).unwrap() - 1.0).abs() < 1e-12);
+        assert!((cot(std::f64::consts::FRAC_PI_2).unwrap() - 0.0).abs() < 1e-9);
+    }
+
+    #[test]
+    fn inverse_reciprocal_trig_functions() {
+        assert_eq!(asec(0.0), Err(CalcError::DivisionByZero));
+        assert!(asec(2.0).is_ok());
+        assert_eq!(acsc(0.0), Err(CalcError::DivisionByZero));
+        assert!(acsc(2.0).is_ok());
+        assert_eq!(acot(0.0), Err(CalcError::DivisionByZero));
+        assert!(acot(2.0).is_ok());
+    }
+
+    #[test]
+    fn reciprocal_hyperbolic_functions() {
+        assert!((sech(0.0).unwrap() - 1.0).abs() < 1e-12);
+        assert_eq!(csch(0.0), Err(CalcError::DivisionByZero));
+        assert_eq!(coth(0.0), Err(CalcError::DivisionByZero));
+        assert!(csch(1.0).is_ok());
+        assert!(coth(1.0).is_ok());
+    }
+
+    #[test]
+    fn inverse_reciprocal_hyperbolic_functions() {
+        assert!(asech(0.5).is_ok());
+        assert_eq!(asech(0.0), Err(CalcError::DomainError("asech".to_string())));
+        assert_eq!(asech(2.0), Err(CalcError::DomainError("asech".to_string())));
+        assert_eq!(acsch(0.0), Err(CalcError::DivisionByZero));
+        assert!(acsch(2.0).is_ok());
+        assert!(acoth(2.0).is_ok());
+        assert_eq!(acoth(0.5), Err(CalcError::DomainError("acoth".to_string())));
+        assert_eq!(
+            acoth(-0.5),
+            Err(CalcError::DomainError("acoth".to_string()))
+        );
+    }
 }

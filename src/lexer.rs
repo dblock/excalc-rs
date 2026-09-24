@@ -151,3 +151,76 @@ impl<'a> Lexer<'a> {
 pub fn tokenize(input: &str) -> CalcResult<Vec<Token>> {
     Lexer::new(input).tokenize()
 }
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn invalid_character_errors() {
+        assert_eq!(tokenize("@"), Err(CalcError::InvalidCharacter('@', 0)));
+    }
+
+    #[test]
+    fn decimal_numbers() {
+        assert_eq!(tokenize("2.75"), Ok(vec![Token::Number(2.75), Token::Eof]));
+    }
+
+    #[test]
+    fn scientific_notation() {
+        assert_eq!(tokenize("1e10"), Ok(vec![Token::Number(1e10), Token::Eof]));
+        assert_eq!(tokenize("1E10"), Ok(vec![Token::Number(1e10), Token::Eof]));
+        assert_eq!(
+            tokenize("1.5e-3"),
+            Ok(vec![Token::Number(1.5e-3), Token::Eof])
+        );
+        assert_eq!(tokenize("2e+3"), Ok(vec![Token::Number(2e3), Token::Eof]));
+    }
+
+    #[test]
+    fn e_not_followed_by_digit_is_not_an_exponent() {
+        // "1ex" -> Number(1) then an identifier "ex", not scientific notation.
+        assert_eq!(
+            tokenize("1ex"),
+            Ok(vec![
+                Token::Number(1.0),
+                Token::Ident("ex".to_string()),
+                Token::Eof
+            ])
+        );
+        // "1e+x" -> the sign lookahead fails since 'x' isn't a digit either.
+        assert_eq!(
+            tokenize("1e+x"),
+            Ok(vec![
+                Token::Number(1.0),
+                Token::Ident("e".to_string()),
+                Token::Plus,
+                Token::Ident("x".to_string()),
+                Token::Eof
+            ])
+        );
+    }
+
+    #[test]
+    fn scientific_notation_followed_by_more_tokens() {
+        // Exercises the exponent-digit loop terminating on a non-digit
+        // (rather than end-of-input), e.g. "1e10+5".
+        assert_eq!(
+            tokenize("1e10+5"),
+            Ok(vec![
+                Token::Number(1e10),
+                Token::Plus,
+                Token::Number(5.0),
+                Token::Eof
+            ])
+        );
+    }
+
+    #[test]
+    fn euler_constant_still_lexes_as_identifier() {
+        assert_eq!(
+            tokenize("e"),
+            Ok(vec![Token::Ident("e".to_string()), Token::Eof])
+        );
+    }
+}
