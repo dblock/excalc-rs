@@ -106,9 +106,9 @@ calc "floor(-2.1)"        # -3        (round down)
 **Number theory** ([details](docs/functions/number-theory.md)):
 
 ```
-calc "gcd(3213, 24)"       # 3        (greatest common divisor)
-calc "lcm(14, 4)"          # 28       (least common multiple)
-calc "fib(10)"             # 55       (10th Fibonacci number)
+calc "gcd(3213, 24)"       # 3         (greatest common divisor)
+calc "lcm(14, 4)"          # 28        (least common multiple)
+calc "fib(10)"             # 55        (10th Fibonacci number)
 calc "prime?(86)"          # 83        (closest prime <= 86)
 calc "moebius(2)"          # -1        (Mobius function)
 calc "mersenne(7)"         # 127       (2^7 - 1)
