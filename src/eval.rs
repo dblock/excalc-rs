@@ -11,7 +11,7 @@ use crate::functions::{
 };
 
 /// Evaluation context: currently just variable bindings. Constants (`pi`,
-/// `e`) are always available and can't be shadowed in v1.
+/// `e`) are always available and can't be shadowed.
 #[derive(Default)]
 pub struct Context {
     variables: HashMap<String, f64>,

@@ -15,7 +15,7 @@
 //! `%` tighter than `* /` and `\` looser than `^`, and used `=` to mean
 //! variable assignment rather than equality. That was a reasonable design
 //! for a button-driven 90s calculator UI, but it surprises anyone typing an
-//! expression today, so v1 normalizes to conventional precedence and gives
+//! expression today, so the port normalizes to conventional precedence and gives
 //! `=` the more intuitive equality meaning; assignment instead uses `:=`
 //! (see [`Stmt::Assign`]) at the statement level, outside expression
 //! grammar entirely, so it's never ambiguous with equality.

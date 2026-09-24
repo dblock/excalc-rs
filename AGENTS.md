@@ -50,8 +50,8 @@ When porting more of the original engine from [dblock/excalc](https://github.com
 
 Whenever a function, operator, or CLI behavior is added, changed, or removed:
 
-- Update the relevant page under [docs/](docs/README.md) with the new functions' domain/examples, or fix domains/examples that changed. Function docs contain explanations only — no v1/planned status; that lives solely in DESIGN.md's Function catalog.
-- Update the function catalog and scope sections in [DESIGN.md](DESIGN.md) (the single source of truth for what's v1 vs. planned) and the index in [docs/README.md](docs/README.md) so every function is listed and linked from somewhere.
-- Update the `### Examples` section in [README.md](README.md) so it still demonstrates every currently-implemented (v1) function/operator category, not just a subset. Each example line must follow the format `calc "expr"  # expected` (optionally with a trailing `(explanation)`), since `tests/readme_examples.rs` parses and executes every one of them against the real evaluator — a wrong or missing example fails CI, not just a stale doc.
+- Update the relevant page under [docs/](docs/README.md) with the new functions' domain/examples, or fix domains/examples that changed. Function docs contain explanations only — no ported/planned status; that lives solely in DESIGN.md's Function catalog.
+- Update the function catalog and scope sections in [DESIGN.md](DESIGN.md) (the single source of truth for what's ported vs. planned) and the index in [docs/README.md](docs/README.md) so every function is listed and linked from somewhere.
+- Update the `### Examples` section in [README.md](README.md) so it still demonstrates every currently-implemented (ported) function/operator category, not just a subset. Each example line must follow the format `calc "expr"  # expected` (optionally with a trailing `(explanation)`), since `tests/readme_examples.rs` parses and executes every one of them against the real evaluator — a wrong or missing example fails CI, not just a stale doc.
 
-Keep `docs/` and README examples in sync with what's actually implemented — don't document something as v1 that isn't callable yet, and don't leave a newly-ported function undocumented.
+Keep `docs/` and README examples in sync with what's actually implemented — don't document something as ported that isn't callable yet, and don't leave a newly-ported function undocumented.

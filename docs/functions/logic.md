@@ -10,7 +10,7 @@ These return `1` for true and `0` for false, rather than a boolean type — ther
 | `>` | Tests if leftmost is bigger | `3 > 2` | `1` |
 | `<` | Tests if leftmost is smaller | `3 < 2` | `0` |
 
-Note: in the original, `=` assigns a variable rather than testing equality, and `?` is the equality test. v1 repurposes `=` as equality and drops `?` entirely; variable assignment instead uses a dedicated `:=` statement — see [Variables](../../README.md#variables).
+Note: in the original, `=` assigns a variable rather than testing equality, and `?` is the equality test. The port repurposes `=` as equality and drops `?` entirely; variable assignment instead uses a dedicated `:=` statement — see [Variables](../../README.md#variables).
 
 ## Logical / bitwise
 
