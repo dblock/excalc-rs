@@ -8,7 +8,7 @@ Expression Calculator (CLI, MCP, Rust)
 
 An expression calculator CLI tool and MCP server built for AI coding agents like Claude and GitHub Copilot to outsource arithmetic, saving tokens and avoiding LLM math hallucinations.
 
-A mathematical beast with 144 functions and operators across standard math, trigonometry, statistics, financial (NPV, IRR), number theory (GCD, totient, primality), numeric integration, and advanced/special functions (gamma, elliptic integrals, dilogarithm, and more).
+A mathematical beast with 151 functions and operators across standard math, trigonometry, statistics, financial (NPV, IRR), number theory (GCD, totient, primality), numeric integration, and advanced/special functions (gamma, elliptic integrals, dilogarithm, and more).
 
 Spiritual successor to the Vestris Inc. shareware Expression Calculator written in 1996 in Pascal. It was also pressed on a CD-ROM, translated, and sold in Germany under the name Global Calculator in 1997. See [HISTORY.md](HISTORY.md).
 
@@ -119,6 +119,13 @@ calc "average(2, 4, 6)"     # 4       (average)
 calc "product(1, 2, 3, 4)"  # 24      (product)
 calc "min(3, 1, 2)"         # 1       (minimum)
 calc "max(3, 1, 2)"         # 3       (maximum)
+calc "median(3, 1, 2)"      # 2       (median)
+calc "mode(1, 2, 2, 3)"     # 2       (mode)
+calc "variance(2, 4, 4, 4, 5, 5, 7, 9)"  # 4  (population variance)
+calc "stddev(2, 4, 4, 4, 5, 5, 7, 9)"    # 2  (population standard deviation)
+calc "percentile(50, 1, 2, 3)"           # 2  (50th percentile)
+calc "covariance(1, 2, 2, 4, 3, 6)"      # ~1.3333 (population covariance of (x,y) pairs)
+calc "correlation(1, 2, 2, 4, 3, 6)"     # 1  (Pearson correlation of (x,y) pairs)
 calc "harmonic(4)"          # ~2.0833 (harmonic mean)
 calc "binom(5, 2)"          # 10      (5 choose 2)
 ```

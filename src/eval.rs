@@ -240,6 +240,13 @@ fn call_function(name: &str, args: &[f64]) -> CalcResult<f64> {
         "product" | "prod" => return stats::product(args),
         "min" => return stats::min(args),
         "max" => return stats::max(args),
+        "median" => return stats::median(args),
+        "mode" => return stats::mode(args),
+        "variance" => return stats::variance(args),
+        "stddev" => return stats::stddev(args),
+        "percentile" => return stats::percentile(args),
+        "covariance" => return stats::covariance(args),
+        "correlation" => return stats::correlation(args),
         "gcd" => return number_theory::gcd(args),
         "lcm" => return number_theory::lcm(args),
         _ => {}
