@@ -1,6 +1,6 @@
 # Numeric Integration
 
-Ported from the `fSum`/`Tegral`/`Gauss` functions in `MCalc.pas`.
+Ported from the original engine's numeric integration functions.
 
 Unlike every other function in this port, these take an **arbitrary expression** and a bare **integration variable** as their first two arguments, rather than plain numbers — the expression is evaluated repeatedly at sample points across `[lowerBound, upperBound]` with the variable substituted each time. All eight share the same shape:
 
@@ -31,7 +31,7 @@ These apply a fixed quadrature formula uniformly across `n` equal-width sub-inte
 |----------|---------|---------|
 | `int(expr, var, a, b, tolerance)` (alias `gauss`) | Numerically integrates `expr` to within `tolerance` (a positive number — smaller means more precise, more sample points), automatically refining until two successive estimates agree | `int(log(x^3), x, 1, 10, 0.0000001)` → `~18.274048987232057` |
 
-The original's `int`/`gauss` (`Tegral`/`Gauss` in `MCalc.pas`) use Hairer's 30-point Gauss-Kronrod quadrature with Aitken extrapolation — a specific, hardcoded-coefficient algorithm. This port instead evaluates them "in spirit" with an adaptive composite Simpson's rule that doubles its sub-interval count until two successive estimates agree within the requested tolerance (the same technique used as a stand-in for [advanced/special functions](advanced.md#a-note-on-numeric-integration) that depend on a numeric integral in the original). A tolerance that can't be reached within the refinement budget (e.g. an unreasonably tight tolerance, or a highly oscillatory/discontinuous integrand) is reported as a numeric overflow error rather than silently returning an imprecise result.
+The original's `int`/`gauss` use Hairer's 30-point Gauss-Kronrod quadrature with Aitken extrapolation — a specific, hardcoded-coefficient algorithm. This port instead evaluates them "in spirit" with an adaptive composite Simpson's rule that doubles its sub-interval count until two successive estimates agree within the requested tolerance (the same technique used as a stand-in for [advanced/special functions](advanced.md#a-note-on-numeric-integration) that depend on a numeric integral in the original). A tolerance that can't be reached within the refinement budget (e.g. an unreasonably tight tolerance, or a highly oscillatory/discontinuous integrand) is reported as a numeric overflow error rather than silently returning an imprecise result.
 
 ## Deviation from the original
 

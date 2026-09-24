@@ -40,7 +40,7 @@ Follow [RELEASING.md](RELEASING.md) step by step when asked to cut a release. Up
 
 ## Porting from the original Pascal engine
 
-When porting more of `common/MCalc.pas` from [dblock/excalc](https://github.com/dblock/excalc):
+When porting more of the original engine from [dblock/excalc](https://github.com/dblock/excalc):
 
 - This is a port "in spirit", not line-by-line. Rename things to be idiomatic Rust; don't carry over Pascal naming (`MyArcSin`, `TCalcThread`, etc.).
 - Flag anything that looks like a bug, typo, or dead code in the original rather than silently reproducing it — ask before changing behavior that isn't clearly a mistake.

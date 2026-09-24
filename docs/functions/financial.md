@@ -1,6 +1,6 @@
 # Financial
 
-Ported from the `Sln`/`Syd`/`Cterm`/`Term`/`Pmt`/`Rate`/`Pv`/`Npv`/`Fv` and `fDB`/`DDB`/`IRATE`/`nper`/`PAYMT`/`FVAL`/`IPAYMT`/`PPAYMT`/`PVAL` functions defined directly in the original `MCalc.pas` (its separate `Finance.pas` unit's currency-scaling wrappers of the same formulas are unused by the dispatch table, so they weren't a porting source). Unlike the advanced/special functions category, none of these depend on numeric integration - they're all closed-form (or, for `irate`, a simple secant-method root find).
+Ported from the original engine's financial functions. Unlike the advanced/special functions category, none of these depend on numeric integration - they're all closed-form (or, for `irate`, a simple secant-method root find).
 
 `rate` is a per-period interest rate expressed as a decimal (e.g. `0.08` for 8%), not a percentage.
 
@@ -41,4 +41,4 @@ These mirror the functions above but add an extra `ptype` parameter (`0` = payme
 | `ddb(cost, salvage, life, period)` | Double-declining-balance depreciation of an asset for `period`, with initial `cost` and final `salvage` value at the end of `life` | `ddb(10000, 1000, 5, 1)` → `4000` |
 | `db(cost, salvage, life, period, month)` | Fixed-declining-balance depreciation; `month` (partial first-year convention, whole number `1`-`12`) can be omitted and defaults to `12`. `life` and `period` must be whole numbers, with `1 <= period <= life + 1` | `db(50000, 10000, 5, 1, 3)` → `3440.25` |
 
-**Note on naming:** the original manual/doc draft for this page called the last function `fdb`, but the original engine's actual token (see `MCalc.pas`'s function name table) is `db` - this port uses `db` to match the real implementation.
+**Note on naming:** the original manual/doc draft for this page called the last function `fdb`, but the original engine's actual dispatched token is `db` - this port uses `db` to match the real implementation.
