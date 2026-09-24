@@ -16,8 +16,15 @@ jobs:
       - uses: actions/checkout@v4
       - uses: dtolnay/rust-toolchain@stable
       - uses: Swatinem/rust-cache@v2
+      - name: Cache cargo-wix binary
+        id: cache-cargo-wix
+        uses: actions/cache@v4
+        with:
+          path: ~/.cargo/bin/cargo-wix.exe
+          key: cargo-wix-0.3.9-${{ runner.os }}
       - name: Install cargo-wix
-        run: cargo install cargo-wix --locked
+        if: steps.cache-cargo-wix.outputs.cache-hit != 'true'
+        run: cargo install cargo-wix --version 0.3.9 --locked
       - name: Build MSI
         run: cargo wix --nocapture
       - name: Upload MSI artifact
