@@ -35,7 +35,7 @@ Above expressions sits one more layer: a full input is a `;`/newline-separated s
 
 ## Numeric model
 
-v1 uses `f64` throughout. Arbitrary-precision support (`math`/big-decimal style, for exact integer/rational results) is planned but not yet implemented — tracked as a follow-up, not blocking v1.
+v1 uses `f64` throughout. Arbitrary-precision support (`math`/big-decimal style, for exact integer/rational results) is not blocking v1 — tracked in [#1](https://github.com/dblock/excalc-rs/issues/1).
 
 ## Angle units
 
