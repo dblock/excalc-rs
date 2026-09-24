@@ -1,6 +1,6 @@
 # Standard Math
 
-The circular trig functions below operate in **radians only**. Rather than a global degree/radian mode toggle (as the original Pascal engine had — see [../../DESIGN.md](../../DESIGN.md#angle-units)), degree support is explicit and stateless: use [`deg`/`rad`](#degreeradian-conversion) to convert, or the `sind`/`cosd`/`tand`/`asind`/`acosd`/`atand` degree-native variants below.
+The circular trig functions below operate in **radians only**. Rather than a global degree/radian mode toggle (as the original Pascal engine had — see [../../port/DESIGN.md](../../port/DESIGN.md#angle-units)), degree support is explicit and stateless: use [`deg`/`rad`](#degreeradian-conversion) to convert, or the `sind`/`cosd`/`tand`/`asind`/`acosd`/`atand` degree-native variants below.
 
 ## Trigonometric
 

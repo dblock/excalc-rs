@@ -66,7 +66,7 @@ CI runs the same checks on Linux, macOS, and Windows; don't push code that fails
 
 ### Write Documentation
 
-Document any new or changed function, operator, or CLI behavior in the relevant page under [docs/](docs/README.md), in [DESIGN.md](DESIGN.md)'s function catalog, and in the `### Examples` section of [README.md](README.md) (which is checked against the evaluator by `tests/readme_examples.rs`, so it can't drift out of sync). See [AGENTS.md](AGENTS.md#documentation) for details.
+Document any new or changed function, operator, or CLI behavior in the relevant page under [docs/](docs/README.md), in [port/DESIGN.md](port/DESIGN.md)'s function catalog, and in the `### Examples` section of [README.md](README.md) (which is checked against the evaluator by `tests/readme_examples.rs`, so it can't drift out of sync). See [AGENTS.md](AGENTS.md#documentation) for details.
 
 ### Update Changelog
 

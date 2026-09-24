@@ -298,11 +298,11 @@ cargo run -- "2 + 2 * 3"
 
 If you already have another `calc` on your `PATH`, check `which calc` after installing — `cargo install` won't warn you if it shadows an existing command.
 
-See [CONTRIBUTING.md](CONTRIBUTING.md) for how to build, test, and contribute, [RELEASING.md](RELEASING.md) for how to cut a new release, and [CHANGELOG.md](CHANGELOG.md) for release history. See [DESIGN.md](DESIGN.md) for the grammar, function catalog, and what's ported vs. deferred vs. skipped.
+See [CONTRIBUTING.md](CONTRIBUTING.md) for how to build, test, and contribute, [RELEASING.md](RELEASING.md) for how to cut a new release, and [CHANGELOG.md](CHANGELOG.md) for release history. See [port/DESIGN.md](port/DESIGN.md) for the grammar, function catalog, and what's ported vs. deferred vs. skipped.
 
 ## Notes
 
-See [DESIGN.md](DESIGN.md#function-catalog) for what's implemented vs. planned.
+See [port/DESIGN.md](port/DESIGN.md#function-catalog) for what's implemented vs. planned.
 
 ## License
 

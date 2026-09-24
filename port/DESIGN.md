@@ -4,7 +4,7 @@ A Rust reimplementation of the core engine from [excalc](https://github.com/dblo
 
 This is a from-scratch Rust design "in spirit" of the original, not a line-by-line port. Class/function names, error messages, and precedence have been reworked where the 90s original was UI-driven, quirky, or simply of its time.
 
-See [docs/](docs/README.md) for detailed per-function reference documentation (domains, formulas, examples), split by category. See the [Function catalog](#function-catalog) below for what's implemented (ported) vs. planned per category.
+See [docs/](../docs/README.md) for detailed per-function reference documentation (domains, formulas, examples), split by category. See the [Function catalog](#function-catalog) below for what's implemented (ported) vs. planned per category.
 
 ## Scope
 
@@ -31,7 +31,7 @@ Conventional precedence, loosest to tightest binding:
 
 `n \ x` means "the n-th root of x", e.g. `2 \ 9` = 3, `3 \ 27` = 3.
 
-Above expressions sits one more layer: a full input is a `;`/newline-separated sequence of **statements**, each either `name := expr` (variable assignment) or a plain expression; the value of the last statement is the result — see [Variables](README.md#variables). Assignment is deliberately a statement, not an expression, so it can't be chained (`x := y := 5`) or nested inside a larger expression; this keeps `:=` unambiguous and out of the operator-precedence table above.
+Above expressions sits one more layer: a full input is a `;`/newline-separated sequence of **statements**, each either `name := expr` (variable assignment) or a plain expression; the value of the last statement is the result — see [Variables](../README.md#variables). Assignment is deliberately a statement, not an expression, so it can't be chained (`x := y := 5`) or nested inside a larger expression; this keeps `:=` unambiguous and out of the operator-precedence table above.
 
 ## Numeric model
 
@@ -39,58 +39,58 @@ The port uses `f64` throughout. Arbitrary-precision support (`math`/big-decimal 
 
 ## Angle units
 
-The core circular trig functions operate in **radians only**. The original supported a global degree/radian mode toggle (`CalcMode`) that converted before/after every trig call; the port deliberately doesn't reintroduce that kind of implicit, session-wide state (it would silently change trig behavior for callers who don't expect it). Instead degree support is stateless and explicit: [`deg`](docs/functions/standard-math.md#degreeradian-conversion)/`rad` convert between units, and `sind`/`cosd`/`tand`/`asind`/`acosd`/`atand` are degree-native convenience wrappers around the six basic circular functions.
+The core circular trig functions operate in **radians only**. The original supported a global degree/radian mode toggle (`CalcMode`) that converted before/after every trig call; the port deliberately doesn't reintroduce that kind of implicit, session-wide state (it would silently change trig behavior for callers who don't expect it). Instead degree support is stateless and explicit: [`deg`](../docs/functions/standard-math.md#degreeradian-conversion)/`rad` convert between units, and `sind`/`cosd`/`tand`/`asind`/`acosd`/`atand` are degree-native convenience wrappers around the six basic circular functions.
 
 ## Known quirks / deviations from the original noted during the port
 
 - Original had a dead duplicate branch (`if ct('fv') ... else if ct('fv') ...`) in the function arg-count table — a copy-paste artifact, dropped.
 - Original used both full operator words (`and`, `or`, `xor`, ...) and single-letter shortcuts (`a`, `o`, `x`, ...) for the same logic operators, apparently keyboard shortcuts from the original UI. the port uses full words only, with one exception: `&` is kept as a shorthand for `and` since it's a common, unambiguous convention in modern calculators and programming languages.
-- Original's `=` assigned a value to a variable (not equality), and `?` tested equality. the port gives `=` the more intuitive equality meaning and drops `?` entirely; variable assignment instead uses a dedicated `:=` statement (see [Variables](docs/README.md#variables)), kept out of expression grammar so it's never ambiguous with equality.
+- Original's `=` assigned a value to a variable (not equality), and `?` tested equality. the port gives `=` the more intuitive equality meaning and drops `?` entirely; variable assignment instead uses a dedicated `:=` statement (see [Variables](../docs/README.md#variables)), kept out of expression grammar so it's never ambiguous with equality.
 - `mod` is spelled out as a word token in the port, rather than a single character, since we're normalizing surface syntax anyway.
 - Original's `Ci`/`Chi` (cosine/hyperbolic-cosine integral) formulas reference an undefined variable `G` (presumably meant to be the Euler-Mascheroni constant), which the generic variable-lookup mechanism silently defaults to `0` — almost certainly a bug, since the results are meaningless without the real constant. the port hardcodes the actual Euler-Mascheroni constant instead.
-- Advanced/special functions that depend on a numeric integral in the original (`ellipticE`, `ellipticF`, `dilog`, `erf`, `erfc`, `si`, `ssi`, `ci`, `chi`, `dawson`, `fresnelC`/`fresnelS`) are routed through the same shared adaptive-quadrature engine as the general-purpose numeric integration functions below (`gamma` keeps its own fixed-step Riemann sum instead, to match its pre-existing worked example); see [docs/functions/advanced.md](docs/functions/advanced.md) for details.
+- Advanced/special functions that depend on a numeric integral in the original (`ellipticE`, `ellipticF`, `dilog`, `erf`, `erfc`, `si`, `ssi`, `ci`, `chi`, `dawson`, `fresnelC`/`fresnelS`) are routed through the same shared adaptive-quadrature engine as the general-purpose numeric integration functions below (`gamma` keeps its own fixed-step Riemann sum instead, to match its pre-existing worked example); see [docs/functions/advanced.md](../docs/functions/advanced.md) for details.
 - The original's actual dispatched financial functions use Delphi's standard `Math.Power`, which errors on a negative base with a non-integer exponent - unlike a separate (and unused by the dispatch table) `Power` helper, which silently returns `0` for any non-positive base. the port uses `f64::powf`, and maps any resulting `NaN` to a domain error and any resulting infinity to an overflow error, rather than silently returning `0` or panicking.
 - The original manual/doc draft named the fixed-declining-balance depreciation function `fdb`, but the actual dispatched token is `db` — the port uses `db` to match the real implementation.
-- Numeric integration functions (`trapezoid`, `simpson`, `newton`, `boole`, `ordersix`, `weddle`, `int`, `gauss`) are the only functions in the port whose first two arguments are an unevaluated expression and a bare variable rather than plain numbers; the evaluator special-cases these by name before generic argument evaluation, substituting the variable in a scoped copy of the evaluation context for each sample point (see `eval.rs`'s `eval_composite_integration`/`eval_adaptive_integration`). The original's `int`/`gauss` use Hairer's 30-point Gauss-Kronrod quadrature with Aitken extrapolation; the port implements these "in spirit" with an adaptive composite Simpson's rule instead of reproducing that specific algorithm's hardcoded coefficient tables — see [docs/functions/numeric-integration.md](docs/functions/numeric-integration.md).
+- Numeric integration functions (`trapezoid`, `simpson`, `newton`, `boole`, `ordersix`, `weddle`, `int`, `gauss`) are the only functions in the port whose first two arguments are an unevaluated expression and a bare variable rather than plain numbers; the evaluator special-cases these by name before generic argument evaluation, substituting the variable in a scoped copy of the evaluation context for each sample point (see `eval.rs`'s `eval_composite_integration`/`eval_adaptive_integration`). The original's `int`/`gauss` use Hairer's 30-point Gauss-Kronrod quadrature with Aitken extrapolation; the port implements these "in spirit" with an adaptive composite Simpson's rule instead of reproducing that specific algorithm's hardcoded coefficient tables — see [docs/functions/numeric-integration.md](../docs/functions/numeric-integration.md).
 - Original's named composite rules (`fSum`) step a `while` loop with a floating-point `<=` comparison, which can silently run one sub-interval short or long due to floating-point accumulation. the port instead requires the sub-interval count `n` to be a positive whole number and loops exactly `n` times.
 
 ## Function catalog
 
-Full reference (domains, formulas, examples) lives in [docs/](docs/README.md); this is just the index of names per category.
+Full reference (domains, formulas, examples) lives in [docs/](../docs/README.md); this is just the index of names per category.
 
-### Operators ([details](docs/functions/operators.md))
+### Operators ([details](../docs/functions/operators.md))
 
 `+ - * / mod ^ \ ! %`, constants `pi e`
 
-### Standard math (radians, plus explicit degree conversion) ([details](docs/functions/standard-math.md))
+### Standard math (radians, plus explicit degree conversion) ([details](../docs/functions/standard-math.md))
 
 `sin cos tan asin acos atan sinh cosh tanh asinh acosh atanh sec csc cot asec acsc acot sech csch coth asech acsch acoth sqrt ln log logn deg rad sind cosd tand asind acosd atand`
 
-### Statistics (variadic unless noted) ([details](docs/functions/statistics.md))
+### Statistics (variadic unless noted) ([details](../docs/functions/statistics.md))
 
 `sum average(avg) product(prod) min max harmonic(n) binom(n, k)`
 
-### General / rounding ([details](docs/functions/general.md))
+### General / rounding ([details](../docs/functions/general.md))
 
 `abs frac intg round trunc ceil floor random`
 
-### Number theory ([details](docs/functions/number-theory.md))
+### Number theory ([details](../docs/functions/number-theory.md))
 
 `gcd lcm fib(onacci) prime? moebius mersenne perfect fermat safeprime primec primen mersennegen mersgen genmers sigma tau phi(eind)`
 
-### Comparison and logical operators ([details](docs/functions/logic.md))
+### Comparison and logical operators ([details](../docs/functions/logic.md))
 
 `= > <`, `xor xnor and nand or nor not shl shr`, `&` synonym for `and`
 
-### Advanced / special functions ([details](docs/functions/advanced.md))
+### Advanced / special functions ([details](../docs/functions/advanced.md))
 
 `gamma beta pochhammer bth bman ellipticE ellipticF(ellipticK) ellipticCE ellipticCK dilog dawson erf erfc si ssi ci chi fresnelC fresnelS fresnelF fresnelG`
 
-### Numeric integration ([details](docs/functions/numeric-integration.md))
+### Numeric integration ([details](../docs/functions/numeric-integration.md))
 
 `trapezoid(trapez, trapezoide) simpson newton boole ordersix(ordresix) weddle` (named composite rules) and `int(gauss)` (adaptive quadrature)
 
-### Financial ([details](docs/functions/financial.md))
+### Financial ([details](../docs/functions/financial.md))
 
 `pv fv pmt npv rate cterm term sln syd ddb db` and extended payment-timing-aware variants `irate nper paymt fval pval ipaymt ppaymt`
 
@@ -98,4 +98,4 @@ Full reference (domains, formulas, examples) lives in [docs/](docs/README.md); t
 
 - **Library** (`excalc::evaluate`) — the core.
 - **CLI** (`excalc "2 + 2 * 3"`, also installed as `calc`) — done.
-- **MCP server** (`excalc-mcp`, installed by default via `cargo install excalc`; build with `cargo build`, or exclude via `--no-default-features`) — done. Exposes a single `evaluate` tool over stdio via [rmcp](https://crates.io/crates/rmcp) so Claude/Copilot/etc. can call it uniformly instead of shelling out. See the README's [MCP Server](README.md#mcp-server) section.
+- **MCP server** (`excalc-mcp`, installed by default via `cargo install excalc`; build with `cargo build`, or exclude via `--no-default-features`) — done. Exposes a single `evaluate` tool over stdio via [rmcp](https://crates.io/crates/rmcp) so Claude/Copilot/etc. can call it uniformly instead of shelling out. See the README's [MCP Server](../README.md#mcp-server) section.

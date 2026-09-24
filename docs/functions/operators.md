@@ -1,6 +1,6 @@
 # Operators
 
-See [../../DESIGN.md](../../DESIGN.md#grammar) for the full precedence table.
+See [../../port/DESIGN.md](../../port/DESIGN.md#grammar) for the full precedence table.
 
 ## Arithmetic
 

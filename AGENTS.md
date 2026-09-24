@@ -1,6 +1,6 @@
 # Agents
 
-excalc is a Rust library, CLI, and MCP server implementing a portable expression calculator — see [DESIGN.md](DESIGN.md) for scope, grammar, and the function catalog (what's ported, deferred, or skipped).
+excalc is a Rust library, CLI, and MCP server implementing a portable expression calculator — see [port/DESIGN.md](port/DESIGN.md) for scope, grammar, and the function catalog (what's ported, deferred, or skipped).
 
 ## Before Committing
 
@@ -44,14 +44,14 @@ When porting more of the original engine from [dblock/excalc](https://github.com
 
 - This is a port "in spirit", not line-by-line. Rename things to be idiomatic Rust; don't carry over Pascal naming (`MyArcSin`, `TCalcThread`, etc.).
 - Flag anything that looks like a bug, typo, or dead code in the original rather than silently reproducing it — ask before changing behavior that isn't clearly a mistake.
-- Update the function catalog and scope sections in DESIGN.md as you add or intentionally skip functions.
+- Update the function catalog and scope sections in port/DESIGN.md as you add or intentionally skip functions.
 
 ## Documentation
 
 Whenever a function, operator, or CLI behavior is added, changed, or removed:
 
-- Update the relevant page under [docs/](docs/README.md) with the new functions' domain/examples, or fix domains/examples that changed. Function docs contain explanations only — no ported/planned status; that lives solely in DESIGN.md's Function catalog.
-- Update the function catalog and scope sections in [DESIGN.md](DESIGN.md) (the single source of truth for what's ported vs. planned) and the index in [docs/README.md](docs/README.md) so every function is listed and linked from somewhere.
+- Update the relevant page under [docs/](docs/README.md) with the new functions' domain/examples, or fix domains/examples that changed. Function docs contain explanations only — no ported/planned status; that lives solely in port/DESIGN.md's Function catalog.
+- Update the function catalog and scope sections in [port/DESIGN.md](port/DESIGN.md) (the single source of truth for what's ported vs. planned) and the index in [docs/README.md](docs/README.md) so every function is listed and linked from somewhere.
 - Update the `### Examples` section in [README.md](README.md) so it still demonstrates every currently-implemented (ported) function/operator category, not just a subset. Each example line must follow the format `calc "expr"  # expected` (optionally with a trailing `(explanation)`), since `tests/readme_examples.rs` parses and executes every one of them against the real evaluator — a wrong or missing example fails CI, not just a stale doc.
 
 Keep `docs/` and README examples in sync with what's actually implemented — don't document something as ported that isn't callable yet, and don't leave a newly-ported function undocumented.
