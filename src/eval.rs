@@ -5,7 +5,7 @@ use std::collections::HashMap;
 use crate::ast::{BinaryOp, Expr, Stmt, UnaryOp};
 use crate::error::{CalcError, CalcResult};
 use crate::functions::{
-    advanced, base, financial, general,
+    advanced, base, combinatorics, financial, general,
     integration::{self, Rule},
     logic, number_theory, stats, trig,
 };
@@ -308,6 +308,7 @@ fn call_function(name: &str, args: &[f64]) -> CalcResult<f64> {
         "correlation" => return stats::correlation(args),
         "gcd" => return number_theory::gcd(args),
         "lcm" => return number_theory::lcm(args),
+        "multinomial" => return combinatorics::multinomial(args),
         _ => {}
     }
 
@@ -392,6 +393,12 @@ fn call_function(name: &str, args: &[f64]) -> CalcResult<f64> {
             expect_args(&lower, args, 2)?;
             stats::binom(args[0], args[1])
         }
+        "factorial" => one_arg(combinatorics::factorial),
+        "perm" => {
+            expect_args(&lower, args, 2)?;
+            combinatorics::perm(args[0], args[1])
+        }
+        "catalan" => one_arg(combinatorics::catalan),
 
         "abs" => one_arg(general::abs),
         "trunc" | "intg" => one_arg(general::trunc),

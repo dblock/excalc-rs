@@ -8,6 +8,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 
 ### Added
 
+- Combinatorics functions: `factorial(n)` (named equivalent of postfix `!`), `perm(n, r)`, `catalan(n)`, `multinomial(n, k1, k2, ...)`.
 - `atan2(y, x)`: two-argument arctangent, using the sign of both arguments to determine the correct quadrant.
 
 - `excalc`/`calc` read the expression from stdin when no argument is given and stdin is not a TTY, e.g. `echo "2 + 2" | calc`.
