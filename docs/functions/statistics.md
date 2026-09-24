@@ -16,6 +16,8 @@
 | `percentile(p, a, b, ...)` | | `p`-th percentile of the data (`p` in `[0, 100]`, linear interpolation between closest ranks) | `percentile(50, 1, 2, 3)` | `2` |
 | `covariance(x1, y1, x2, y2, ...)` | | Population covariance of two data series given as interleaved `(x, y)` pairs | `covariance(1, 2, 2, 4, 3, 6)` | `~1.333` |
 | `correlation(x1, y1, x2, y2, ...)` | | Pearson correlation coefficient of two data series given as interleaved `(x, y)` pairs | `correlation(1, 2, 2, 4, 3, 6)` | `1` |
+| `skewness(a, b, ...)` | | Population skewness (third standardized moment); positive for a longer right tail, negative for a longer left tail | `skewness(1, 2, 2, 3, 10)` | `~1.361` |
+| `kurtosis(a, b, ...)` | | Population excess kurtosis (fourth standardized moment minus `3`); `0` matches the normal distribution | `kurtosis(1, 2, 3, 4, 5)` | `-1.3` |
 
 ## Fixed-arity
 

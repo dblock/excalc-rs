@@ -330,6 +330,8 @@ fn call_function(name: &str, args: &[f64]) -> CalcResult<f64> {
         "percentile" => return stats::percentile(args),
         "covariance" => return stats::covariance(args),
         "correlation" => return stats::correlation(args),
+        "skewness" => return stats::skewness(args),
+        "kurtosis" => return stats::kurtosis(args),
         "gcd" => return numbertheory::gcd(args),
         "lcm" => return numbertheory::lcm(args),
         "multinomial" => return combinatorics::multinomial(args),

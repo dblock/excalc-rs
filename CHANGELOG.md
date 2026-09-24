@@ -8,6 +8,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 
 ### Added
 
+- New statistics functions: `skewness` (population skewness) and `kurtosis` (population excess kurtosis).
 - Unit conversion functions: `c2f`/`f2c` (temperature), `km2mi`/`mi2km` (distance), `kg2lb`/`lb2kg` (mass), `m2ft`/`ft2m` (distance).
 - Probability distribution functions: `binomialpdf`/`binomialcdf` (binomial), `poissonpdf`/`poissoncdf` (Poisson), `normalpdf`/`normalcdf` (normal, reusing the existing `erf`), and `zscore` (standard score).
 - Geometry functions: `distance`/`manhattan`/`dot` (n-dimensional, splitting a single argument list in half between two points/vectors) and `norm` (n-dimensional vector magnitude), plus dimension-free shape formulas `triarea` (Heron's formula), `circlearea`, `circumference`, `spherevol`, `spherearea`.

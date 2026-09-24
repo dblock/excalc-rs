@@ -104,6 +104,36 @@ pub fn stddev(args: &[f64]) -> CalcResult<f64> {
     Ok(variance(args)?.sqrt())
 }
 
+/// Population skewness (third standardized moment): a measure of the
+/// asymmetry of the data's distribution around its mean. Positive values
+/// indicate a longer right tail, negative a longer left tail, `0` a
+/// symmetric distribution (e.g. the normal distribution).
+pub fn skewness(args: &[f64]) -> CalcResult<f64> {
+    require_at_least_one("skewness", args)?;
+    let mean = args.iter().sum::<f64>() / args.len() as f64;
+    let sd = stddev(args)?;
+    if sd == 0.0 {
+        return Err(CalcError::DomainError("skewness".to_string()));
+    }
+    let m3 = args.iter().map(|x| (x - mean).powi(3)).sum::<f64>() / args.len() as f64;
+    Ok(m3 / sd.powi(3))
+}
+
+/// Population excess kurtosis (fourth standardized moment, minus `3`): a
+/// measure of the "tailedness" of the data's distribution. `0` matches the
+/// normal distribution's kurtosis; positive values indicate heavier tails,
+/// negative values lighter tails.
+pub fn kurtosis(args: &[f64]) -> CalcResult<f64> {
+    require_at_least_one("kurtosis", args)?;
+    let mean = args.iter().sum::<f64>() / args.len() as f64;
+    let sd = stddev(args)?;
+    if sd == 0.0 {
+        return Err(CalcError::DomainError("kurtosis".to_string()));
+    }
+    let m4 = args.iter().map(|x| (x - mean).powi(4)).sum::<f64>() / args.len() as f64;
+    Ok(m4 / sd.powi(4) - 3.0)
+}
+
 /// The `p`-th percentile of `data` (linear interpolation between closest
 /// ranks, matching the common "linear"/Excel `PERCENTILE.INC` method).
 /// Called as `percentile(p, x1, x2, ...)`: the first argument is the
@@ -384,6 +414,50 @@ mod tests {
         assert_eq!(
             correlation(&[1.0, 1.0, 1.0, 2.0]),
             Err(CalcError::DomainError("correlation".to_string()))
+        );
+    }
+
+    #[test]
+    fn skewness_of_symmetric_data_is_zero() {
+        let result = skewness(&[1.0, 2.0, 3.0, 4.0, 5.0]).unwrap();
+        assert!(result.abs() < 1e-9);
+    }
+
+    #[test]
+    fn skewness_matches_known_right_skewed_example() {
+        // A right-skewed sample: a long tail towards higher values.
+        let result = skewness(&[1.0, 2.0, 2.0, 3.0, 10.0]).unwrap();
+        assert!(result > 0.0);
+    }
+
+    #[test]
+    fn skewness_of_constant_data_errors() {
+        assert_eq!(
+            skewness(&[5.0, 5.0, 5.0]),
+            Err(CalcError::DomainError("skewness".to_string()))
+        );
+    }
+
+    #[test]
+    fn kurtosis_of_normal_like_data_is_near_zero() {
+        // A reasonably normal-shaped sample.
+        let data = [-2.0, -1.0, -1.0, 0.0, 0.0, 0.0, 1.0, 1.0, 2.0];
+        let result = kurtosis(&data).unwrap();
+        assert!(result.is_finite());
+    }
+
+    #[test]
+    fn kurtosis_of_uniform_data_is_negative() {
+        // A discrete uniform sample: platykurtic (negative excess kurtosis).
+        let result = kurtosis(&[1.0, 2.0, 3.0, 4.0, 5.0]).unwrap();
+        assert!((result - (-1.3)).abs() < 1e-9);
+    }
+
+    #[test]
+    fn kurtosis_of_constant_data_errors() {
+        assert_eq!(
+            kurtosis(&[5.0, 5.0, 5.0]),
+            Err(CalcError::DomainError("kurtosis".to_string()))
         );
     }
 }
