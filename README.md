@@ -8,7 +8,7 @@ Expression Calculator (CLI, MCP, Rust)
 
 An expression calculator CLI tool and MCP server built for AI coding agents like Claude and GitHub Copilot to outsource arithmetic, saving tokens and avoiding LLM math hallucinations.
 
-A mathematical beast with 191 functions and operators across standard math, trigonometry, statistics, financial (NPV, IRR), number theory (GCD, totient, primality), base conversion, combinatorics, numeric integration, root finding, geometry (n-dimensional distance/dot/norm), and advanced/special functions (gamma, elliptic integrals, dilogarithm, and more).
+A mathematical beast with 198 functions and operators across standard math, trigonometry, statistics, probability distributions, financial (NPV, IRR), number theory (GCD, totient, primality), base conversion, combinatorics, numeric integration, root finding, geometry (n-dimensional distance/dot/norm), and advanced/special functions (gamma, elliptic integrals, dilogarithm, and more).
 
 Spiritual successor to the Vestris Inc. shareware Expression Calculator written in 1996 in Pascal. It was also pressed on a CD-ROM, translated, and sold in Germany under the name Global Calculator in 1997. See [HISTORY.md](HISTORY.md).
 
@@ -129,6 +129,18 @@ calc "covariance(1, 2, 2, 4, 3, 6)"      # ~1.3333 (population covariance of (x,
 calc "correlation(1, 2, 2, 4, 3, 6)"     # 1  (Pearson correlation of (x,y) pairs)
 calc "harmonic(4)"          # ~2.0833 (harmonic mean)
 calc "binom(5, 2)"          # 10      (5 choose 2)
+```
+
+**Probability distributions** ([details](docs/functions/probability.md)):
+
+```
+calc "binomialpdf(10, 0.5, 5)"  # ~0.246 (P(X = 5) for Binomial(10, 0.5))
+calc "binomialcdf(10, 0.5, 5)"  # ~0.623 (P(X <= 5) for Binomial(10, 0.5))
+calc "poissonpdf(4, 2)"         # ~0.1465 (P(X = 2) for Poisson(4))
+calc "poissoncdf(4, 2)"         # ~0.2381 (P(X <= 2) for Poisson(4))
+calc "normalpdf(0, 0, 1)"       # ~0.3989 (density of the standard normal at 0)
+calc "normalcdf(1.96, 0, 1)"    # ~0.975  (P(Z <= 1.96), standard normal)
+calc "zscore(85, 70, 10)"       # 1.5     (standard score)
 ```
 
 **Combinatorics** ([details](docs/functions/combinatorics.md)):

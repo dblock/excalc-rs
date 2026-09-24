@@ -8,6 +8,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 
 ### Added
 
+- Probability distribution functions: `binomialpdf`/`binomialcdf` (binomial), `poissonpdf`/`poissoncdf` (Poisson), `normalpdf`/`normalcdf` (normal, reusing the existing `erf`), and `zscore` (standard score).
 - Geometry functions: `distance`/`manhattan`/`dot` (n-dimensional, splitting a single argument list in half between two points/vectors) and `norm` (n-dimensional vector magnitude), plus dimension-free shape formulas `triarea` (Heron's formula), `circlearea`, `circumference`, `spherevol`, `spherearea`.
 - New number theory functions: `carmichael(n)` (Carmichael function), `aliquot(n)` (sum of proper divisors), `amicable?(n)`, `coprime?(a, b)`, `order(a, n)` (multiplicative order), `jacobi(a, n)` (Jacobi symbol).
 - Root-finding functions `bisect(expr, var, a, b, tolerance)` (bisection method) and `secant(expr, var, x0, x1, tolerance)` (secant method), sharing the same expression-and-bare-variable calling convention as the numeric-integration functions.

@@ -7,7 +7,7 @@ use crate::error::{CalcError, CalcResult};
 use crate::functions::{
     advanced, base, combinatorics, financial, general, geometry,
     integration::{self, Rule},
-    logic, numbertheory, rootfinding, stats, trig,
+    logic, numbertheory, probability, rootfinding, stats, trig,
 };
 
 /// The result of evaluating a program or expression: almost always a plain
@@ -514,6 +514,35 @@ fn call_function(name: &str, args: &[f64]) -> CalcResult<f64> {
         "circumference" => one_arg(geometry::circumference),
         "spherevol" => one_arg(geometry::spherevol),
         "spherearea" => one_arg(geometry::spherearea),
+
+        "binomialpdf" => {
+            expect_args(&lower, args, 3)?;
+            probability::binomialpdf(args[0], args[1], args[2])
+        }
+        "binomialcdf" => {
+            expect_args(&lower, args, 3)?;
+            probability::binomialcdf(args[0], args[1], args[2])
+        }
+        "poissonpdf" => {
+            expect_args(&lower, args, 2)?;
+            probability::poissonpdf(args[0], args[1])
+        }
+        "poissoncdf" => {
+            expect_args(&lower, args, 2)?;
+            probability::poissoncdf(args[0], args[1])
+        }
+        "normalpdf" => {
+            expect_args(&lower, args, 3)?;
+            probability::normalpdf(args[0], args[1], args[2])
+        }
+        "normalcdf" => {
+            expect_args(&lower, args, 3)?;
+            probability::normalcdf(args[0], args[1], args[2])
+        }
+        "zscore" => {
+            expect_args(&lower, args, 3)?;
+            probability::zscore(args[0], args[1], args[2])
+        }
 
         "not" => one_arg(logic::not),
         "shl" => {

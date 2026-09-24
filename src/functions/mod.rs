@@ -7,6 +7,7 @@ pub mod geometry;
 pub mod integration;
 pub mod logic;
 pub mod numbertheory;
+pub mod probability;
 pub mod rootfinding;
 pub mod stats;
 pub mod trig;
