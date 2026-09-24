@@ -13,22 +13,24 @@ See [CHANGELOG.md](CHANGELOG.md) for release history and [RELEASING.md](RELEASIN
 cargo install excalc
 ```
 
-This installs the `excalc` binary to `~/.cargo/bin` (make sure it's on your `PATH`). Requires a [Rust toolchain](https://rustup.rs/).
+This installs both the `excalc` and `calc` binaries (identical, `calc` is just a shorter alias) to `~/.cargo/bin` (make sure it's on your `PATH`). Requires a [Rust toolchain](https://rustup.rs/).
+
+If you already have another `calc` on your `PATH`, check `which calc` after installing — `cargo install` won't warn you if it shadows an existing command.
 
 ## Usage
 
 ```
-excalc "2 + 2 * 3"
+calc "2 + 2 * 3"
 # 8
 
-excalc "sqrt(16) + sin(pi/2)"
+calc "sqrt(16) + sin(pi/2)"
 # 5
 
-excalc "1/0"
+calc "1/0"
 # error, exit code 1
 ```
 
-Run `excalc --help` for full usage.
+Run `calc --help` (or `excalc --help`) for full usage.
 
 Without installing, you can also run it straight from a checkout of this repo:
 

@@ -70,5 +70,5 @@ Comparison (`= < > !=`) and bitwise/logic (`and or xor nor xnor nand`), deferred
 ## Interfaces
 
 - **Library** (`excalc::evaluate`) — the core.
-- **CLI** (`excalc "2 + 2 * 3"`) — done in v1.
+- **CLI** (`excalc "2 + 2 * 3"`, also installed as `calc`) — done in v1.
 - **MCP server** — planned; will expose an `evaluate` tool over stdio so Claude/Copilot/etc. can call it uniformly instead of shelling out.

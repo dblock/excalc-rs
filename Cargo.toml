@@ -14,6 +14,10 @@ path = "src/lib.rs"
 name = "excalc"
 path = "src/main.rs"
 
+[[bin]]
+name = "calc"
+path = "src/main.rs"
+
 [dependencies]
 thiserror = "1"
 clap = { version = "4", features = ["derive"] }
