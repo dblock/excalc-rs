@@ -1,7 +1,5 @@
 # General / Rounding Functions
 
-Sourced from the "IV. General Functions" chapter of the original [manual](../../HISTORY.md).
-
 | Function | Meaning | Domain | Example | Result |
 |----------|---------|--------|---------|--------|
 | `abs(x)` | Absolute value | `R -> R+` | `abs(-2)` | `2` |

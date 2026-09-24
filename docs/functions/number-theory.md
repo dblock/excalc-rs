@@ -1,7 +1,5 @@
 # Number Theory
 
-Formulas and examples below are sourced from the "IV. General Functions" and "VII. Primes and Numbers" chapters of the original [manual](../../HISTORY.md).
-
 | Function | Meaning | Domain | Example |
 |----------|---------|--------|---------|
 | `gcd(a, b, ...)` | Greatest common divisor of all arguments | `Z x Z -> Z` | `gcd(3213, 24)` → `3` |

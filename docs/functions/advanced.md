@@ -1,6 +1,6 @@
 # Advanced / Special Functions
 
-Formulas and examples below are sourced from the "VI. Special Functions and Series" chapter of the original [manual](../../HISTORY.md); see [AGENTS.md](../../AGENTS.md#porting-from-the-original-pascal-engine) for porting conventions and the note on numeric integration below.
+See [AGENTS.md](../../AGENTS.md#porting-from-the-original-pascal-engine) for porting conventions and the note on numeric integration below.
 
 ## A note on numeric integration
 
