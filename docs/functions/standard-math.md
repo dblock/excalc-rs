@@ -1,6 +1,6 @@
 # Standard Math
 
-All angular functions operate in **radians only** (the original Pascal engine had a degree/radian mode toggle; that's deferred — see [../../DESIGN.md](../../DESIGN.md#angle-units)).
+The circular trig functions below operate in **radians only**. Rather than a global degree/radian mode toggle (as the original Pascal engine had — see [../../DESIGN.md](../../DESIGN.md#angle-units)), degree support is explicit and stateless: use [`deg`/`rad`](#degreeradian-conversion) to convert, or the `sind`/`cosd`/`tand`/`asind`/`acosd`/`atand` degree-native variants below.
 
 ## Trigonometric
 
@@ -12,6 +12,19 @@ All angular functions operate in **radians only** (the original Pascal engine ha
 | `asin(x)` | Arcsine | `-1 <= x <= 1` | `asin(1)` → `pi/2` |
 | `acos(x)` | Arccosine | `-1 <= x <= 1` | `acos(0)` → `pi/2` |
 | `atan(x)` | Arctangent | all reals | `atan(1)` → `pi/4` |
+
+## Degree/radian conversion
+
+| Function | Meaning | Domain | Example |
+|----------|---------|--------|---------|
+| `deg(x)` | Converts radians to degrees | all reals | `deg(pi)` → `180` |
+| `rad(x)` | Converts degrees to radians | all reals | `rad(180)` → `pi` |
+| `sind(x)` | Sine, `x` in degrees | all reals | `sind(30)` → `0.5` |
+| `cosd(x)` | Cosine, `x` in degrees | all reals | `cosd(60)` → `0.5` |
+| `tand(x)` | Tangent, `x` in degrees | `cosd(x) != 0` | `tand(45)` → `~1` |
+| `asind(x)` | Arcsine, result in degrees | `-1 <= x <= 1` | `asind(0.5)` → `30` |
+| `acosd(x)` | Arccosine, result in degrees | `-1 <= x <= 1` | `acosd(0.5)` → `60` |
+| `atand(x)` | Arctangent, result in degrees | all reals | `atand(1)` → `45` |
 
 ## Reciprocal trigonometric
 

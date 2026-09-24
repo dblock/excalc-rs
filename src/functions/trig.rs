@@ -1,11 +1,30 @@
 //! Trigonometric, hyperbolic, and their inverse/reciprocal functions.
 //!
-//! v1 operates in radians only. The original Pascal engine supported a
-//! degree/radian mode toggle (`CalcMode = deg/rad`) that flipped conversion
-//! before/after these calls; that's deferred to a follow-up (angle-unit
-//! support), since most programmatic/AI callers want radians by default.
+//! The circular trig functions below (`sin`/`cos`/`tan`/`asin`/`acos`/`atan`
+//! and their reciprocals `sec`/`csc`/`cot`/`asec`/`acsc`/`acot`) operate in
+//! **radians only**, matching most programmatic/AI callers' expectations.
+//! Rather than reviving the original Pascal engine's global `CalcMode =
+//! deg/rad` toggle (implicit state that would silently change how every
+//! trig call behaves), degree support is stateless and explicit:
+//! [`deg`]/[`rad`] convert between the two units, and `sind`/`cosd`/`tand`/
+//! `asind`/`acosd`/`atand` are degree-native convenience wrappers around the
+//! six basic circular functions. Hyperbolic functions operate on plain real
+//! numbers, not angles, so they have no degree/radian variants.
 
 use crate::error::{CalcError, CalcResult};
+
+const DEG_PER_RAD: f64 = 180.0 / std::f64::consts::PI;
+const RAD_PER_DEG: f64 = std::f64::consts::PI / 180.0;
+
+/// Converts an angle in radians to degrees.
+pub fn deg(x: f64) -> CalcResult<f64> {
+    Ok(x * DEG_PER_RAD)
+}
+
+/// Converts an angle in degrees to radians.
+pub fn rad(x: f64) -> CalcResult<f64> {
+    Ok(x * RAD_PER_DEG)
+}
 
 pub fn sin(x: f64) -> CalcResult<f64> {
     Ok(x.sin())
@@ -42,6 +61,36 @@ pub fn acos(x: f64) -> CalcResult<f64> {
 
 pub fn atan(x: f64) -> CalcResult<f64> {
     Ok(x.atan())
+}
+
+/// `sin`, taking its argument in degrees instead of radians.
+pub fn sind(x: f64) -> CalcResult<f64> {
+    sin(x * RAD_PER_DEG)
+}
+
+/// `cos`, taking its argument in degrees instead of radians.
+pub fn cosd(x: f64) -> CalcResult<f64> {
+    cos(x * RAD_PER_DEG)
+}
+
+/// `tan`, taking its argument in degrees instead of radians.
+pub fn tand(x: f64) -> CalcResult<f64> {
+    tan(x * RAD_PER_DEG)
+}
+
+/// `asin`, returning its result in degrees instead of radians.
+pub fn asind(x: f64) -> CalcResult<f64> {
+    asin(x).map(|r| r * DEG_PER_RAD)
+}
+
+/// `acos`, returning its result in degrees instead of radians.
+pub fn acosd(x: f64) -> CalcResult<f64> {
+    acos(x).map(|r| r * DEG_PER_RAD)
+}
+
+/// `atan`, returning its result in degrees instead of radians.
+pub fn atand(x: f64) -> CalcResult<f64> {
+    atan(x).map(|r| r * DEG_PER_RAD)
 }
 
 pub fn sinh(x: f64) -> CalcResult<f64> {
@@ -170,6 +219,23 @@ pub fn acoth(x: f64) -> CalcResult<f64> {
 #[cfg(test)]
 mod tests {
     use super::*;
+
+    #[test]
+    fn degree_radian_conversion() {
+        assert!((deg(std::f64::consts::PI).unwrap() - 180.0).abs() < 1e-12);
+        assert!((rad(180.0).unwrap() - std::f64::consts::PI).abs() < 1e-12);
+        assert!((deg(rad(30.0).unwrap()).unwrap() - 30.0).abs() < 1e-12);
+    }
+
+    #[test]
+    fn degree_native_trig_functions() {
+        assert!((sind(30.0).unwrap() - 0.5).abs() < 1e-9);
+        assert!((cosd(60.0).unwrap() - 0.5).abs() < 1e-9);
+        assert!((tand(45.0).unwrap() - 1.0).abs() < 1e-9);
+        assert!((asind(0.5).unwrap() - 30.0).abs() < 1e-9);
+        assert!((acosd(0.5).unwrap() - 60.0).abs() < 1e-9);
+        assert!((atand(1.0).unwrap() - 45.0).abs() < 1e-9);
+    }
 
     #[test]
     fn plain_trig_functions() {

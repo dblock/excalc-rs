@@ -51,7 +51,7 @@ calc "(2 + 3) * 4"        # 20        (grouping)
 calc -- "-5 + 3"          # -2        (unary minus needs -- so clap doesn't treat it as a flag)
 ```
 
-**Standard math** ([details](docs/functions/standard-math.md)), all angles in radians:
+**Standard math** ([details](docs/functions/standard-math.md)), all angles in radians (see `deg`/`rad` below for degree conversion):
 
 ```
 calc "sqrt(16)"           # 4         (square root)
@@ -70,6 +70,11 @@ calc "tanh(0)"            # 0         (hyperbolic tangent)
 calc "sec(0)"             # 1         (secant)
 calc "csc(pi/2)"          # 1         (cosecant)
 calc "cot(pi/4)"          # ~1        (cotangent)
+calc "deg(pi)"            # 180       (radians to degrees)
+calc "rad(180)"           # ~3.1416   (degrees to radians; pi)
+calc "sind(30)"           # 0.5       (sine, argument in degrees)
+calc "cosd(60)"           # 0.5       (cosine, argument in degrees)
+calc "asind(0.5)"         # 30        (arcsine, result in degrees)
 ```
 
 **Statistics** ([details](docs/functions/statistics.md)), variadic unless noted:

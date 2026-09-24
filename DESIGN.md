@@ -39,7 +39,7 @@ v1 uses `f64` throughout. Arbitrary-precision support (`math`/big-decimal style,
 
 ## Angle units
 
-v1 trig functions operate in **radians only**. The original supported a degree/radian mode toggle (`CalcMode`) that converted before/after every trig call. Deferred to a follow-up (e.g. `sin_deg`, or a context-level angle unit setting) since most programmatic callers expect radians by default.
+The core circular trig functions operate in **radians only**. The original supported a global degree/radian mode toggle (`CalcMode`) that converted before/after every trig call; v1 deliberately doesn't reintroduce that kind of implicit, session-wide state (it would silently change trig behavior for callers who don't expect it). Instead degree support is stateless and explicit: [`deg`](docs/functions/standard-math.md#degreeradian-conversion)/`rad` convert between units, and `sind`/`cosd`/`tand`/`asind`/`acosd`/`atand` are degree-native convenience wrappers around the six basic circular functions.
 
 ## Known quirks / deviations from the original noted during the port
 
@@ -62,9 +62,9 @@ Full reference (domains, formulas, examples) lives in [docs/](docs/README.md); t
 
 `+ - * / mod ^ \ ! %`, constants `pi e`
 
-### v1: Standard math (radians) ([details](docs/functions/standard-math.md))
+### v1: Standard math (radians, plus explicit degree conversion) ([details](docs/functions/standard-math.md))
 
-`sin cos tan asin acos atan sinh cosh tanh asinh acosh atanh sec csc cot asec acsc acot sech csch coth asech acsch acoth sqrt ln log logn`
+`sin cos tan asin acos atan sinh cosh tanh asinh acosh atanh sec csc cot asec acsc acot sech csch coth asech acsch acoth sqrt ln log logn deg rad sind cosd tand asind acosd atand`
 
 ### v1: Statistics (variadic unless noted) ([details](docs/functions/statistics.md))
 
