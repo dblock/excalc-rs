@@ -8,7 +8,7 @@ Expression Calculator (Rust)
 
 A portable expression calculator, built as a CLI tool and an MCP server so AI coding agents like Claude and GitHub Copilot can outsource arithmetic instead of computing it themselves — saving tokens and avoiding LLM math mistakes.
 
-Spiritual successor to the Vestris Inc. Expression Calculator that I wrote in 1996 in Pascal, also sold as ~3000 copies on a CD-ROM in Germany in 1997 under the name Global Calculator. See [HISTORY.md](HISTORY.md).
+Spiritual successor to the Vestris Inc. shareware Expression Calculator that I wrote in 1996 in Pascal. It was also pressed on a CD-ROM, translated, and sold in Germany under the name Global Calculator in 1997. See [HISTORY.md](HISTORY.md).
 
 ## Install
 
