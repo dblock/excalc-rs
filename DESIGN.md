@@ -4,6 +4,8 @@ A Rust reimplementation of the core engine from [excalc](https://github.com/dblo
 
 This is a from-scratch Rust design "in spirit" of the original, not a line-by-line port. Class/function names, error messages, and precedence have been reworked where the 90s original was UI-driven, quirky, or simply of its time.
 
+See [docs/](docs/README.md) for detailed per-function reference documentation (domains, formulas, examples), split by category and marked v1 vs. planned.
+
 ## Scope
 
 Ported from `common/MCalc.pas` in the original repo, grouped by the milestone that introduces them:
@@ -43,23 +45,29 @@ v1 trig functions operate in **radians only**. The original supported a degree/r
 
 ## Function catalog
 
-### v1: Standard math (radians)
+Full reference (domains, formulas, examples) lives in [docs/](docs/README.md); this is just the index of names per category.
+
+### v1: Operators ([details](docs/functions/operators.md))
+
+`+ - * / mod ^ \ ! %`, constants `pi e`
+
+### v1: Standard math (radians) ([details](docs/functions/standard-math.md))
 
 `sin cos tan asin acos atan sinh cosh tanh asinh acosh atanh sec csc cot asec acsc acot sech csch coth asech acsch acoth sqrt ln log logn`
 
-### v1: Statistics (variadic unless noted)
+### v1: Statistics (variadic unless noted) ([details](docs/functions/statistics.md))
 
 `sum average(avg) product(prod) min max harmonic(n) binom(n, k)`
 
-### Planned: Number theory
+### Planned: Number theory ([details](docs/functions/number-theory.md))
 
 `gcd lcm fib(onacci) isprime factor mersenne perfect moebius fermat`
 
-### Planned: Advanced / special functions
+### Planned: Advanced / special functions ([details](docs/functions/advanced.md))
 
 `gamma beta elliptice ellipticf pochhammer` and numeric integration (`trapezoid`, `simpson`, `newton`, `boole`, `ordersix`, `weddle`, `gauss`)
 
-### Planned: Financial
+### Planned: Financial ([details](docs/functions/financial.md))
 
 `pv fv pmt npv nper rate term cterm sln syd ddb irate paymt fval ipaymt ppaymt pval`
 
