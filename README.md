@@ -20,19 +20,6 @@ This installs the `excalc`, `calc` (a shorter alias for `excalc`), and `excalc-m
 
 If you already have another `calc` on your `PATH`, check `which calc` after installing — `cargo install` won't warn you if it shadows an existing command.
 
-If you only want the CLI and not the MCP server (skipping the `rmcp`/`tokio` dependencies it pulls in):
-
-```bash
-cargo install excalc --no-default-features
-```
-
-`excalc-mcp` exposes the evaluator as an `evaluate` tool over stdio via [MCP](https://modelcontextprotocol.io/), for AI agents that support it instead of shelling out to the CLI:
-
-```bash
-copilot mcp add excalc -- excalc-mcp   # GitHub Copilot CLI
-claude mcp add excalc -- excalc-mcp    # Claude Code
-```
-
 ## Usage
 
 ```
@@ -173,6 +160,12 @@ calc "unknownfn(1)"       # error: unknown function: unknownfn
 ## MCP Server
 
 `excalc-mcp` exposes the evaluator as an `evaluate` tool over stdio via [MCP](https://modelcontextprotocol.io/), for AI agents that support it instead of shelling out to the CLI. It's installed by default (see [Install](#install)).
+
+If you only want the CLI and not the MCP server (skipping the `rmcp`/`tokio` dependencies it pulls in):
+
+```bash
+cargo install excalc --no-default-features
+```
 
 ```bash
 copilot mcp add excalc -- excalc-mcp   # GitHub Copilot CLI
