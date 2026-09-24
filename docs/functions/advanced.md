@@ -1,7 +1,5 @@
 # Advanced / Special Functions
 
-See [AGENTS.md](../../AGENTS.md#porting-from-the-original-pascal-engine) for porting conventions and the note on numeric integration below.
-
 ## A note on numeric integration
 
 In the original Pascal engine, most of these functions (`ellipticE`, `ellipticF`, `dilog`, `erf`, `erfc`, `si`, `ssi`, `ci`, `chi`, `dawson`, `fresnelC`, `fresnelS`) are thin wrappers around a generic numeric integration engine (`int(expression, variable, lowerBound, upperBound, tolerance)`), and `gamma` itself is a hand-rolled Riemann-sum integral (`ShortGamma`/`Factor` in `MCalc.pas`) rather than a closed-form approximation. This category ports the same underlying formulas, but evaluates the integrals with a private, ad hoc adaptive Simpson's-rule integrator rather than the general-purpose quadrature engine now implemented in [Numeric integration](numeric-integration.md) (`gamma` keeps its original fixed-step Riemann sum, since that's what the pre-existing worked example was computed with).

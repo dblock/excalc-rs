@@ -1,7 +1,5 @@
 # Comparison and Logical Operators
 
-Adapted per [AGENTS.md](../../AGENTS.md#porting-from-the-original-pascal-engine) porting conventions (see notes below on what changed from the original).
-
 ## Comparison
 
 These return `1` for true and `0` for false, rather than a boolean type — there is no boolean type in the engine.
@@ -12,7 +10,7 @@ These return `1` for true and `0` for false, rather than a boolean type — ther
 | `>` | Tests if leftmost is bigger | `3 > 2` | `1` |
 | `<` | Tests if leftmost is smaller | `3 < 2` | `0` |
 
-Note: in the original, `=` assigns a variable rather than testing equality, and `?` is the equality test. Since this port has no assignment operator, `=` was repurposed as equality and `?` was dropped entirely (see [AGENTS.md](../../AGENTS.md#porting-from-the-original-pascal-engine): flag anything that looks quirky before reproducing it).
+Note: in the original, `=` assigns a variable rather than testing equality, and `?` is the equality test. Since this port has no assignment operator, `=` was repurposed as equality and `?` was dropped entirely.
 
 ## Logical / bitwise
 
