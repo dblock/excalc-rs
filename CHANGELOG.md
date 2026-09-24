@@ -8,6 +8,8 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 
 ### Added
 
+- Homebrew formula (`Formula/excalc.rb`), installable via `brew tap dblock/excalc-rs https://github.com/dblock/excalc-rs && brew install excalc`. Builds from source via `cargo install`. CI audits/installs/tests the formula on every push (see `.github/workflows/ci.yml`'s `homebrew` job); `RELEASING.md` documents updating its `url`/`sha256` on every release.
+
 - `calc` binary alias for `excalc` (same CLI, shorter name).
 - `docs/` reference documentation, per function category, marked ported (implemented) vs. planned (extracted from the original Pascal source as a porting reference).
 - README `### Examples` section covering every ported operator and function, verified against the evaluator by `tests/readme_examples.rs` so it can't silently drift out of sync.

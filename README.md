@@ -18,6 +18,13 @@ cargo install excalc
 
 This installs the `excalc`, `calc` (a shorter alias for `excalc`), and `excalc-mcp` (see [MCP Server](#mcp-server)) binaries to `~/.cargo/bin` (make sure it's on your `PATH`). Requires a [Rust toolchain](https://rustup.rs/).
 
+Alternatively, on macOS/Linux with [Homebrew](https://brew.sh/):
+
+```bash
+brew tap dblock/excalc-rs https://github.com/dblock/excalc-rs
+brew install excalc
+```
+
 ## Usage
 
 ```

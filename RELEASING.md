@@ -79,7 +79,36 @@ Or, to use the changelog entry as the release notes instead of the raw commit lo
 gh release create v0.2.0 --title "v0.2.0" --notes "$(sed -n '/## \[0.2.0\]/,/## \[/p' CHANGELOG.md | sed '$d')"
 ```
 
-## 8. Verify CI passed on the release commit
+## 8. Update the Homebrew formula
+
+Update `Formula/excalc.rb`'s `url` and `sha256` to point at the new tag:
+
+```bash
+curl -sL https://github.com/dblock/excalc-rs/archive/refs/tags/v0.2.0.tar.gz -o /tmp/excalc.tar.gz
+shasum -a 256 /tmp/excalc.tar.gz
+```
+
+Update the `url` to `.../refs/tags/v0.2.0.tar.gz` and `sha256` to the value printed above. Then verify it locally before committing:
+
+```bash
+brew tap dblock/excalc-rs "$(pwd)"
+brew audit --strict dblock/excalc-rs/excalc
+brew install --build-from-source dblock/excalc-rs/excalc
+brew test dblock/excalc-rs/excalc
+brew uninstall excalc && brew untap dblock/excalc-rs
+```
+
+Commit and push the formula update:
+
+```bash
+git add Formula/excalc.rb
+git commit -m "Update Homebrew formula to v0.2.0"
+git push origin master
+```
+
+CI also runs this same audit/install/test on every push via the `homebrew` job in `.github/workflows/ci.yml` — treat a red run there as a blocker, same as any other CI failure.
+
+## 9. Verify CI passed on the release commit
 
 ```bash
 gh run list --branch master --limit 1
@@ -90,3 +119,4 @@ Confirm it's green before telling anyone the release is out.
 ## Notes
 
 - Never force-push tags or rewrite an already-pushed release tag. If a release was cut with a mistake, ship a new patch version instead.
+- Homebrew users install via `brew tap dblock/excalc-rs https://github.com/dblock/excalc-rs && brew install excalc` (no `homebrew-` prefix needed since the URL is explicit). The tap lives in this same repo's `Formula/` directory — there is no separate tap repo.

@@ -57,3 +57,17 @@ jobs:
       - uses: coverallsapp/github-action@v2
         with:
           file: lcov.info
+
+  homebrew:
+    name: Homebrew formula
+    runs-on: macos-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Tap this checkout
+        run: brew tap dblock/excalc-rs "$GITHUB_WORKSPACE"
+      - name: Audit formula
+        run: brew audit --strict dblock/excalc-rs/excalc
+      - name: Install formula
+        run: brew install --build-from-source dblock/excalc-rs/excalc
+      - name: Test formula
+        run: brew test dblock/excalc-rs/excalc
