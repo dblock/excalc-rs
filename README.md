@@ -1,6 +1,8 @@
 Expression Calculator (Rust)
 =============================
 
+<img src="docs/images/small.jpg" alt="Expression Calculator NT" align="right" width="120">
+
 [![CI](https://github.com/dblock/excalc-rs/actions/workflows/ci.yml/badge.svg)](https://github.com/dblock/excalc-rs/actions/workflows/ci.yml)
 [![Coverage Status](https://coveralls.io/repos/github/dblock/excalc-rs/badge.svg?branch=master)](https://coveralls.io/github/dblock/excalc-rs?branch=master)
 
