@@ -7,7 +7,30 @@ Spiritual successor to [excalc](https://github.com/dblock/excalc) (Vestris Inc. 
 
 See [CHANGELOG.md](CHANGELOG.md) for release history and [RELEASING.md](RELEASING.md) for how to cut a new release.
 
+## Install
+
+```bash
+cargo install excalc
+```
+
+This installs the `excalc` binary to `~/.cargo/bin` (make sure it's on your `PATH`). Requires a [Rust toolchain](https://rustup.rs/).
+
 ## Usage
+
+```
+excalc "2 + 2 * 3"
+# 8
+
+excalc "sqrt(16) + sin(pi/2)"
+# 5
+
+excalc "1/0"
+# error, exit code 1
+```
+
+Run `excalc --help` for full usage.
+
+Without installing, you can also run it straight from a checkout of this repo:
 
 ```
 cargo run -- "2 + 2 * 3"
