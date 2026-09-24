@@ -1,6 +1,6 @@
 # General / Rounding Functions
 
-**Status: v1 (implemented).** Sourced from the "IV. General Functions" chapter of the original [manual](../../HISTORY.md).
+Sourced from the "IV. General Functions" chapter of the original [manual](../../HISTORY.md).
 
 | Function | Meaning | Domain | Example | Result |
 |----------|---------|--------|---------|--------|

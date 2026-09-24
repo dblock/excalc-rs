@@ -1,7 +1,5 @@
 # Statistics
 
-**Status: v1 (implemented).**
-
 ## Variadic (any number of arguments)
 
 | Function | Aliases | Meaning | Example | Result |

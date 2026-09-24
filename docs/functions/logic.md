@@ -1,6 +1,6 @@
 # Comparison and Logical Operators
 
-**Status: v1 (implemented).** Sourced from the "II. Operators" and "III. Logical Operators" chapters of the original [manual](../../HISTORY.md), adapted per [AGENTS.md](../../AGENTS.md#porting-from-the-original-pascal-engine) porting conventions (see notes below on what changed from the original).
+Sourced from the "II. Operators" and "III. Logical Operators" chapters of the original [manual](../../HISTORY.md), adapted per [AGENTS.md](../../AGENTS.md#porting-from-the-original-pascal-engine) porting conventions (see notes below on what changed from the original).
 
 ## Comparison
 

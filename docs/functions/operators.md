@@ -1,6 +1,6 @@
 # Operators
 
-**Status: v1 (implemented).** See [../../DESIGN.md](../../DESIGN.md#grammar) for the full precedence table.
+See [../../DESIGN.md](../../DESIGN.md#grammar) for the full precedence table.
 
 ## Arithmetic
 

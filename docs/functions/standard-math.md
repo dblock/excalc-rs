@@ -1,6 +1,6 @@
 # Standard Math
 
-**Status: v1 (implemented).** All angular functions operate in **radians only** (the original Pascal engine had a degree/radian mode toggle; that's deferred — see [../../DESIGN.md](../../DESIGN.md#angle-units)).
+All angular functions operate in **radians only** (the original Pascal engine had a degree/radian mode toggle; that's deferred — see [../../DESIGN.md](../../DESIGN.md#angle-units)).
 
 ## Trigonometric
 

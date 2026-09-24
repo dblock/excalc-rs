@@ -4,7 +4,7 @@ A Rust reimplementation of the core engine from [excalc](https://github.com/dblo
 
 This is a from-scratch Rust design "in spirit" of the original, not a line-by-line port. Class/function names, error messages, and precedence have been reworked where the 90s original was UI-driven, quirky, or simply of its time.
 
-See [docs/](docs/README.md) for detailed per-function reference documentation (domains, formulas, examples), split by category and marked v1 vs. planned.
+See [docs/](docs/README.md) for detailed per-function reference documentation (domains, formulas, examples), split by category. See the [Function catalog](#function-catalog) below for what's implemented (v1) vs. planned per category.
 
 ## Scope
 

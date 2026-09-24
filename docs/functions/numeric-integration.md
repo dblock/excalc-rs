@@ -1,6 +1,6 @@
 # Numeric Integration
 
-**Status: v1 (implemented).** Ported from the "Numeric Integration" chapter of the original [manual](../../HISTORY.md) and the `fSum`/`Tegral`/`Gauss` functions in `MCalc.pas`. See [AGENTS.md](../../AGENTS.md#porting-from-the-original-pascal-engine) for porting conventions.
+Ported from the "Numeric Integration" chapter of the original [manual](../../HISTORY.md) and the `fSum`/`Tegral`/`Gauss` functions in `MCalc.pas`. See [AGENTS.md](../../AGENTS.md#porting-from-the-original-pascal-engine) for porting conventions.
 
 Unlike every other function in this port, these take an **arbitrary expression** and a bare **integration variable** as their first two arguments, rather than plain numbers — the expression is evaluated repeatedly at sample points across `[lowerBound, upperBound]` with the variable substituted each time. All eight share the same shape:
 

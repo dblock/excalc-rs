@@ -1,6 +1,6 @@
 # Financial
 
-**Status: v1 (implemented).** Ported from the `Sln`/`Syd`/`Cterm`/`Term`/`Pmt`/`Rate`/`Pv`/`Npv`/`Fv` and `fDB`/`DDB`/`IRATE`/`nper`/`PAYMT`/`FVAL`/`IPAYMT`/`PPAYMT`/`PVAL` functions defined directly in the original `MCalc.pas` (its separate `Finance.pas` unit's currency-scaling wrappers of the same formulas are unused by the dispatch table, so they weren't a porting source). Unlike the advanced/special functions category, none of these depend on numeric integration - they're all closed-form (or, for `irate`, a simple secant-method root find).
+Ported from the `Sln`/`Syd`/`Cterm`/`Term`/`Pmt`/`Rate`/`Pv`/`Npv`/`Fv` and `fDB`/`DDB`/`IRATE`/`nper`/`PAYMT`/`FVAL`/`IPAYMT`/`PPAYMT`/`PVAL` functions defined directly in the original `MCalc.pas` (its separate `Finance.pas` unit's currency-scaling wrappers of the same formulas are unused by the dispatch table, so they weren't a porting source). Unlike the advanced/special functions category, none of these depend on numeric integration - they're all closed-form (or, for `irate`, a simple secant-method root find).
 
 `rate` is a per-period interest rate expressed as a decimal (e.g. `0.08` for 8%), not a percentage.
 

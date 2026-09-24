@@ -35,7 +35,7 @@ Run `calc --help` (or `excalc --help`) for full usage.
 
 ### Examples
 
-Everything below works today (v1). See [docs/](docs/README.md) for full reference documentation, including domains and error conditions for each function, and what's planned but not yet implemented.
+See [docs/](docs/README.md) for full reference documentation, including domains and error conditions for each function. See [DESIGN.md](DESIGN.md#function-catalog) for what's implemented vs. planned.
 
 **Arithmetic operators** ([details](docs/functions/operators.md)):
 
