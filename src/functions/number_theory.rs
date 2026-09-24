@@ -134,6 +134,22 @@ pub fn fib(n: f64) -> CalcResult<f64> {
     Ok(a)
 }
 
+/// The `n`-th Lucas number: same recurrence as Fibonacci (`L(n) = L(n-1) +
+/// L(n-2)`), but starting `L(0) = 2, L(1) = 1` instead of `0, 1`.
+pub fn lucas(n: f64) -> CalcResult<f64> {
+    let n = non_negative_integer("lucas", n)?;
+    let (mut a, mut b) = (2f64, 1f64);
+    for _ in 0..n {
+        let next = a + b;
+        a = b;
+        b = next;
+        if b.is_infinite() {
+            return Err(CalcError::Overflow);
+        }
+    }
+    Ok(a)
+}
+
 /// The closest prime `<= n` (returns `n` itself if `n` is prime); the
 /// original manual calls this `Prime`. Exposed to the calculator as `prime?`
 /// (Scheme-style predicate naming, since it also confirms primality when
@@ -436,6 +452,25 @@ pub fn nextprime(n: f64) -> CalcResult<f64> {
     }
 }
 
+/// The `n`-th triangular number: `T(n) = n(n+1)/2`, the count of objects
+/// arranged in an equilateral triangle with `n` objects per side.
+pub fn triangular(n: f64) -> CalcResult<f64> {
+    let n = non_negative_integer("triangular", n)? as f64;
+    Ok(n * (n + 1.0) / 2.0)
+}
+
+/// The `n`-th pentagonal number: `P(n) = n(3n-1)/2`.
+pub fn pentagonal(n: f64) -> CalcResult<f64> {
+    let n = non_negative_integer("pentagonal", n)? as f64;
+    Ok(n * (3.0 * n - 1.0) / 2.0)
+}
+
+/// The `n`-th hexagonal number: `H(n) = n(2n-1)`.
+pub fn hexagonal(n: f64) -> CalcResult<f64> {
+    let n = non_negative_integer("hexagonal", n)? as f64;
+    Ok(n * (2.0 * n - 1.0))
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
@@ -478,6 +513,15 @@ mod tests {
         assert_eq!(fib(10.0).unwrap(), 55.0);
         assert!((fib(56.0).unwrap() - 225851433717.0).abs() < 1.0);
         assert_eq!(fib(1500.0), Err(CalcError::Overflow));
+    }
+
+    #[test]
+    fn lucas_matches_known_values() {
+        assert_eq!(lucas(0.0).unwrap(), 2.0);
+        assert_eq!(lucas(1.0).unwrap(), 1.0);
+        assert_eq!(lucas(2.0).unwrap(), 3.0);
+        assert_eq!(lucas(10.0).unwrap(), 123.0);
+        assert_eq!(lucas(1500.0), Err(CalcError::Overflow));
     }
 
     #[test]
@@ -670,5 +714,33 @@ mod tests {
         assert!(matches!(digitalroot(1.5), Err(CalcError::DomainError(_))));
         assert!(matches!(ispalindrome(-1.0), Err(CalcError::DomainError(_))));
         assert!(matches!(nextprime(-1.0), Err(CalcError::DomainError(_))));
+    }
+
+    #[test]
+    fn triangular_matches_known_values() {
+        assert_eq!(triangular(0.0).unwrap(), 0.0);
+        assert_eq!(triangular(1.0).unwrap(), 1.0);
+        assert_eq!(triangular(10.0).unwrap(), 55.0);
+    }
+
+    #[test]
+    fn pentagonal_matches_known_values() {
+        assert_eq!(pentagonal(0.0).unwrap(), 0.0);
+        assert_eq!(pentagonal(1.0).unwrap(), 1.0);
+        assert_eq!(pentagonal(10.0).unwrap(), 145.0);
+    }
+
+    #[test]
+    fn hexagonal_matches_known_values() {
+        assert_eq!(hexagonal(0.0).unwrap(), 0.0);
+        assert_eq!(hexagonal(1.0).unwrap(), 1.0);
+        assert_eq!(hexagonal(10.0).unwrap(), 190.0);
+    }
+
+    #[test]
+    fn figurate_number_domain_errors() {
+        assert!(matches!(triangular(-1.0), Err(CalcError::DomainError(_))));
+        assert!(matches!(pentagonal(1.5), Err(CalcError::DomainError(_))));
+        assert!(matches!(hexagonal(-1.0), Err(CalcError::DomainError(_))));
     }
 }

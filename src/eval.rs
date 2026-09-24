@@ -436,6 +436,7 @@ fn call_function(name: &str, args: &[f64]) -> CalcResult<f64> {
         }
 
         "fib" | "fibonacci" => one_arg(number_theory::fib),
+        "lucas" => one_arg(number_theory::lucas),
         "prime?" => one_arg(number_theory::isprime),
         "moebius" => one_arg(number_theory::moebius),
         "mersenne" => one_arg(number_theory::mersenne),
@@ -458,6 +459,9 @@ fn call_function(name: &str, args: &[f64]) -> CalcResult<f64> {
         "digitalroot" => one_arg(number_theory::digitalroot),
         "palindrome?" => one_arg(number_theory::ispalindrome),
         "nextprime" => one_arg(number_theory::nextprime),
+        "triangular" => one_arg(number_theory::triangular),
+        "pentagonal" => one_arg(number_theory::pentagonal),
+        "hexagonal" => one_arg(number_theory::hexagonal),
 
         "not" => one_arg(logic::not),
         "shl" => {

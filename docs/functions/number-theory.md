@@ -5,6 +5,7 @@
 | `gcd(a, b, ...)` | Greatest common divisor of all arguments | `Z x Z -> Z` | `gcd(3213, 24)` → `3` |
 | `lcm(a, b, ...)` | Least common multiple of all arguments | `Z x Z -> Z` | `lcm(14, 4)` → `28` |
 | `fib(n)` (alias `fibonacci`) | The `n`-th Fibonacci number | `N -> N` | `fib(56)` → `2.258e11` |
+| `lucas(n)` | The `n`-th Lucas number (same recurrence as `fib`, but starting `2, 1` instead of `0, 1`) | `N -> N` | `lucas(10)` → `123` |
 | `prime?(n)` | The closest prime `<= n` (returns `n` itself if `n` is prime) — the original manual calls this `Prime` | `N -> N` | `prime?(86)` → `83` |
 | `moebius(n)` | Möbius function `μ(n)` — `1` for an even number of distinct prime factors, `-1` for an odd number, `0` if any prime factor repeats | `N -> {-1, 0, 1}` | `moebius(2)` → `-1` |
 | `mersenne(p)` | The Mersenne number `2^p - 1` for exponent `p` | `[1, 1023] -> N` | `mersenne(7)` → `127` |
@@ -24,6 +25,9 @@
 | `digitalroot(n)` | Repeatedly sum digits until a single digit remains | `N -> [0, 9]` | `digitalroot(12345)` → `6` |
 | `palindrome?(n)` | Whether `n`'s decimal digits read the same forwards and backwards | `N -> {0, 1}` | `palindrome?(12321)` → `1` |
 | `nextprime(n)` | The smallest prime strictly greater than `n` | `N -> N` | `nextprime(10)` → `11` |
+| `triangular(n)` | The `n`-th triangular number, `n(n+1)/2` | `N -> N` | `triangular(10)` → `55` |
+| `pentagonal(n)` | The `n`-th pentagonal number, `n(3n-1)/2` | `N -> N` | `pentagonal(10)` → `145` |
+| `hexagonal(n)` | The `n`-th hexagonal number, `n(2n-1)` | `N -> N` | `hexagonal(10)` → `190` |
 
 ## Notes and implementation details
 

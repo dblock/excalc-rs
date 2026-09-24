@@ -8,7 +8,7 @@ Expression Calculator (CLI, MCP, Rust)
 
 An expression calculator CLI tool and MCP server built for AI coding agents like Claude and GitHub Copilot to outsource arithmetic, saving tokens and avoiding LLM math hallucinations.
 
-A mathematical beast with 170 functions and operators across standard math, trigonometry, statistics, financial (NPV, IRR), number theory (GCD, totient, primality), base conversion, combinatorics, numeric integration, and advanced/special functions (gamma, elliptic integrals, dilogarithm, and more).
+A mathematical beast with 174 functions and operators across standard math, trigonometry, statistics, financial (NPV, IRR), number theory (GCD, totient, primality), base conversion, combinatorics, numeric integration, and advanced/special functions (gamma, elliptic integrals, dilogarithm, and more).
 
 Spiritual successor to the Vestris Inc. shareware Expression Calculator written in 1996 in Pascal. It was also pressed on a CD-ROM, translated, and sold in Germany under the name Global Calculator in 1997. See [HISTORY.md](HISTORY.md).
 
@@ -166,6 +166,7 @@ calc "mod2(-7, 3)"          # 2     (floored modulo; remainder takes sign of div
 calc "gcd(3213, 24)"    # 3     (greatest common divisor)
 calc "lcm(14, 4)"       # 28    (least common multiple)
 calc "fib(10)"          # 55    (10th Fibonacci number)
+calc "lucas(10)"        # 123   (10th Lucas number)
 calc "prime?(86)"       # 83    (closest prime <= 86)
 calc "moebius(2)"       # -1    (Mobius function)
 calc "mersenne(7)"      # 127   (2^7 - 1)
@@ -185,6 +186,9 @@ calc "digitsum(12345)"  # 15    (sum of decimal digits)
 calc "digitalroot(12345)"  # 6  (repeated digit sum)
 calc "palindrome?(12321)"  # 1  (true; reads the same forwards and backwards)
 calc "nextprime(10)"    # 11    (smallest prime > 10)
+calc "triangular(10)"   # 55    (10th triangular number)
+calc "pentagonal(10)"   # 145   (10th pentagonal number)
+calc "hexagonal(10)"    # 190   (10th hexagonal number)
 ```
 
 **Base conversion** ([details](docs/functions/base-conversion.md)):
