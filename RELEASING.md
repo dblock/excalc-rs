@@ -108,7 +108,18 @@ git push origin master
 
 CI also runs this same audit/install/test on every push via `.github/workflows/homebrew.yml` — treat a red run there as a blocker, same as any other CI failure.
 
-## 9. Verify CI passed on the release commit
+## 9. Verify the MSI installer was attached to the release
+
+Publishing the release (step 7) triggers `.github/workflows/release.yml`, which builds a Windows MSI installer with `cargo wix` and uploads it as a release asset automatically. Confirm it showed up:
+
+```bash
+gh run list --workflow=release.yml --limit 1
+gh release view v0.2.0
+```
+
+The release should list an `excalc-<version>-x86_64.msi` asset once the workflow finishes. Treat a missing asset or a red run the same as any other CI failure.
+
+## 10. Verify CI passed on the release commit
 
 ```bash
 gh run list --branch master --limit 1
@@ -120,3 +131,4 @@ Confirm it's green before telling anyone the release is out.
 
 - Never force-push tags or rewrite an already-pushed release tag. If a release was cut with a mistake, ship a new patch version instead.
 - Homebrew users install via `brew tap dblock/excalc-rs https://github.com/dblock/excalc-rs && brew install excalc` (no `homebrew-` prefix needed since the URL is explicit). The tap lives in this same repo's `Formula/` directory — there is no separate tap repo.
+- The MSI installer's WiX definition lives in `wix/main.wxs` (generated once with `cargo wix init`, then committed and hand-maintained). It bundles all three binaries (`excalc`, `calc`, `excalc-mcp`) and an optional "add to PATH" component. `.github/workflows/msi.yml` builds it on every push/PR to catch regressions; `.github/workflows/release.yml` rebuilds it and attaches it to the GitHub release when one is published.

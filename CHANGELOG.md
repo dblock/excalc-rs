@@ -9,6 +9,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 ### Added
 
 - Homebrew formula (`Formula/excalc.rb`), installable via `brew tap dblock/excalc-rs https://github.com/dblock/excalc-rs && brew install excalc`. Builds from source via `cargo install`. CI audits/installs/tests the formula on every push/PR via `.github/workflows/homebrew.yml`; `RELEASING.md` documents updating its `url`/`sha256` on every release.
+- Windows MSI installer, built with [cargo-wix](https://github.com/volks73/cargo-wix) from `wix/main.wxs` (bundles `excalc`, `calc`, and `excalc-mcp`, with an optional PATH entry). `.github/workflows/msi.yml` builds it on every push/PR; `.github/workflows/release.yml` rebuilds it and attaches it to each published GitHub release.
 
 - `calc` binary alias for `excalc` (same CLI, shorter name).
 - `docs/` reference documentation, per function category, marked ported (implemented) vs. planned (extracted from the original Pascal source as a porting reference).

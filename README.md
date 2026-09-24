@@ -25,6 +25,8 @@ brew tap dblock/excalc-rs https://github.com/dblock/excalc-rs
 brew install excalc
 ```
 
+On Windows, download and run the MSI installer from the [latest release](https://github.com/dblock/excalc-rs/releases/latest) (installs `excalc.exe`, `calc.exe`, and `excalc-mcp.exe`, with an option to add them to your `PATH`).
+
 ## Usage
 
 ```
