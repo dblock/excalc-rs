@@ -29,6 +29,7 @@ path = "tests/mcp.rs"
 required-features = ["mcp"]
 
 [features]
+default = ["mcp"]
 mcp = ["dep:rmcp", "dep:tokio", "dep:serde", "dep:anyhow"]
 
 [dependencies]

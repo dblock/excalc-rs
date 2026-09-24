@@ -25,11 +25,11 @@ cargo build
 cargo test
 ```
 
-To also build/test the [MCP server](README.md#mcp-server) (`excalc-mcp`, gated behind the `mcp` feature since it pulls in an async runtime and isn't part of the default CLI install):
+To also build/test without the [MCP server](README.md#mcp-server) (`excalc-mcp`, on by default; gated behind the `mcp` feature since it pulls in an async runtime):
 
 ```
-cargo build --features mcp
-cargo test --features mcp
+cargo build --no-default-features
+cargo test --no-default-features
 ```
 
 ## Contribute Code

@@ -14,14 +14,21 @@ Spiritual successor to [excalc](https://github.com/dblock/excalc) (Vestris Inc. 
 cargo install excalc
 ```
 
-This installs both the `excalc` and `calc` binaries (identical, `calc` is just a shorter alias) to `~/.cargo/bin` (make sure it's on your `PATH`). Requires a [Rust toolchain](https://rustup.rs/).
+This installs the `excalc`, `calc` (a shorter alias for `excalc`), and `excalc-mcp` (see [MCP Server](#mcp-server)) binaries to `~/.cargo/bin` (make sure it's on your `PATH`). Requires a [Rust toolchain](https://rustup.rs/).
 
 If you already have another `calc` on your `PATH`, check `which calc` after installing — `cargo install` won't warn you if it shadows an existing command.
 
-To also install the [MCP server](#mcp-server) binary, `excalc-mcp`:
+If you only want the CLI and not the MCP server (skipping the `rmcp`/`tokio` dependencies it pulls in):
 
 ```bash
-cargo install excalc --features mcp
+cargo install excalc --no-default-features
+```
+
+`excalc-mcp` exposes the evaluator as an `evaluate` tool over stdio via [MCP](https://modelcontextprotocol.io/), for AI agents that support it instead of shelling out to the CLI:
+
+```bash
+copilot mcp add excalc -- excalc-mcp   # GitHub Copilot CLI
+claude mcp add excalc -- excalc-mcp    # Claude Code
 ```
 
 ## Usage
@@ -109,7 +116,14 @@ calc "unknownfn(1)"       # error: unknown function: unknownfn
 
 ## MCP Server
 
-`excalc-mcp` exposes the same evaluator as a single `evaluate` tool over stdio, for AI agents that speak [MCP](https://modelcontextprotocol.io/) instead of shelling out to the CLI. Install it with `cargo install excalc --features mcp` (see [Install](#install)), then point your MCP client at the `excalc-mcp` binary, e.g. in Claude Desktop/Code's `mcp.json` or Copilot's `mcp-config.json`:
+`excalc-mcp` exposes the evaluator as an `evaluate` tool over stdio via [MCP](https://modelcontextprotocol.io/), for AI agents that support it instead of shelling out to the CLI. It's installed by default (see [Install](#install)).
+
+```bash
+copilot mcp add excalc -- excalc-mcp   # GitHub Copilot CLI
+claude mcp add excalc -- excalc-mcp    # Claude Code
+```
+
+For other clients (Claude Desktop, VS Code, etc.), add this to their MCP config file (e.g. `mcp.json` or `mcp-config.json`):
 
 ```json
 {
@@ -121,6 +135,6 @@ calc "unknownfn(1)"       # error: unknown function: unknownfn
 }
 ```
 
-`evaluate` takes a single `expression` string argument and returns the numeric result as text, or a tool error with the same message the CLI would print (e.g. `division by zero`, `domain error in sqrt`).
+The `evaluate` tool takes a single `expression` string argument and returns the numeric result as text, or a tool error with the same message the CLI would print (e.g. `division by zero`, `domain error in sqrt`).
 
 See [CHANGELOG.md](CHANGELOG.md) for release history, [RELEASING.md](RELEASING.md) for how to cut a new release, and [CONTRIBUTING.md](CONTRIBUTING.md) for how to build, test, and contribute.

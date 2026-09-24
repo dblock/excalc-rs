@@ -32,7 +32,7 @@ Do not hard-wrap prose in Markdown files. Write each paragraph as a single long 
 
 ## MCP server
 
-`src/bin/excalc-mcp.rs` is a separate binary target gated behind the `mcp` Cargo feature (it pulls in `rmcp`/`tokio`, which aren't needed by the plain CLI). It must build and pass tests both with and without `--features mcp`; don't move MCP-only code into files that compile unconditionally, and don't make `mcp` a default feature. Its integration test (`tests/mcp.rs`) closes stdin (rather than killing the child process) before waiting on exit, so the MCP server shuts down normally and `cargo llvm-cov` can flush its coverage profile — follow the same pattern for any new subprocess-based tests.
+`src/bin/excalc-mcp.rs` is a separate binary target gated behind the `mcp` Cargo feature (it pulls in `rmcp`/`tokio`, which aren't needed by the plain CLI), but `mcp` is a **default** feature so it's built and installed unless someone opts out with `--no-default-features`. It must build and pass tests both with and without that flag. Its integration test (`tests/mcp.rs`) closes stdin (rather than killing the child process) before waiting on exit, so the MCP server shuts down normally and `cargo llvm-cov` can flush its coverage profile — follow the same pattern for any new subprocess-based tests.
 
 ## Releasing
 

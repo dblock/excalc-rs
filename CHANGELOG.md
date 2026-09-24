@@ -14,7 +14,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 - `CONTRIBUTING.md` with build/test/PR instructions, replacing the README's `## Development` section.
 - CI: test coverage reported to Coveralls via `cargo llvm-cov`, plus a CI status and coverage badge in README.
 - Test suite brought to ~99% line coverage: unit tests for every reciprocal/hyperbolic trig function and error path, statistics error paths, evaluator error paths (unknown variable, factorial overflow, log/root domain errors), lexer edge cases (decimals, scientific notation), parser error paths, and a new `tests/cli.rs` exercising the compiled binary end-to-end. The 3 remaining uncovered lines are `tan`/`sec`/`sech` division-by-zero guards that are mathematically unreachable for any real input.
-- `excalc-mcp` binary: an MCP server exposing a single `evaluate` tool over stdio (via [rmcp](https://crates.io/crates/rmcp)), so AI agents that speak MCP can call the evaluator directly instead of shelling out to the CLI. Gated behind the new `mcp` Cargo feature (`cargo install excalc --features mcp`) so the plain CLI install doesn't pull in the extra async-runtime dependencies. Covered by `tests/mcp.rs`.
+- `excalc-mcp` binary: an MCP server exposing a single `evaluate` tool over stdio (via [rmcp](https://crates.io/crates/rmcp)), so AI agents that speak MCP can call the evaluator directly instead of shelling out to the CLI. Built and installed by default via the `mcp` Cargo feature (opt out with `cargo install excalc --no-default-features` for a CLI-only install). Covered by `tests/mcp.rs`. README documents one-liners to register it with GitHub Copilot CLI (`copilot mcp add`) and Claude Code (`claude mcp add`).
 
 ### Fixed
 
