@@ -24,7 +24,7 @@ rustup component add llvm-tools-preview   # if using rustup
 cargo llvm-cov --workspace --all-features
 ```
 
-When adding new functions/features, add tests that exercise them rather than relying on coverage tooling to catch gaps after the fact.
+When adding new functions/features, add tests that exercise them rather than relying on coverage tooling to catch gaps after the fact. Keep coverage as close to 100% as practical — including error/domain-error branches, not just the happy path — and check `cargo llvm-cov --workspace --all-features --show-missing-lines` before committing if you touched non-trivial logic. Rust stable has no per-line/comment-based coverage exclusion (`#[coverage(off)]` is nightly-only), so if a line is truly unreachable (e.g. a defensive guard for a condition that can't occur with real `f64` inputs), leave it uncovered but add a comment explaining why, rather than writing a contrived test just to hit it.
 
 ## Markdown
 
