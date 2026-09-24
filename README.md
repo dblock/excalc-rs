@@ -8,7 +8,7 @@ Expression Calculator (CLI, MCP, Rust)
 
 An expression calculator CLI tool and MCP server built for AI coding agents like Claude and GitHub Copilot to outsource arithmetic, saving tokens and avoiding LLM math hallucinations.
 
-A mathematical beast with 159 functions and operators across standard math, trigonometry, statistics, financial (NPV, IRR), number theory (GCD, totient, primality), base conversion, numeric integration, and advanced/special functions (gamma, elliptic integrals, dilogarithm, and more).
+A mathematical beast with 160 functions and operators across standard math, trigonometry, statistics, financial (NPV, IRR), number theory (GCD, totient, primality), base conversion, numeric integration, and advanced/special functions (gamma, elliptic integrals, dilogarithm, and more).
 
 Spiritual successor to the Vestris Inc. shareware Expression Calculator written in 1996 in Pascal. It was also pressed on a CD-ROM, translated, and sold in Germany under the name Global Calculator in 1997. See [HISTORY.md](HISTORY.md).
 
@@ -98,6 +98,7 @@ calc "tan(pi/4)"   # ~1      (tangent)
 calc "asin(1)"     # ~1.5708 (arcsine; pi/2)
 calc "acos(0)"     # ~1.5708 (arccosine; pi/2)
 calc "atan(1)"     # ~0.7854 (arctangent; pi/4)
+calc "atan2(1, 1)" # ~0.7854 (two-argument arctangent; pi/4)
 calc "sinh(1)"     # ~1.1752 (hyperbolic sine)
 calc "cosh(0)"     # 1       (hyperbolic cosine)
 calc "tanh(0)"     # 0       (hyperbolic tangent)

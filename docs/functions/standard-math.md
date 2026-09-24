@@ -12,6 +12,7 @@ The circular trig functions below operate in **radians only**. Rather than a glo
 | `asin(x)` | Arcsine | `-1 <= x <= 1` | `asin(1)` → `pi/2` |
 | `acos(x)` | Arccosine | `-1 <= x <= 1` | `acos(0)` → `pi/2` |
 | `atan(x)` | Arctangent | all reals | `atan(1)` → `pi/4` |
+| `atan2(y, x)` | Two-argument arctangent of `y/x`, using the sign of both arguments to pick the correct quadrant | not both `0` | `atan2(1, 1)` → `pi/4` |
 
 ## Degree/radian conversion
 

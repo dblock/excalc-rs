@@ -63,6 +63,13 @@ pub fn atan(x: f64) -> CalcResult<f64> {
     Ok(x.atan())
 }
 
+/// Two-argument arctangent of `y/x`, using the signs of both arguments to
+/// determine the correct quadrant (unlike plain `atan(y/x)`, which can't
+/// distinguish `(1, 1)` from `(-1, -1)` and is undefined when `x = 0`).
+pub fn atan2(y: f64, x: f64) -> CalcResult<f64> {
+    Ok(y.atan2(x))
+}
+
 /// `sin`, taking its argument in degrees instead of radians.
 pub fn sind(x: f64) -> CalcResult<f64> {
     sin(x * RAD_PER_DEG)
@@ -243,6 +250,15 @@ mod tests {
         assert!((cos(0.0).unwrap() - 1.0).abs() < 1e-12);
         assert!((tan(0.0).unwrap() - 0.0).abs() < 1e-12);
         assert!((atan(1.0).unwrap() - std::f64::consts::FRAC_PI_4).abs() < 1e-12);
+    }
+
+    #[test]
+    fn atan2_uses_both_signs_for_quadrant() {
+        assert!((atan2(1.0, 1.0).unwrap() - std::f64::consts::FRAC_PI_4).abs() < 1e-12);
+        assert!((atan2(1.0, -1.0).unwrap() - 3.0 * std::f64::consts::FRAC_PI_4).abs() < 1e-12);
+        assert!((atan2(-1.0, -1.0).unwrap() - (-3.0 * std::f64::consts::FRAC_PI_4)).abs() < 1e-12);
+        // atan2(1, 0) = pi/2, undefined for plain atan(y/x).
+        assert!((atan2(1.0, 0.0).unwrap() - std::f64::consts::FRAC_PI_2).abs() < 1e-12);
     }
 
     #[test]

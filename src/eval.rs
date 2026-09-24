@@ -353,6 +353,10 @@ fn call_function(name: &str, args: &[f64]) -> CalcResult<f64> {
         "asin" => one_arg(trig::asin),
         "acos" => one_arg(trig::acos),
         "atan" => one_arg(trig::atan),
+        "atan2" => {
+            expect_args(&lower, args, 2)?;
+            trig::atan2(args[0], args[1])
+        }
         "deg" => one_arg(trig::deg),
         "rad" => one_arg(trig::rad),
         "sind" => one_arg(trig::sind),
