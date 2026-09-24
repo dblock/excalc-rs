@@ -16,16 +16,33 @@ Spiritual successor to the Vestris Inc. shareware Expression Calculator written 
 cargo install excalc
 ```
 
-This installs the `excalc`, `calc` (a shorter alias for `excalc`), and `excalc-mcp` (see [MCP Server](#mcp-server)) binaries to `~/.cargo/bin` (make sure it's on your `PATH`). Requires a [Rust toolchain](https://rustup.rs/).
+This installs the `excalc`, `calc` (a shorter alias for `excalc`), and `excalc-mcp` (see [MCP Server](#mcp-server)) binaries to `~/.cargo/bin` (make sure it's on your `PATH`). Requires a [Rust toolchain](https://rustup.rs/). Works on macOS, Linux, and Windows.
 
-Alternatively, on macOS/Linux with [Homebrew](https://brew.sh/):
+### macOS/Linux
+
+Install via [Homebrew](https://brew.sh/):
 
 ```bash
 brew tap dblock/excalc-rs https://github.com/dblock/excalc-rs
 brew install excalc
 ```
 
-On Windows, download and run the MSI installer from the [latest release](https://github.com/dblock/excalc-rs/releases/latest) (installs `excalc.exe`, `calc.exe`, and `excalc-mcp.exe`, with an option to add them to your `PATH`).
+### Windows
+
+Download and run the MSI installer from the [latest release](https://github.com/dblock/excalc-rs/releases/latest) (installs `excalc.exe`, `calc.exe`, and `excalc-mcp.exe`, with an option to add them to your `PATH`), or install it silently from the command line with the [GitHub CLI](https://cli.github.com/):
+
+```powershell
+gh release download --repo dblock/excalc-rs --pattern "*.msi" --output excalc.msi
+msiexec /i excalc.msi /quiet
+```
+
+Or with PowerShell alone (no `gh` required):
+
+```powershell
+$asset = (Invoke-RestMethod https://api.github.com/repos/dblock/excalc-rs/releases/latest).assets | Where-Object name -like "*.msi"
+Invoke-WebRequest $asset.browser_download_url -OutFile excalc.msi
+msiexec /i excalc.msi /quiet
+```
 
 ## Usage
 
