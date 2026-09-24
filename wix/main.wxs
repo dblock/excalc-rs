@@ -87,7 +87,7 @@
 
         <Directory Id='TARGETDIR' Name='SourceDir'>
             <Directory Id='$(var.PlatformProgramFilesFolder)' Name='PFiles'>
-                <Directory Id='APPLICATIONFOLDER' Name='excalc'>
+                <Directory Id='APPLICATIONFOLDER' Name='ExCalc'>
                     <!--
                       Disabling the license sidecar file in the installer is a two step process:
 
@@ -113,28 +113,36 @@
                                 Action='set'
                                 System='yes'/>
                         </Component>
-                        <Component Id='binary0' Guid='*'>
+                        <Component Id='CalcBinary' Guid='*'>
                             <File
-                                Id='exe0'
+                                Id='CalcExe'
                                 Name='calc.exe'
                                 DiskId='1'
                                 Source='$(var.CargoTargetBinDir)\calc.exe'
                                 KeyPath='yes'/>
                         </Component>
-                        <Component Id='binary1' Guid='*'>
+                        <Component Id='ExcalcBinary' Guid='*'>
                             <File
-                                Id='exe1'
+                                Id='ExcalcExe'
                                 Name='excalc.exe'
                                 DiskId='1'
                                 Source='$(var.CargoTargetBinDir)\excalc.exe'
                                 KeyPath='yes'/>
                         </Component>
-                        <Component Id='binary2' Guid='*'>
+                        <Component Id='ExcalcMcpBinary' Guid='*'>
                             <File
-                                Id='exe2'
+                                Id='ExcalcMcpExe'
                                 Name='excalc-mcp.exe'
                                 DiskId='1'
                                 Source='$(var.CargoTargetBinDir)\excalc-mcp.exe'
+                                KeyPath='yes'/>
+                        </Component>
+                        <Component Id='ExcalcMcpSetupBinary' Guid='*'>
+                            <File
+                                Id='ExcalcMcpSetupExe'
+                                Name='excalc-mcp-setup.exe'
+                                DiskId='1'
+                                Source='$(var.CargoTargetBinDir)\excalc-mcp-setup.exe'
                                 KeyPath='yes'/>
                         </Component>
                     </Directory>
@@ -157,9 +165,10 @@
             -->
             <ComponentRef Id='License'/>
             
-            <ComponentRef Id='binary0'/>
-            <ComponentRef Id='binary1'/>
-            <ComponentRef Id='binary2'/>
+            <ComponentRef Id='CalcBinary'/>
+            <ComponentRef Id='ExcalcBinary'/>
+            <ComponentRef Id='ExcalcMcpBinary'/>
+            <ComponentRef Id='ExcalcMcpSetupBinary'/>
 
             <Feature
                 Id='Environment'
@@ -169,9 +178,36 @@
                 Absent='allow'>
                 <ComponentRef Id='Path'/>
             </Feature>
+
+            <Feature
+                Id='McpIntegration'
+                Title='MCP Server Registration'
+                Description='Register excalc-mcp with GitHub Copilot CLI (copilot mcp add) and Claude Code CLI (claude mcp add), if either is installed.'
+                Level='1'
+                Absent='allow'>
+            </Feature>
         </Feature>
 
         <SetProperty Id='ARPINSTALLLOCATION' Value='[APPLICATIONFOLDER]' After='CostFinalize'/>
+
+        <!--
+          Best-effort registration of excalc-mcp with GitHub Copilot CLI and
+          Claude Code CLI, if either is found on the machine. Deferred and
+          impersonated so it runs as the logged-in user (writing to their
+          profile, not the elevated installer's), and Return='ignore' so a
+          missing/failing CLI never fails the installation.
+        -->
+        <CustomAction
+            Id='RegisterMcp'
+            FileKey='ExcalcMcpSetupExe'
+            ExeCommand=''
+            Execute='deferred'
+            Impersonate='yes'
+            Return='ignore'/>
+
+        <InstallExecuteSequence>
+            <Custom Action='RegisterMcp' After='InstallFiles'>NOT REMOVE AND &amp;McpIntegration=3</Custom>
+        </InstallExecuteSequence>
 
         
         <!--

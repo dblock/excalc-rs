@@ -10,6 +10,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 
 - `excalc`/`calc` read the expression from stdin when no argument is given and stdin is not a TTY, e.g. `echo "2 + 2" | calc`.
 - `--help` and usage output now credit the author.
+- Windows MSI installer: renamed the default install directory from `excalc` to `ExCalc`; added an optional (on by default) "MCP Server Registration" feature that shells out to `copilot mcp add` and `claude mcp add` to register `excalc-mcp` with GitHub Copilot CLI and Claude Code CLI, if either is found on the machine (`src/bin/excalc-mcp-setup.rs`, run as a deferred, impersonated, best-effort custom action).
 
 ## [0.2.0] - 2026-09-24
 

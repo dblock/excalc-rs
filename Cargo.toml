@@ -24,6 +24,10 @@ name = "excalc-mcp"
 path = "src/bin/excalc-mcp.rs"
 required-features = ["mcp"]
 
+[[bin]]
+name = "excalc-mcp-setup"
+path = "src/bin/excalc-mcp-setup.rs"
+
 [[test]]
 name = "mcp"
 path = "tests/mcp.rs"

@@ -29,7 +29,7 @@ brew install excalc
 
 ### Windows
 
-Download and run the MSI installer from the [latest release](https://github.com/dblock/excalc-rs/releases/latest) (installs `excalc.exe`, `calc.exe`, and `excalc-mcp.exe`, with an option to add them to your `PATH`), or install it silently from the command line with the [GitHub CLI](https://cli.github.com/):
+Download and run the MSI installer from the [latest release](https://github.com/dblock/excalc-rs/releases/latest) (installs `excalc.exe`, `calc.exe`, and `excalc-mcp.exe`, with options to add them to your `PATH` and to register `excalc-mcp` with [GitHub Copilot CLI](https://docs.github.com/en/copilot/how-tos/copilot-cli) and [Claude Code](https://docs.claude.com/en/docs/claude-code/overview) if either is installed, both on by default), or install it silently from the command line with the [GitHub CLI](https://cli.github.com/):
 
 ```powershell
 gh release download --repo dblock/excalc-rs --pattern "*.msi" --output excalc.msi
