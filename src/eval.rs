@@ -422,6 +422,18 @@ fn call_function(name: &str, args: &[f64]) -> CalcResult<f64> {
             expect_args(&lower, args, 3)?;
             general::lerp(args[0], args[1], args[2])
         }
+        "roundto" => {
+            expect_args(&lower, args, 2)?;
+            general::roundto(args[0], args[1])
+        }
+        "floordiv" => {
+            expect_args(&lower, args, 2)?;
+            general::floordiv(args[0], args[1])
+        }
+        "mod2" => {
+            expect_args(&lower, args, 2)?;
+            general::mod2(args[0], args[1])
+        }
 
         "fib" | "fibonacci" => one_arg(number_theory::fib),
         "prime?" => one_arg(number_theory::isprime),

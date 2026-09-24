@@ -99,6 +99,42 @@ pub fn lerp(a: f64, b: f64, t: f64) -> CalcResult<f64> {
     Ok(a + (b - a) * t)
 }
 
+/// Rounds `x` to `n` decimal places (`n` may be negative, e.g. `-1` rounds
+/// to the nearest 10), using the same round-half-up convention as
+/// [`round`].
+pub fn roundto(x: f64, n: f64) -> CalcResult<f64> {
+    if n.fract() != 0.0 {
+        return Err(CalcError::DomainError("roundto".to_string()));
+    }
+    let scale = 10f64.powf(n);
+    Ok(round(x * scale)? / scale)
+}
+
+/// Floored (Euclidean-leaning) integer division: rounds the quotient
+/// towards negative infinity, unlike `/` which truncates towards zero.
+/// `floordiv(-7, 2) == -4`, whereas `(-7) / 2 == -3.5` truncated to `-3`.
+pub fn floordiv(a: f64, b: f64) -> CalcResult<f64> {
+    if b == 0.0 {
+        return Err(CalcError::DivisionByZero);
+    }
+    Ok((a / b).floor())
+}
+
+/// Floored modulo: the remainder always takes the sign of the divisor
+/// (`mod2(-7, 3) == 2`), unlike the `mod` operator, whose remainder takes
+/// the sign of the dividend (`-7 mod 3 == -1`).
+pub fn mod2(a: f64, b: f64) -> CalcResult<f64> {
+    if b == 0.0 {
+        return Err(CalcError::DivisionByZero);
+    }
+    let r = a % b;
+    Ok(if r != 0.0 && (r < 0.0) != (b < 0.0) {
+        r + b
+    } else {
+        r
+    })
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
@@ -195,5 +231,33 @@ mod tests {
         assert_eq!(lerp(0.0, 10.0, 1.0).unwrap(), 10.0);
         assert_eq!(lerp(0.0, 10.0, 0.5).unwrap(), 5.0);
         assert_eq!(lerp(0.0, 10.0, 2.0).unwrap(), 20.0);
+    }
+
+    #[test]
+    fn roundto_rounds_to_given_decimal_places() {
+        assert_eq!(roundto(12.3456, 2.0).unwrap(), 12.35);
+        assert_eq!(roundto(12.3456, 0.0).unwrap(), 12.0);
+        assert_eq!(roundto(1234.5, -2.0).unwrap(), 1200.0);
+        assert_eq!(
+            roundto(1.0, 1.5),
+            Err(CalcError::DomainError("roundto".to_string()))
+        );
+    }
+
+    #[test]
+    fn floordiv_rounds_towards_negative_infinity() {
+        assert_eq!(floordiv(7.0, 2.0).unwrap(), 3.0);
+        assert_eq!(floordiv(-7.0, 2.0).unwrap(), -4.0);
+        assert_eq!(floordiv(7.0, 0.0), Err(CalcError::DivisionByZero));
+    }
+
+    #[test]
+    fn mod2_remainder_takes_sign_of_divisor() {
+        assert_eq!(mod2(7.0, 3.0).unwrap(), 1.0);
+        assert_eq!(mod2(-7.0, 3.0).unwrap(), 2.0);
+        assert_eq!(mod2(7.0, -3.0).unwrap(), -2.0);
+        assert_eq!(mod2(-7.0, -3.0).unwrap(), -1.0);
+        assert_eq!(mod2(6.0, 3.0).unwrap(), 0.0);
+        assert_eq!(mod2(7.0, 0.0), Err(CalcError::DivisionByZero));
     }
 }
