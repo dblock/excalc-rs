@@ -120,6 +120,28 @@ calc "floor(-2.1)"        # -3
 
 `random(x)` returns a uniformly distributed random number in `[0, x]`, e.g. `calc "random(8)"` — omitted above since its result isn't deterministic.
 
+**Number theory** ([details](docs/functions/number-theory.md)):
+
+```
+calc "gcd(3213, 24)"       # 3
+calc "lcm(14, 4)"          # 28
+calc "fib(10)"             # 55
+calc "isprime(86)"         # 83        (closest prime <= 86)
+calc "moebius(2)"          # -1        (Mobius function)
+calc "mersenne(7)"         # 127       (2^7 - 1)
+calc "perfect(1231)"       # 496       (closest known perfect number <= 1231)
+calc "fermat(4)"           # 65537     (2^(2^4) + 1)
+calc "safeprime(12)"       # 23        (smallest safe prime >= 12)
+calc "primec(86)"          # 23        (count of primes <= 86)
+calc "primen(86)"          # 443       (the 86th prime)
+calc "mersennegen(12)"     # 7         (closest Mersenne generator <= 12)
+calc "mersgen(7)"          # 127       (Mersenne number for generator 7)
+calc "genmers(127)"        # 7         (generator for Mersenne number 127)
+calc "sigma(100, 0)"       # 9         (number of divisors of 100)
+calc "tau(9)"              # 13        (sum of divisors of 9)
+calc "phi(12)"             # 4         (Euler's totient of 12)
+```
+
 **Constants**: `pi` and `e` (case-insensitive).
 
 **Errors** exit with status `1` and print a message, e.g.:

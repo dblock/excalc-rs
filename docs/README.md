@@ -9,7 +9,7 @@ Each page below marks its functions as **v1** (implemented, usable today) or **p
 - [Statistics](functions/statistics.md) — sum, average, min/max, combinatorics (v1)
 - [General / rounding](functions/general.md) — abs, frac, round, trunc, ceil, floor, random (v1)
 - [Comparison and logical operators](functions/logic.md) — `= ? > <`, `xor and or nand nor not shl shr` (planned)
-- [Number theory](functions/number-theory.md) — gcd, lcm, primes, Fibonacci, Mersenne, perfect numbers, Möbius, Fermat (planned)
+- [Number theory](functions/number-theory.md) — gcd, lcm, primes, Fibonacci, Mersenne, perfect numbers, Möbius, Fermat (v1)
 - [Advanced / special functions](functions/advanced.md) — gamma, beta, elliptic integrals, Pochhammer, integral special functions, numeric integration (planned)
 - [Financial](functions/financial.md) — present/future value, payments, depreciation (planned)
 

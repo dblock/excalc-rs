@@ -4,7 +4,7 @@ use std::collections::HashMap;
 
 use crate::ast::{BinaryOp, Expr, UnaryOp};
 use crate::error::{CalcError, CalcResult};
-use crate::functions::{general, stats, trig};
+use crate::functions::{general, number_theory, stats, trig};
 
 /// Evaluation context: currently just variable bindings. Constants (`pi`,
 /// `e`) are always available and can't be shadowed in v1.
@@ -128,6 +128,8 @@ fn call_function(name: &str, args: &[f64]) -> CalcResult<f64> {
         "product" | "prod" => return stats::product(args),
         "min" => return stats::min(args),
         "max" => return stats::max(args),
+        "gcd" => return number_theory::gcd(args),
+        "lcm" => return number_theory::lcm(args),
         _ => {}
     }
 
@@ -208,6 +210,25 @@ fn call_function(name: &str, args: &[f64]) -> CalcResult<f64> {
         "ceil" => one_arg(general::ceil),
         "floor" => one_arg(general::floor),
         "random" => one_arg(general::random),
+
+        "fib" | "fibonacci" => one_arg(number_theory::fib),
+        "isprime" => one_arg(number_theory::isprime),
+        "moebius" => one_arg(number_theory::moebius),
+        "mersenne" => one_arg(number_theory::mersenne),
+        "perfect" => one_arg(number_theory::perfect),
+        "fermat" => one_arg(number_theory::fermat),
+        "safeprime" => one_arg(number_theory::safeprime),
+        "primec" => one_arg(number_theory::primec),
+        "primen" => one_arg(number_theory::primen),
+        "mersennegen" => one_arg(number_theory::mersennegen),
+        "mersgen" => one_arg(number_theory::mersgen),
+        "genmers" => one_arg(number_theory::genmers),
+        "tau" => one_arg(number_theory::tau),
+        "phi" | "eind" => one_arg(number_theory::phi),
+        "sigma" => {
+            expect_args(&lower, args, 2)?;
+            number_theory::sigma(args[0], args[1])
+        }
 
         _ => Err(CalcError::UnknownFunction(name.to_string())),
     }

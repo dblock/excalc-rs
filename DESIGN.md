@@ -10,8 +10,8 @@ See [docs/](docs/README.md) for detailed per-function reference documentation (d
 
 Ported from `common/MCalc.pas` in the original repo, grouped by the milestone that introduces them:
 
-- **v1 (this pass):** core arithmetic engine, standard math functions, statistics functions, general/rounding functions.
-- **Later passes:** number theory, advanced/special functions (including named integral functions like `erf`/`dilog`/Fresnel integrals), financial functions, comparison/logic operators.
+- **v1 (this pass):** core arithmetic engine, standard math functions, statistics functions, general/rounding functions, number theory functions.
+- **Later passes:** advanced/special functions (including named integral functions like `erf`/`dilog`/Fresnel integrals), financial functions, comparison/logic operators.
 - **Not ported:** anything GUI-only (2D/3D plotting, drawing, Windows registry-based user-function storage, the Delphi `TCalcThread` threading model). None of that applies to a headless CLI/MCP tool.
 
 ## Grammar
@@ -63,9 +63,9 @@ Full reference (domains, formulas, examples) lives in [docs/](docs/README.md); t
 
 `abs frac intg round trunc ceil floor random`
 
-### Planned: Number theory ([details](docs/functions/number-theory.md))
+### v1: Number theory ([details](docs/functions/number-theory.md))
 
-`gcd lcm fib(onacci) isprime factor mersenne perfect moebius fermat`
+`gcd lcm fib(onacci) isprime moebius mersenne perfect fermat safeprime primec primen mersennegen mersgen genmers sigma tau phi(eind)`
 
 ### Planned: Advanced / special functions ([details](docs/functions/advanced.md))
 
