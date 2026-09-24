@@ -16,7 +16,7 @@ CI runs the same checks on Linux, macOS, and Windows; don't push code that fails
 
 ## Coverage
 
-CI reports test coverage to [Coveralls](https://coveralls.io/github/dblock/excalc-rs) via `cargo llvm-cov` on every push/PR (see the `coverage` job in `.github/workflows/ci.yml`). No secrets to configure — it authenticates with the built-in `GITHUB_TOKEN`. To check coverage locally:
+CI reports test coverage to [Coveralls](https://coveralls.io/github/dblock/excalc-rs) via `cargo llvm-cov` on every push/PR (see `.github/workflows/coverage.yml`). No secrets to configure — it authenticates with the built-in `GITHUB_TOKEN`. To check coverage locally:
 
 ```bash
 cargo install cargo-llvm-cov

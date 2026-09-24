@@ -106,7 +106,7 @@ git commit -m "Update Homebrew formula to v0.2.0"
 git push origin master
 ```
 
-CI also runs this same audit/install/test on every push via the `homebrew` job in `.github/workflows/ci.yml` — treat a red run there as a blocker, same as any other CI failure.
+CI also runs this same audit/install/test on every push via `.github/workflows/homebrew.yml` — treat a red run there as a blocker, same as any other CI failure.
 
 ## 9. Verify CI passed on the release commit
 
