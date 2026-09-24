@@ -1,0 +1,21 @@
+[package]
+name = "excalc"
+version = "0.1.0"
+edition = "2021"
+description = "A portable expression calculator, usable as a CLI or MCP tool for AI coding agents."
+license = "MIT"
+repository = "https://github.com/dblock/excalc-rs"
+
+[lib]
+name = "excalc"
+path = "src/lib.rs"
+
+[[bin]]
+name = "excalc"
+path = "src/main.rs"
+
+[dependencies]
+thiserror = "1"
+clap = { version = "4", features = ["derive"] }
+
+[dev-dependencies]
