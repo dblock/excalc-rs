@@ -449,6 +449,11 @@ fn call_function(name: &str, args: &[f64]) -> CalcResult<f64> {
         "random" => one_arg(general::random),
         "log2" => one_arg(general::log2),
         "cbrt" => one_arg(general::cbrt),
+        "nthroot" => {
+            expect_args(&lower, args, 2)?;
+            general::nthroot(args[0], args[1])
+        }
+        "isqrt" => one_arg(general::isqrt),
         "sign" => one_arg(general::sign),
         "hypot" => {
             expect_args(&lower, args, 2)?;

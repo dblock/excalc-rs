@@ -8,7 +8,7 @@ Expression Calculator (CLI, MCP, Rust)
 
 An expression calculator CLI tool and MCP server built for AI coding agents like Claude and GitHub Copilot to outsource arithmetic, saving tokens and avoiding LLM math hallucinations.
 
-A mathematical beast with 212 functions and operators across standard math, trigonometry, statistics, probability distributions, financial (NPV, IRR), number theory (GCD, totient, primality), base conversion, combinatorics, numeric integration, root finding, geometry (n-dimensional distance/dot/norm), unit conversion, and advanced/special functions (gamma, elliptic integrals, dilogarithm, and more).
+A mathematical beast with 214 functions and operators across standard math, trigonometry, statistics, probability distributions, financial (NPV, IRR), number theory (GCD, totient, primality), base conversion, combinatorics, numeric integration, root finding, geometry (n-dimensional distance/dot/norm), unit conversion, and advanced/special functions (gamma, elliptic integrals, dilogarithm, and more).
 
 Spiritual successor to the Vestris Inc. shareware Expression Calculator written in 1996 in Pascal. It was also pressed on a CD-ROM, translated, and sold in Germany under the name Global Calculator in 1997. See [HISTORY.md](HISTORY.md).
 
@@ -87,6 +87,8 @@ calc -- "-5 + 3"    # -2   (unary minus needs -- so clap doesn't treat it as a f
 ```
 calc "sqrt(16)"    # 4       (square root)
 calc "cbrt(-8)"    # -2      (cube root)
+calc "nthroot(27, 3)"  # 3   (general n-th root)
+calc "isqrt(17)"   # 4       (integer square root)
 calc "ln(e)"       # 1       (natural log)
 calc "log(100)"    # 2       (base 10)
 calc "log2(8)"     # 3       (base 2)

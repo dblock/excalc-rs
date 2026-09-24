@@ -66,6 +66,8 @@ The circular trig functions below operate in **radians only**. Rather than a glo
 |----------|---------|--------|---------|
 | `sqrt(x)` | Square root | `x >= 0` | `sqrt(16)` → `4` |
 | `cbrt(x)` | Cube root | all reals | `cbrt(-8)` → `-2` |
+| `nthroot(x, n)` | General `n`-th root, `x^(1/n)` (negative `x` only valid for odd `n`) | see notes | `nthroot(27, 3)` → `3` |
+| `isqrt(n)` | Integer square root: the largest integer `m` with `m*m <= n` | `n >= 0`, whole number | `isqrt(17)` → `4` |
 | `ln(x)` | Natural logarithm (base e) | `x > 0` | `ln(e)` → `1` |
 | `log(x)` | Common logarithm (base 10) | `x > 0` | `log(100)` → `2` |
 | `log2(x)` | Binary logarithm (base 2) | `x > 0` | `log2(8)` → `3` |
@@ -73,3 +75,5 @@ The circular trig functions below operate in **radians only**. Rather than a glo
 | `hypot(x, y)` | Euclidean distance, `sqrt(x^2 + y^2)` | all reals | `hypot(3, 4)` → `5` |
 
 Note: in the original Pascal source, `MyLog` computes base-10 log (not natural log) — `log` in this port preserves that semantics deliberately, despite the name looking like it could mean `ln`. Use `ln` for natural log.
+
+`nthroot(x, n)` requires `n` to be a non-zero whole number; negative `x` is only valid when `n` is odd (matching `cbrt`'s convention). `isqrt(n)` requires `n` to be a non-negative whole number and returns the floor of the true square root, computed via `f64::sqrt` with an explicit correction step to guard against floating-point rounding.

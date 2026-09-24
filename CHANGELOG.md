@@ -8,6 +8,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 
 ### Added
 
+- New general/numeric-analysis functions: `nthroot(x, n)` (general n-th root) and `isqrt(n)` (integer square root).
 - Combinatorics extras: `stirling1(n, k)`/`stirling2(n, k)` (Stirling numbers of the first/second kind), `derangement(n)`, and `bell(n)` (Bell numbers).
 - New statistics functions: `skewness` (population skewness) and `kurtosis` (population excess kurtosis).
 - Unit conversion functions: `c2f`/`f2c` (temperature), `km2mi`/`mi2km` (distance), `kg2lb`/`lb2kg` (mass), `m2ft`/`ft2m` (distance).

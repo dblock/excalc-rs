@@ -67,6 +67,41 @@ pub fn cbrt(x: f64) -> CalcResult<f64> {
     Ok(x.cbrt())
 }
 
+/// General `n`-th root of `x`: `x^(1/n)`. Negative `x` is only valid for
+/// odd integer `n` (matching `cbrt`'s convention of `cbrt(-8) == -2`); `n`
+/// must be a non-zero whole number.
+pub fn nthroot(x: f64, n: f64) -> CalcResult<f64> {
+    if n == 0.0 || n.fract() != 0.0 {
+        return Err(CalcError::DomainError("nthroot".to_string()));
+    }
+    if x < 0.0 {
+        let n_int = n as i64;
+        if n_int % 2 == 0 {
+            return Err(CalcError::DomainError("nthroot".to_string()));
+        }
+        return Ok(-(-x).powf(1.0 / n));
+    }
+    Ok(x.powf(1.0 / n))
+}
+
+/// Integer square root: the largest integer `m` such that `m*m <= n`.
+/// Computed via `f64::sqrt` followed by a correction step, to guard
+/// against floating-point rounding pushing the initial estimate off by
+/// one in either direction.
+pub fn isqrt(n: f64) -> CalcResult<f64> {
+    if n < 0.0 || n.fract() != 0.0 {
+        return Err(CalcError::DomainError("isqrt".to_string()));
+    }
+    let mut m = n.sqrt().floor();
+    while m * m > n {
+        m -= 1.0;
+    }
+    while (m + 1.0) * (m + 1.0) <= n {
+        m += 1.0;
+    }
+    Ok(m)
+}
+
 /// Euclidean distance `sqrt(x^2 + y^2)`, computed via `f64::hypot` to avoid
 /// intermediate overflow/underflow for very large or very small inputs.
 pub fn hypot(x: f64, y: f64) -> CalcResult<f64> {
@@ -200,6 +235,42 @@ mod tests {
         assert_eq!(cbrt(8.0).unwrap(), 2.0);
         assert_eq!(cbrt(-8.0).unwrap(), -2.0);
         assert_eq!(cbrt(0.0).unwrap(), 0.0);
+    }
+
+    #[test]
+    fn nthroot_matches_known_values() {
+        assert_eq!(nthroot(27.0, 3.0).unwrap(), 3.0);
+        assert_eq!(nthroot(16.0, 4.0).unwrap(), 2.0);
+        assert_eq!(nthroot(-8.0, 3.0).unwrap(), -2.0);
+    }
+
+    #[test]
+    fn nthroot_rejects_negative_base_with_even_root() {
+        assert!(matches!(
+            nthroot(-16.0, 4.0),
+            Err(CalcError::DomainError(_))
+        ));
+    }
+
+    #[test]
+    fn nthroot_rejects_zero_or_fractional_n() {
+        assert!(matches!(nthroot(8.0, 0.0), Err(CalcError::DomainError(_))));
+        assert!(matches!(nthroot(8.0, 1.5), Err(CalcError::DomainError(_))));
+    }
+
+    #[test]
+    fn isqrt_matches_known_values() {
+        assert_eq!(isqrt(0.0).unwrap(), 0.0);
+        assert_eq!(isqrt(15.0).unwrap(), 3.0);
+        assert_eq!(isqrt(16.0).unwrap(), 4.0);
+        assert_eq!(isqrt(17.0).unwrap(), 4.0);
+        assert_eq!(isqrt(1_000_000.0).unwrap(), 1000.0);
+    }
+
+    #[test]
+    fn isqrt_rejects_negative_or_fractional_input() {
+        assert!(matches!(isqrt(-1.0), Err(CalcError::DomainError(_))));
+        assert!(matches!(isqrt(2.5), Err(CalcError::DomainError(_))));
     }
 
     #[test]
