@@ -10,7 +10,7 @@ See [docs/](docs/README.md) for detailed per-function reference documentation (d
 
 Ported from `common/MCalc.pas` in the original repo, grouped by the milestone that introduces them:
 
-- **v1 (this pass):** core arithmetic engine, standard math functions, statistics functions, general/rounding functions, number theory functions, comparison/logical operators, advanced/special functions (gamma, beta, Pochhammer, elliptic integrals, named integral functions like `erf`/`dilog`/Fresnel integrals), financial functions (time value of money, depreciation, and their extended payment-timing-aware variants).
+- **v1 (this pass):** core arithmetic engine, standard math functions, statistics functions, general/rounding functions, number theory functions, comparison/logical operators, advanced/special functions (gamma, beta, Pochhammer, elliptic integrals, named integral functions like `erf`/`dilog`/Fresnel integrals), financial functions (time value of money, depreciation, and their extended payment-timing-aware variants), general-purpose numeric integration (named composite quadrature rules plus adaptive `int`/`gauss`) — this closes out every function category from the original.
 - **Not ported:** anything GUI-only (2D/3D plotting, drawing, Windows registry-based user-function storage, the Delphi `TCalcThread` threading model). None of that applies to a headless CLI/MCP tool.
 
 ## Grammar
@@ -46,9 +46,11 @@ v1 trig functions operate in **radians only**. The original supported a degree/r
 - Original's `=` assigned a value to a variable (not equality), and `?` tested equality. Since v1 has no variable-assignment operator, `=` was repurposed as equality and `?` was dropped entirely.
 - `mod` is spelled out as a word token in v1, rather than a single character, since we're normalizing surface syntax anyway.
 - Original's `Ci`/`Chi` (cosine/hyperbolic-cosine integral) formulas reference an undefined variable `G` (presumably meant to be the Euler-Mascheroni constant), which the generic variable-lookup mechanism silently defaults to `0` — almost certainly a bug, since the results are meaningless without the real constant. v1 hardcodes the actual Euler-Mascheroni constant instead.
-- Advanced/special functions that depend on numeric integration in the original (`ellipticE`, `ellipticF`, `dilog`, `erf`, `erfc`, `si`, `ssi`, `ci`, `chi`, `dawson`, `fresnelC`/`fresnelS`) are ported using a private adaptive Simpson's-rule integrator as a stand-in for the still-deferred general-purpose numeric integration engine; see [docs/functions/advanced.md](docs/functions/advanced.md) for details and a TODO on revisiting this once that engine exists.
+- Advanced/special functions that depend on a numeric integral in the original (`ellipticE`, `ellipticF`, `dilog`, `erf`, `erfc`, `si`, `ssi`, `ci`, `chi`, `dawson`, `fresnelC`/`fresnelS`) are ported using a private adaptive Simpson's-rule integrator rather than the general-purpose numeric integration engine (see below); see [docs/functions/advanced.md](docs/functions/advanced.md) for details and a TODO on unifying the two.
 - The original's actual dispatched financial functions (defined locally in `MCalc.pas`) use Delphi's standard `Math.Power`, which errors on a negative base with a non-integer exponent - unlike `Finance.pas`'s separate (and unused by the dispatch table) `Power` helper, which silently returns `0` for any non-positive base. v1 uses `f64::powf`, and maps any resulting `NaN` to a domain error and any resulting infinity to an overflow error, rather than silently returning `0` or panicking.
 - The original manual/doc draft named the fixed-declining-balance depreciation function `fdb`, but the actual dispatched token in `MCalc.pas` is `db` — v1 uses `db` to match the real implementation.
+- Numeric integration functions (`trapezoid`, `simpson`, `newton`, `boole`, `ordersix`, `weddle`, `int`, `gauss`) are the only functions in v1 whose first two arguments are an unevaluated expression and a bare variable rather than plain numbers; the evaluator special-cases these by name before generic argument evaluation, substituting the variable in a scoped copy of the evaluation context for each sample point (see `eval.rs`'s `eval_composite_integration`/`eval_adaptive_integration`). The original's `int`/`gauss` use Hairer's 30-point Gauss-Kronrod quadrature with Aitken extrapolation (`Tegral`/`Gauss`); v1 ports these "in spirit" with an adaptive composite Simpson's rule instead of reproducing that specific algorithm's hardcoded coefficient tables — see [docs/functions/numeric-integration.md](docs/functions/numeric-integration.md).
+- Original's named composite rules (`fSum`) step a `while` loop with a floating-point `<=` comparison, which can silently run one sub-interval short or long due to floating-point accumulation. v1 instead requires the sub-interval count `n` to be a positive whole number and loops exactly `n` times.
 
 ## Function catalog
 
@@ -80,7 +82,11 @@ Full reference (domains, formulas, examples) lives in [docs/](docs/README.md); t
 
 ### v1: Advanced / special functions ([details](docs/functions/advanced.md))
 
-`gamma beta pochhammer bth bman ellipticE ellipticF(ellipticK) ellipticCE ellipticCK dilog dawson erf erfc si ssi ci chi fresnelC fresnelS fresnelF fresnelG`; general-purpose numeric integration (`trapezoid`, `simpson`, `newton`, `boole`, `ordersix`, `weddle`, `gauss`, `int`) still planned
+`gamma beta pochhammer bth bman ellipticE ellipticF(ellipticK) ellipticCE ellipticCK dilog dawson erf erfc si ssi ci chi fresnelC fresnelS fresnelF fresnelG`
+
+### v1: Numeric integration ([details](docs/functions/numeric-integration.md))
+
+`trapezoid(trapez, trapezoide) simpson newton boole ordersix(ordresix) weddle` (named composite rules) and `int(gauss)` (adaptive quadrature)
 
 ### v1: Financial ([details](docs/functions/financial.md))
 

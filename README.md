@@ -164,6 +164,18 @@ calc "fresnelC(1)"         # ~0.7798934003768329
 calc "fresnelS(1)"         # ~0.4382591473903456
 ```
 
+**Numeric integration** ([details](docs/functions/numeric-integration.md)) — takes an expression and a bare variable, unlike every other function:
+
+```
+calc "trapezoid(log(x^3), x, 1, 10, 64)"     # ~18.272118017450193 (trapezoidal rule)
+calc "simpson(log(x^3), x, 1, 10, 64)"       # ~18.274048637598288 (Simpson's rule)
+calc "newton(log(x^3), x, 1, 10, 64)"        # ~18.27404883248503  (Newton-Cotes 3/8 rule)
+calc "boole(log(x^3), x, 1, 10, 64)"         # ~18.274048988489618 (Boole's rule)
+calc "ordersix(log(x^3), x, 1, 10, 64)"      # ~18.274048988543118 (6th-order Newton-Cotes rule)
+calc "weddle(log(x^3), x, 1, 10, 64)"        # ~18.274048988612115 (Weddle's rule)
+calc "int(log(x^3), x, 1, 10, 0.0000001)"    # ~18.274048987232057 (adaptive quadrature, alias gauss)
+```
+
 **Financial functions** ([details](docs/functions/financial.md)):
 
 ```

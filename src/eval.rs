@@ -4,7 +4,11 @@ use std::collections::HashMap;
 
 use crate::ast::{BinaryOp, Expr, UnaryOp};
 use crate::error::{CalcError, CalcResult};
-use crate::functions::{advanced, financial, general, logic, number_theory, stats, trig};
+use crate::functions::{
+    advanced, financial, general,
+    integration::{self, Rule},
+    logic, number_theory, stats, trig,
+};
 
 /// Evaluation context: currently just variable bindings. Constants (`pi`,
 /// `e`) are always available and can't be shadowed in v1.
@@ -41,6 +45,13 @@ pub fn eval(expr: &Expr, ctx: &Context) -> CalcResult<f64> {
         }
 
         Expr::Call(name, arg_exprs) => {
+            let lower = name.to_ascii_lowercase();
+            if let Some(rule) = Rule::from_name(&lower) {
+                return eval_composite_integration(&lower, rule, arg_exprs, ctx);
+            }
+            if lower == "int" || lower == "gauss" {
+                return eval_adaptive_integration(&lower, arg_exprs, ctx);
+            }
             let mut args = Vec::with_capacity(arg_exprs.len());
             for a in arg_exprs {
                 args.push(eval(a, ctx)?);
@@ -48,6 +59,63 @@ pub fn eval(expr: &Expr, ctx: &Context) -> CalcResult<f64> {
             call_function(name, &args)
         }
     }
+}
+
+/// Shared setup for the numeric-integration functions (`int`, `gauss`, and
+/// the named composite rules): validates the fixed 5-argument arity,
+/// extracts and validates the bare integration variable (2nd argument, per
+/// the original's `fSum`/`Tegral` requiring a plain, non-reserved variable
+/// node), and evaluates the bounds and rule-specific 5th parameter (`n` for
+/// the composite rules, `tolerance` for `int`/`gauss`).
+fn integration_setup<'a>(
+    name: &str,
+    arg_exprs: &'a [Expr],
+    ctx: &Context,
+) -> CalcResult<(&'a Expr, String, f64, f64, f64)> {
+    if arg_exprs.len() != 5 {
+        return Err(CalcError::WrongArgCount {
+            name: name.to_string(),
+            expected: "5".to_string(),
+            got: arg_exprs.len(),
+        });
+    }
+    let var_name = match &arg_exprs[1] {
+        Expr::Variable(v) if !matches!(v.to_ascii_lowercase().as_str(), "pi" | "e") => v.clone(),
+        _ => return Err(CalcError::DomainError(name.to_string())),
+    };
+    let a = eval(&arg_exprs[2], ctx)?;
+    let b = eval(&arg_exprs[3], ctx)?;
+    let param = eval(&arg_exprs[4], ctx)?;
+    Ok((&arg_exprs[0], var_name, a, b, param))
+}
+
+fn eval_composite_integration(
+    name: &str,
+    rule: Rule,
+    arg_exprs: &[Expr],
+    ctx: &Context,
+) -> CalcResult<f64> {
+    let (body, var_name, a, b, n) = integration_setup(name, arg_exprs, ctx)?;
+    let mut work_ctx = Context {
+        variables: ctx.variables.clone(),
+    };
+    let f = |x: f64| -> CalcResult<f64> {
+        work_ctx.set(var_name.clone(), x);
+        eval(body, &work_ctx)
+    };
+    integration::composite(name, rule, f, a, b, n)
+}
+
+fn eval_adaptive_integration(name: &str, arg_exprs: &[Expr], ctx: &Context) -> CalcResult<f64> {
+    let (body, var_name, a, b, tolerance) = integration_setup(name, arg_exprs, ctx)?;
+    let mut work_ctx = Context {
+        variables: ctx.variables.clone(),
+    };
+    let f = |x: f64| -> CalcResult<f64> {
+        work_ctx.set(var_name.clone(), x);
+        eval(body, &work_ctx)
+    };
+    integration::adaptive(name, f, a, b, tolerance)
 }
 
 fn resolve_variable(name: &str, ctx: &Context) -> CalcResult<f64> {
@@ -689,6 +757,131 @@ mod tests {
                 expected: "4 or 5".to_string(),
                 got: 6,
             })
+        );
+    }
+
+    #[test]
+    fn integration_composite_rules_end_to_end() {
+        for (expr, expected) in [
+            ("simpson(x^2, x, 0, 3, 100)", 9.0),
+            ("trapez(x^2, x, 0, 3, 2000)", 9.0),
+            ("trapezoide(x^2, x, 0, 3, 2000)", 9.0),
+            ("newton(x^2, x, 0, 3, 100)", 9.0),
+            ("boole(x^2, x, 0, 3, 100)", 9.0),
+            ("ordersix(x^2, x, 0, 3, 100)", 9.0),
+            ("ordresix(x^2, x, 0, 3, 100)", 9.0),
+            ("weddle(x^2, x, 0, 3, 100)", 9.0),
+        ] {
+            let result = crate::evaluate(expr).unwrap();
+            assert!((result - expected).abs() < 1e-2, "{expr} => {result}");
+        }
+    }
+
+    #[test]
+    fn integration_adaptive_rules_end_to_end() {
+        let result = crate::evaluate("int(x^2, x, 0, 3, 0.000001)").unwrap();
+        assert!((result - 9.0).abs() < 1e-4);
+
+        let result = crate::evaluate("gauss(sin(x), x, 0, pi, 0.000001)").unwrap();
+        assert!((result - 2.0).abs() < 1e-4);
+    }
+
+    #[test]
+    fn integration_reversed_bounds_negates_result() {
+        let result = crate::evaluate("simpson(x^2, x, 3, 0, 100)").unwrap();
+        assert!((result - -9.0).abs() < 1e-2);
+    }
+
+    #[test]
+    fn integration_does_not_leak_or_shadow_outer_context() {
+        // The integration variable is scoped to the call; it shouldn't
+        // affect (or be affected by) a same-named variable elsewhere.
+        let mut ctx = Context::new();
+        ctx.set("k", 2.0);
+        let expr = crate::parser::parse("simpson(k * x, x, 0, 2, 100) + k").unwrap();
+        let result = eval(&expr, &ctx).unwrap();
+        // integral of 2*x from 0 to 2 = 4, plus outer k (2) = 6.
+        assert!((result - 6.0).abs() < 1e-2);
+    }
+
+    #[test]
+    fn integration_wrong_arg_count() {
+        assert_eq!(
+            crate::evaluate("simpson(x^2, x, 0, 3)"),
+            Err(CalcError::WrongArgCount {
+                name: "simpson".to_string(),
+                expected: "5".to_string(),
+                got: 4,
+            })
+        );
+        assert_eq!(
+            crate::evaluate("int(x^2, x, 0, 3)"),
+            Err(CalcError::WrongArgCount {
+                name: "int".to_string(),
+                expected: "5".to_string(),
+                got: 4,
+            })
+        );
+    }
+
+    #[test]
+    fn integration_invalid_variable_argument() {
+        // Second argument must be a bare, non-reserved variable.
+        assert_eq!(
+            crate::evaluate("simpson(x^2, 5, 0, 3, 100)"),
+            Err(CalcError::DomainError("simpson".to_string()))
+        );
+        assert_eq!(
+            crate::evaluate("simpson(x^2, pi, 0, 3, 100)"),
+            Err(CalcError::DomainError("simpson".to_string()))
+        );
+        assert_eq!(
+            crate::evaluate("simpson(x^2, e, 0, 3, 100)"),
+            Err(CalcError::DomainError("simpson".to_string()))
+        );
+        assert_eq!(
+            crate::evaluate("simpson(x^2, x + 1, 0, 3, 100)"),
+            Err(CalcError::DomainError("simpson".to_string()))
+        );
+    }
+
+    #[test]
+    fn integration_non_whole_or_non_positive_n() {
+        assert_eq!(
+            crate::evaluate("simpson(x^2, x, 0, 3, 2.5)"),
+            Err(CalcError::DomainError("simpson".to_string()))
+        );
+        assert_eq!(
+            crate::evaluate("simpson(x^2, x, 0, 3, 0)"),
+            Err(CalcError::DomainError("simpson".to_string()))
+        );
+    }
+
+    #[test]
+    fn integration_non_positive_tolerance() {
+        assert_eq!(
+            crate::evaluate("int(x^2, x, 0, 3, 0)"),
+            Err(CalcError::DomainError("int".to_string()))
+        );
+        assert_eq!(
+            crate::evaluate("int(x^2, x, 0, 3, -1)"),
+            Err(CalcError::DomainError("int".to_string()))
+        );
+    }
+
+    #[test]
+    fn integration_propagates_body_errors() {
+        assert_eq!(
+            crate::evaluate("simpson(sqrt(x), x, -1, 1, 4)"),
+            Err(CalcError::DomainError("sqrt".to_string()))
+        );
+    }
+
+    #[test]
+    fn integration_does_not_converge_overflows() {
+        assert_eq!(
+            crate::evaluate("int(sin(x * 100000000), x, 0, 1, 0.000000000000001)"),
+            Err(CalcError::Overflow)
         );
     }
 }

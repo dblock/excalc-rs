@@ -4,9 +4,9 @@
 
 ## A note on numeric integration
 
-In the original Pascal engine, most of these functions (`ellipticE`, `ellipticF`, `dilog`, `erf`, `erfc`, `si`, `ssi`, `ci`, `chi`, `dawson`, `fresnelC`, `fresnelS`) are thin wrappers around a generic numeric integration engine (`int(expression, variable, lowerBound, upperBound, tolerance)`), and `gamma` itself is a hand-rolled Riemann-sum integral (`ShortGamma`/`Factor` in `MCalc.pas`) rather than a closed-form approximation. General-purpose numeric integration/plotting (`trapezoid`, `simpson`, `newton`, `boole`, `ordersix`, `weddle`, `gauss`, `int`, `plot`, `zplot`) is deferred to a separate future pass in this port. This category ports the same underlying formulas, but evaluates the integrals with a private, ad hoc adaptive Simpson's-rule integrator rather than the full quadrature engine (`gamma` keeps its original fixed-step Riemann sum, since that's what the pre-existing worked example was computed with).
+In the original Pascal engine, most of these functions (`ellipticE`, `ellipticF`, `dilog`, `erf`, `erfc`, `si`, `ssi`, `ci`, `chi`, `dawson`, `fresnelC`, `fresnelS`) are thin wrappers around a generic numeric integration engine (`int(expression, variable, lowerBound, upperBound, tolerance)`), and `gamma` itself is a hand-rolled Riemann-sum integral (`ShortGamma`/`Factor` in `MCalc.pas`) rather than a closed-form approximation. This category ports the same underlying formulas, but evaluates the integrals with a private, ad hoc adaptive Simpson's-rule integrator rather than the general-purpose quadrature engine now implemented in [Numeric integration](numeric-integration.md) (`gamma` keeps its original fixed-step Riemann sum, since that's what the pre-existing worked example was computed with).
 
-**TODO:** once general numeric integration is implemented, consider routing these through the shared engine, or through dedicated closed-form approximations (e.g. the Lanczos approximation for `gamma`, rational/continued-fraction approximations for `erf`) for better precision and performance than the current adaptive-Simpson/Riemann-sum stand-ins.
+**TODO:** now that general numeric integration exists (see [numeric-integration.md](numeric-integration.md)), consider routing these through the shared engine, or through dedicated closed-form approximations (e.g. the Lanczos approximation for `gamma`, rational/continued-fraction approximations for `erf`) for better precision and performance than the current adaptive-Simpson/Riemann-sum stand-ins.
 
 ## Special functions
 
@@ -43,19 +43,6 @@ These are named integrals, most of which are only computable numerically (no ele
 
 `EulerGamma` above is the Euler-Mascheroni constant (`≈ 0.5772156649015329`). The original Pascal source reads this from a variable named `G` that the user is expected to set themselves (undefined variables default to `0`) — almost certainly a bug rather than intentional, since `ci`/`chi` are meaningless without the correct constant; this port uses the real mathematical constant directly. `dilog`, `si`, and `ci`/`chi` have removable singularities in their integrands (at `t = 1`, `t = 0`, and `t = 0` respectively), handled explicitly by substituting the analytic limit at that point.
 
-## Numeric integration (deferred)
-
-Named quadrature rules for numerically integrating an arbitrary expression over a variable and range are **not yet implemented** in this port (a separate future pass, tracked in [DESIGN.md](../../DESIGN.md#scope)):
-
-| Rule | Meaning |
-|------|---------|
-| `trapezoid(...)` | Trapezoidal rule (order 2) |
-| `simpson(...)` | Simpson's rule (order 4) |
-| `newton(...)` | Newton-Cotes rule (order 4) |
-| `boole(...)` | Boole's rule (order 6) |
-| `ordersix(...)` | 6th-order Newton-Cotes rule |
-| `weddle(...)` | Weddle's rule (order 8) — the manual example (`weddle(log(x^3), x, 1, 10, 64)`) gets 12 correct decimals vs. 5 for `simpson` at the same step count |
-| `gauss(...)` | Gaussian quadrature |
-| `int(...)` | "Exact" Gauss integral approximation, automatically picking precision based on the requested tolerance; the manual notes this is the most precise built-in method short of symbolic integration (Maple/Mathematica) |
+See [Numeric integration](numeric-integration.md) for the general-purpose quadrature functions (`trapezoid`, `simpson`, `newton`, `boole`, `ordersix`, `weddle`, `gauss`, `int`) that these special functions could eventually be routed through (see the TODO above).
 
 Syntax for all of the above (per the manual): `method(expression, variable, lowerBound, upperBound [, step_or_tolerance])`.
