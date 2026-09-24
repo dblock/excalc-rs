@@ -10,6 +10,9 @@ Spiritual successor to [excalc](https://github.com/dblock/excalc)
 (Vestris Inc. Expression Calculator, Pascal, 1996). See [DESIGN.md](DESIGN.md)
 for the grammar, function catalog, and what's ported vs. deferred vs. skipped.
 
+See [CHANGELOG.md](CHANGELOG.md) for release history and [RELEASING.md](RELEASING.md)
+for how to cut a new release.
+
 ## Usage
 
 ```
