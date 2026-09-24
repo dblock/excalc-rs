@@ -2,9 +2,7 @@
 
 ## A note on numeric integration
 
-In the original Pascal engine, most of these functions (`ellipticE`, `ellipticF`, `dilog`, `erf`, `erfc`, `si`, `ssi`, `ci`, `chi`, `dawson`, `fresnelC`, `fresnelS`) are thin wrappers around a generic numeric integration engine (`int(expression, variable, lowerBound, upperBound, tolerance)`), and `gamma` itself is a hand-rolled Riemann-sum integral rather than a closed-form approximation. This category ports the same underlying formulas, but evaluates the integrals with a private, ad hoc adaptive Simpson's-rule integrator rather than the general-purpose quadrature engine now implemented in [Numeric integration](numeric-integration.md) (`gamma` keeps its original fixed-step Riemann sum, since that's what the pre-existing worked example was computed with).
-
-**TODO:** now that general numeric integration exists (see [numeric-integration.md](numeric-integration.md)), consider routing these through the shared engine, or through dedicated closed-form approximations (e.g. the Lanczos approximation for `gamma`, rational/continued-fraction approximations for `erf`) for better precision and performance than the current adaptive-Simpson/Riemann-sum stand-ins.
+In the original Pascal engine, most of these functions (`ellipticE`, `ellipticF`, `dilog`, `erf`, `erfc`, `si`, `ssi`, `ci`, `chi`, `dawson`, `fresnelC`, `fresnelS`) are thin wrappers around a generic numeric integration engine (`int(expression, variable, lowerBound, upperBound, tolerance)`), and `gamma` itself is a hand-rolled Riemann-sum integral rather than a closed-form approximation. This category ports the same underlying formulas, and routes the integral-based ones through the same adaptive-quadrature engine used by [Numeric integration](numeric-integration.md)'s `int`/`gauss` (`gamma` keeps its own fixed-step Riemann sum, since that's what the pre-existing worked example was computed with).
 
 ## Special functions
 
@@ -41,6 +39,6 @@ These are named integrals, most of which are only computable numerically (no ele
 
 `EulerGamma` above is the Euler-Mascheroni constant (`≈ 0.5772156649015329`). The original Pascal source reads this from a variable named `G` that the user is expected to set themselves (undefined variables default to `0`) — almost certainly a bug rather than intentional, since `ci`/`chi` are meaningless without the correct constant; this port uses the real mathematical constant directly. `dilog`, `si`, and `ci`/`chi` have removable singularities in their integrands (at `t = 1`, `t = 0`, and `t = 0` respectively), handled explicitly by substituting the analytic limit at that point.
 
-See [Numeric integration](numeric-integration.md) for the general-purpose quadrature functions (`trapezoid`, `simpson`, `newton`, `boole`, `ordersix`, `weddle`, `gauss`, `int`) that these special functions could eventually be routed through (see the TODO above).
+See [Numeric integration](numeric-integration.md) for the general-purpose quadrature functions (`trapezoid`, `simpson`, `newton`, `boole`, `ordersix`, `weddle`, `gauss`, `int`) that this category's integral-based functions are evaluated through.
 
 Syntax for all of the above (per the manual): `method(expression, variable, lowerBound, upperBound [, step_or_tolerance])`.

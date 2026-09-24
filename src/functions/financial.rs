@@ -7,8 +7,7 @@
 //! (not the separate `Finance.pas` unit, whose currency-scaling wrappers are
 //! unused by the dispatch table). Unlike the advanced/special functions
 //! category, none of these depend on numeric integration - they're all
-//! closed-form (or, for `irate`, a simple secant-method root find), so no
-//! stand-in integrator is needed here.
+//! closed-form (or, for `irate`, a simple secant-method root find).
 //!
 //! `ptype` (payment timing) is `0` for payments at the end of a period, `1`
 //! for payments at the start, matching the original.

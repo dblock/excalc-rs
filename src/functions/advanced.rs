@@ -6,18 +6,17 @@
 //! `fresnelC`/`fresnelS`) are thin wrappers around a generic numeric
 //! integration engine (`int(expr, var, lo, hi, tolerance)`), and `gamma`
 //! itself is a hand-rolled Riemann-sum integral (see `ShortGamma`/`Factor`
-//! in `MCalc.pas`). General-purpose numeric integration/plotting is
-//! deferred to a separate future pass in this port, so this module ports
-//! the same underlying formulas but evaluates them with a private, ad hoc
-//! adaptive Simpson's-rule integrator (`integrate`, below) rather than the
-//! full quadrature engine.
-//!
-//! TODO: once general numeric integration is implemented, consider routing
-//! these through the shared engine (or dedicated closed-form
-//! approximations, e.g. the Lanczos approximation for `gamma` and rational
-//!/continued-fraction approximations for `erf`) for better precision and
-//! performance than this fixed adaptive-Simpson stand-in.
+//! in `MCalc.pas`). This module ports the same underlying formulas, and
+//! routes the integral-based ones through the shared adaptive-quadrature
+//! engine in [`super::integration`] (the same one backing the `int`/`gauss`
+//! calculator functions), rather than reproducing its own integrator.
+//! `gamma` keeps its own fixed-step Riemann sum (`short_gamma`, below)
+//! rather than switching to the shared engine or a closed-form
+//! approximation (e.g. Lanczos), since that's what the pre-existing worked
+//! example (`gamma(0.5)` = `1.77244070463831`, vs the true
+//! `sqrt(pi) = 1.77245385...`) was computed with.
 
+use super::integration;
 use crate::error::{CalcError, CalcResult};
 
 /// The Euler-Mascheroni constant, used by `ci`/`chi`. The original Pascal
@@ -27,46 +26,18 @@ use crate::error::{CalcError, CalcResult};
 /// correct constant. This port uses the real mathematical constant.
 const EULER_MASCHERONI: f64 = 0.5772156649015329;
 
-/// Composite Simpson's rule over `[a, b]` with `n` sub-intervals (`n` must
-/// be even).
-fn simpson(f: &impl Fn(f64) -> f64, a: f64, b: f64, n: usize) -> f64 {
-    let h = (b - a) / n as f64;
-    let mut sum = f(a) + f(b);
-    for i in 1..n {
-        let x = a + i as f64 * h;
-        sum += if i % 2 == 0 { 2.0 } else { 4.0 } * f(x);
-    }
-    sum * h / 3.0
-}
+/// Absolute convergence tolerance used for every integral-based function in
+/// this module — tight enough that switching from the module's old private
+/// adaptive-Simpson stand-in to the shared engine doesn't move any of the
+/// worked examples/tests below outside their existing tolerances.
+const INTEGRATION_TOLERANCE: f64 = 1e-10;
 
-/// Numerically integrates `f` over `[lo, hi]` (in either order) using
-/// composite Simpson's rule, doubling the number of sub-intervals until the
-/// result stabilizes (or a maximum refinement count is reached).
-fn integrate(f: impl Fn(f64) -> f64, lo: f64, hi: f64) -> f64 {
-    if lo == hi {
-        return 0.0;
-    }
-    let (a, b, sign) = if lo > hi {
-        (hi, lo, -1.0)
-    } else {
-        (lo, hi, 1.0)
-    };
-    let mut n = 64usize;
-    let mut prev = simpson(&f, a, b, n);
-    for _ in 0..14 {
-        n *= 2;
-        let cur = simpson(&f, a, b, n);
-        if (cur - prev).abs() < 1e-12 * cur.abs().max(1.0) {
-            return sign * cur;
-        }
-        prev = cur;
-    }
-    // Unreachable in practice: 14 doublings from n=64 reaches roughly a
-    // million sub-intervals, at which point composite Simpson's rule has
-    // converged to well within the 1e-12 relative tolerance above for every
-    // integrand used in this module (all finite, smooth, and defined on a
-    // bounded interval after the singularity handling above/in callers).
-    sign * prev
+/// Numerically integrates the infallible `f` over `[lo, hi]` (in either
+/// order) via the shared adaptive-quadrature engine (see
+/// [`integration::adaptive`]), used for every integral-based special
+/// function except `gamma` (see the module doc comment).
+fn integrate(name: &str, f: impl Fn(f64) -> f64, lo: f64, hi: f64) -> CalcResult<f64> {
+    integration::adaptive(name, |x| Ok(f(x)), lo, hi, INTEGRATION_TOLERANCE)
 }
 
 /// The fixed Riemann-sum step used by `gamma`/`ShortGamma`, matching the
@@ -200,11 +171,12 @@ pub fn elliptic_e(k: f64, z: f64) -> CalcResult<f64> {
     if (k * z).abs() > 1.0 {
         return Err(CalcError::DomainError("ellipticE".to_string()));
     }
-    Ok(integrate(
+    integrate(
+        "ellipticE",
         |theta| (1.0 - k * k * theta.sin().powi(2)).max(0.0).sqrt(),
         0.0,
         theta_max,
-    ))
+    )
 }
 
 /// Incomplete elliptic integral of the first kind (the original manual
@@ -220,11 +192,12 @@ pub fn elliptic_f(k: f64, z: f64) -> CalcResult<f64> {
     if kz >= 1.0 - 1e-9 {
         return Err(CalcError::Overflow);
     }
-    Ok(integrate(
+    integrate(
+        "ellipticF",
         |theta| 1.0 / (1.0 - k * k * theta.sin().powi(2)).sqrt(),
         0.0,
         theta_max,
-    ))
+    )
 }
 
 /// Complementary complete elliptic integral of the second kind,
@@ -251,7 +224,8 @@ pub fn dilog(x: f64) -> CalcResult<f64> {
     if x <= 0.0 {
         return Err(CalcError::DomainError("dilog".to_string()));
     }
-    Ok(integrate(
+    integrate(
+        "dilog",
         |t| {
             if t == 1.0 {
                 -1.0
@@ -261,17 +235,17 @@ pub fn dilog(x: f64) -> CalcResult<f64> {
         },
         1.0,
         x,
-    ))
+    )
 }
 
 /// Dawson integral, `exp(-x^2) * Int(exp(t^2), t, 0, x)`.
 pub fn dawson(x: f64) -> CalcResult<f64> {
-    Ok((-x * x).exp() * integrate(|t| (t * t).exp(), 0.0, x))
+    Ok((-x * x).exp() * integrate("dawson", |t| (t * t).exp(), 0.0, x)?)
 }
 
 /// Error function, `2/sqrt(pi) * Int(exp(-t^2), t, 0, x)`.
 pub fn erf(x: f64) -> CalcResult<f64> {
-    Ok((2.0 / std::f64::consts::PI.sqrt()) * integrate(|t| (-(t * t)).exp(), 0.0, x))
+    Ok((2.0 / std::f64::consts::PI.sqrt()) * integrate("erf", |t| (-(t * t)).exp(), 0.0, x)?)
 }
 
 /// Complementary error function, `1 - erf(x)`.
@@ -282,11 +256,7 @@ pub fn erfc(x: f64) -> CalcResult<f64> {
 /// Sine integral, `Int(sin(t)/t, t, 0, x)`. The integrand has a removable
 /// singularity at `t = 0` (limit `1`), handled explicitly.
 pub fn si(x: f64) -> CalcResult<f64> {
-    Ok(integrate(
-        |t| if t == 0.0 { 1.0 } else { t.sin() / t },
-        0.0,
-        x,
-    ))
+    integrate("si", |t| if t == 0.0 { 1.0 } else { t.sin() / t }, 0.0, x)
 }
 
 /// Shifted sine integral, `si(x) - pi/2`.
@@ -302,7 +272,12 @@ pub fn ci(x: f64) -> CalcResult<f64> {
     }
     Ok(EULER_MASCHERONI
         + x.ln()
-        + integrate(|t| if t == 0.0 { 0.0 } else { (t.cos() - 1.0) / t }, 0.0, x))
+        + integrate(
+            "ci",
+            |t| if t == 0.0 { 0.0 } else { (t.cos() - 1.0) / t },
+            0.0,
+            x,
+        )?)
 }
 
 /// Hyperbolic cosine integral, `EULER_MASCHERONI + ln(x) + Int((cosh(t)-1)/t,
@@ -315,28 +290,31 @@ pub fn chi(x: f64) -> CalcResult<f64> {
     Ok(EULER_MASCHERONI
         + x.ln()
         + integrate(
+            "chi",
             |t| if t == 0.0 { 0.0 } else { (t.cosh() - 1.0) / t },
             0.0,
             x,
-        ))
+        )?)
 }
 
 /// Fresnel cosine integral, `Int(cos(pi/2 * t^2), t, 0, x)`.
 pub fn fresnel_c(x: f64) -> CalcResult<f64> {
-    Ok(integrate(
+    integrate(
+        "fresnelC",
         |t| (std::f64::consts::FRAC_PI_2 * t * t).cos(),
         0.0,
         x,
-    ))
+    )
 }
 
 /// Fresnel sine integral, `Int(sin(pi/2 * t^2), t, 0, x)`.
 pub fn fresnel_s(x: f64) -> CalcResult<f64> {
-    Ok(integrate(
+    integrate(
+        "fresnelS",
         |t| (std::f64::consts::FRAC_PI_2 * t * t).sin(),
         0.0,
         x,
-    ))
+    )
 }
 
 /// Fresnel cosine auxiliary function, derived from `fresnelC`/`fresnelS`.
