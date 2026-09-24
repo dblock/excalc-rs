@@ -11,7 +11,7 @@ See [docs/](docs/README.md) for detailed per-function reference documentation (d
 Ported from `common/MCalc.pas` in the original repo, grouped by the milestone that introduces them:
 
 - **v1 (this pass):** core arithmetic engine, standard math functions, statistics functions.
-- **Later passes:** number theory, advanced/special functions, financial functions, comparison/logic operators.
+- **Later passes:** number theory, advanced/special functions (including named integral functions like `erf`/`dilog`/Fresnel integrals), financial functions, comparison/logic operators, general rounding functions (`abs`, `frac`, `round`, `trunc`, `ceil`, `floor`, `random`).
 - **Not ported:** anything GUI-only (2D/3D plotting, drawing, Windows registry-based user-function storage, the Delphi `TCalcThread` threading model). None of that applies to a headless CLI/MCP tool.
 
 ## Grammar

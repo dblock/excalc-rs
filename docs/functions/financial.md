@@ -1,22 +1,22 @@
 # Financial
 
-**Status: planned, not yet implemented.** See [../../AGENTS.md](../../AGENTS.md#porting-from-the-original-pascal-engine) for porting conventions.
+**Status: planned, not yet implemented.** See [../../AGENTS.md](../../AGENTS.md#porting-from-the-original-pascal-engine) for porting conventions. Descriptions below are sourced from the "X. Financial Functions" chapter of the original [manual](../../HISTORY.md).
 
 ## Time value of money
 
 | Function | Meaning |
 |----------|---------|
-| `pv(payment, rate, term)` | Present value of a series of payments |
-| `fv(payment, rate, term)` | Future value of a series of payments |
-| `pmt(principal, rate, term)` | Payment amount to amortize `principal` over `term` periods |
-| `npv(rate, cashflow1, cashflow2, ...)` | Net present value of a series of cash flows |
-| `rate(futureValue, presentValue, term)` | Periodic interest rate implied by a present/future value pair |
-| `cterm(rate, futureValue, presentValue)` | Number of compounding periods needed to reach `futureValue` |
-| `term(payment, rate, futureValue)` | Number of payments needed to reach `futureValue` |
+| `pv(payment, rate, term)` | Initial value (present value) of a loan or annuity that can be paid off by making `term` payments of `payment`, with interest on the unpaid amount accruing at `rate` per interval |
+| `fv(payment, rate, term)` | Accumulated amount from making `term` payments of `payment`, with interest accruing on the accumulated amount at `rate` compounded per interval |
+| `pmt(principal, rate, term)` | Payment amount per interval on a loan or annuity of initial value `principal`, spread over `term` intervals at `rate` per interval |
+| `npv(rate, cashflow1, cashflow2, ...)` | Net present value of a sequence of cash flows discounted at `rate` |
+| `rate(futureValue, presentValue, term)` | Interest rate per interval such that `presentValue` compounded over `term` intervals accumulates into `futureValue` |
+| `cterm(rate, futureValue, presentValue)` | Number of compounding periods required for `presentValue` to accumulate into `futureValue` at `rate`, with no periodic deposits |
+| `term(payment, rate, futureValue)` | Number of compounding periods required to accumulate `futureValue` by making periodic deposits of `payment` at `rate` per period |
 
 ## Extended variants (support a payment-timing flag)
 
-These mirror the functions above but add an extra `ptype` parameter (`0` = payments at end of period, `1` = payments at start of period):
+These mirror the functions above but add an extra `ptype` parameter (`0` = payments at end of period, `1` = payments at start of period). Per the manual: `irate` extends `rate`, `nper` extends both `cterm` and `term`, `paymt` extends `pmt`, and `ppaymt`/`ipaymt` split a payment into its principal/interest portions:
 
 | Function | Meaning |
 |----------|---------|
@@ -32,7 +32,7 @@ These mirror the functions above but add an extra `ptype` parameter (`0` = payme
 
 | Function | Meaning |
 |----------|---------|
-| `sln(initialValue, residue, time)` | Straight-line depreciation per period |
-| `syd(initialValue, residue, period, time)` | Sum-of-the-years-digits depreciation for a given `period` |
-| `ddb(cost, salvage, life, period)` | Double-declining-balance depreciation for `period` |
-| `fdb(cost, salvage, life, period, month)` | Fixed-declining-balance depreciation, with partial first-year `month` convention |
+| `sln(cost, salvage, life)` | Straight-line depreciation per interval for an item of initial value `cost` that has a value of `salvage` after `life` intervals |
+| `syd(cost, salvage, life, period)` | Sum-of-the-years-digits depreciation amount for a given (positive, whole) `period`, on an item with initial `cost` and a final `salvage` value at the end of `life` intervals |
+| `ddb(cost, salvage, life, period)` | Double-declining-balance depreciation of an asset for `period`, with initial `cost` and final `salvage` value at the end of `life` |
+| `fdb(cost, salvage, life, period, month)` | Fixed-declining-balance depreciation — the manual calls this `Db`; `month` (partial first-year convention) can be omitted and defaults to `12` |
