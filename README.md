@@ -106,6 +106,20 @@ calc "harmonic(4)"           # ~2.0833
 calc "binom(5, 2)"           # 10       (5 choose 2)
 ```
 
+**General / rounding** ([details](docs/functions/general.md)):
+
+```
+calc "abs(-2)"            # 2
+calc "frac(1.345)"        # 0.345
+calc "intg(2.1)"          # 2         (alias of trunc)
+calc "round(-2.5)"        # -2        (ties round towards +infinity)
+calc "trunc(2.1)"         # 2
+calc "ceil(-2.1)"         # -2
+calc "floor(-2.1)"        # -3
+```
+
+`random(x)` returns a uniformly distributed random number in `[0, x]`, e.g. `calc "random(8)"` — omitted above since its result isn't deterministic.
+
 **Constants**: `pi` and `e` (case-insensitive).
 
 **Errors** exit with status `1` and print a message, e.g.:

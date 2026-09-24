@@ -4,7 +4,7 @@ use std::collections::HashMap;
 
 use crate::ast::{BinaryOp, Expr, UnaryOp};
 use crate::error::{CalcError, CalcResult};
-use crate::functions::{stats, trig};
+use crate::functions::{general, stats, trig};
 
 /// Evaluation context: currently just variable bindings. Constants (`pi`,
 /// `e`) are always available and can't be shadowed in v1.
@@ -200,6 +200,14 @@ fn call_function(name: &str, args: &[f64]) -> CalcResult<f64> {
             expect_args(&lower, args, 2)?;
             stats::binom(args[0], args[1])
         }
+
+        "abs" => one_arg(general::abs),
+        "trunc" | "intg" => one_arg(general::trunc),
+        "frac" => one_arg(general::frac),
+        "round" => one_arg(general::round),
+        "ceil" => one_arg(general::ceil),
+        "floor" => one_arg(general::floor),
+        "random" => one_arg(general::random),
 
         _ => Err(CalcError::UnknownFunction(name.to_string())),
     }

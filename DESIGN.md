@@ -10,8 +10,8 @@ See [docs/](docs/README.md) for detailed per-function reference documentation (d
 
 Ported from `common/MCalc.pas` in the original repo, grouped by the milestone that introduces them:
 
-- **v1 (this pass):** core arithmetic engine, standard math functions, statistics functions.
-- **Later passes:** number theory, advanced/special functions (including named integral functions like `erf`/`dilog`/Fresnel integrals), financial functions, comparison/logic operators, general rounding functions (`abs`, `frac`, `round`, `trunc`, `ceil`, `floor`, `random`).
+- **v1 (this pass):** core arithmetic engine, standard math functions, statistics functions, general/rounding functions.
+- **Later passes:** number theory, advanced/special functions (including named integral functions like `erf`/`dilog`/Fresnel integrals), financial functions, comparison/logic operators.
 - **Not ported:** anything GUI-only (2D/3D plotting, drawing, Windows registry-based user-function storage, the Delphi `TCalcThread` threading model). None of that applies to a headless CLI/MCP tool.
 
 ## Grammar
@@ -58,6 +58,10 @@ Full reference (domains, formulas, examples) lives in [docs/](docs/README.md); t
 ### v1: Statistics (variadic unless noted) ([details](docs/functions/statistics.md))
 
 `sum average(avg) product(prod) min max harmonic(n) binom(n, k)`
+
+### v1: General / rounding ([details](docs/functions/general.md))
+
+`abs frac intg round trunc ceil floor random`
 
 ### Planned: Number theory ([details](docs/functions/number-theory.md))
 
