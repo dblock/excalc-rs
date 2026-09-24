@@ -7,7 +7,7 @@
 | `gcd(a, b, ...)` | Greatest common divisor of all arguments | `Z x Z -> Z` | `gcd(3213, 24)` → `3` |
 | `lcm(a, b, ...)` | Least common multiple of all arguments | `Z x Z -> Z` | `lcm(14, 4)` → `28` |
 | `fib(n)` (alias `fibonacci`) | The `n`-th Fibonacci number | `N -> N` | `fib(56)` → `2.258e11` |
-| `isprime(n)` | The closest prime `<= n` (returns `n` itself if `n` is prime) — the original manual calls this `Prime` | `N -> N` | `isprime(86)` → `83` |
+| `prime?(n)` | The closest prime `<= n` (returns `n` itself if `n` is prime) — the original manual calls this `Prime` | `N -> N` | `prime?(86)` → `83` |
 | `moebius(n)` | Möbius function `μ(n)` — `1` for an even number of distinct prime factors, `-1` for an odd number, `0` if any prime factor repeats | `N -> {-1, 0, 1}` | `moebius(2)` → `-1` |
 | `mersenne(p)` | The Mersenne number `2^p - 1` for exponent `p` | `[1, 1023] -> N` | `mersenne(7)` → `127` |
 | `perfect(n)` | The closest known perfect number `<= n` (a number equal to the sum of its own positive divisors, e.g. `6 = 1+2+3`) | `N+ -> N+` | `perfect(1231)` → `496` |
@@ -27,7 +27,7 @@
 - `gcd(x, y)` uses Euclid's algorithm: repeatedly `t = x mod y; x = y; y = t;` until `y = 0`, result is `x`. Folded pairwise across all arguments for the variadic form.
 - `lcm(x, y) = (x / gcd(x, y)) * y`, folded pairwise; any zero argument makes the whole result `0`.
 - `fib` is computed iteratively via a running pair of sums, not naive recursion or matrix exponentiation, to avoid overflow/perf issues for large `n`.
-- Primality (`isprime`, `mersenne`-family, `safeprime`, `primec`, `primen`) uses a deterministic Miller-Rabin test, valid for the entire `u64` range rather than a hardcoded list of known primes.
+- Primality (`prime?`, `mersenne`-family, `safeprime`, `primec`, `primen`) uses a deterministic Miller-Rabin test, valid for the entire `u64` range rather than a hardcoded list of known primes.
 - `mersenne(p)` is the literal `2^p - 1`, regardless of whether the result is actually prime; use `mersennegen`/`mersgen`/`genmers` to work specifically with *Mersenne primes* (i.e. Mersenne numbers with a prime exponent that also happen to be prime).
 - `mersennegen`/`mersgen`/`genmers` search generators `p` in `[2, 63]` (the largest range for which `2^p - 1` fits exactly in a `u64`), rather than a hardcoded list of known Mersenne primes.
 - `perfect` relates directly to Mersenne primes: if `2^p - 1` is prime, then `2^(p-1) * (2^p - 1)` is an even perfect number, and every known even perfect number arises this way.

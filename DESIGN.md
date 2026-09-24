@@ -69,7 +69,7 @@ Full reference (domains, formulas, examples) lives in [docs/](docs/README.md); t
 
 ### v1: Number theory ([details](docs/functions/number-theory.md))
 
-`gcd lcm fib(onacci) isprime moebius mersenne perfect fermat safeprime primec primen mersennegen mersgen genmers sigma tau phi(eind)`
+`gcd lcm fib(onacci) prime? moebius mersenne perfect fermat safeprime primec primen mersennegen mersgen genmers sigma tau phi(eind)`
 
 ### v1: Comparison and logical operators ([details](docs/functions/logic.md))
 

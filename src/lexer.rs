@@ -141,11 +141,14 @@ impl<'a> Lexer<'a> {
         }
     }
 
+    /// Identifiers may end with a single trailing `?` (Scheme-style predicate
+    /// naming convention, e.g. `prime?`), matched greedily like any other
+    /// identifier character but not expected to appear more than once.
     fn read_ident(&mut self, first: char) -> Token {
         let mut s = String::new();
         s.push(first);
         while let Some(c) = self.peek_char() {
-            if c.is_ascii_alphanumeric() || c == '_' {
+            if c.is_ascii_alphanumeric() || c == '_' || c == '?' {
                 s.push(c);
                 self.chars.next();
             } else {
@@ -229,6 +232,20 @@ mod tests {
         assert_eq!(
             tokenize("e"),
             Ok(vec![Token::Ident("e".to_string()), Token::Eof])
+        );
+    }
+
+    #[test]
+    fn identifier_with_trailing_question_mark() {
+        assert_eq!(
+            tokenize("prime?(86)"),
+            Ok(vec![
+                Token::Ident("prime?".to_string()),
+                Token::LParen,
+                Token::Number(86.0),
+                Token::RParen,
+                Token::Eof
+            ])
         );
     }
 

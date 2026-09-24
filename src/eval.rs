@@ -230,7 +230,7 @@ fn call_function(name: &str, args: &[f64]) -> CalcResult<f64> {
         "random" => one_arg(general::random),
 
         "fib" | "fibonacci" => one_arg(number_theory::fib),
-        "isprime" => one_arg(number_theory::isprime),
+        "prime?" => one_arg(number_theory::isprime),
         "moebius" => one_arg(number_theory::moebius),
         "mersenne" => one_arg(number_theory::mersenne),
         "perfect" => one_arg(number_theory::perfect),

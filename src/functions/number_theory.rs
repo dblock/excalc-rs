@@ -135,16 +135,18 @@ pub fn fib(n: f64) -> CalcResult<f64> {
 }
 
 /// The closest prime `<= n` (returns `n` itself if `n` is prime); the
-/// original manual calls this `Prime`.
+/// original manual calls this `Prime`. Exposed to the calculator as `prime?`
+/// (Scheme-style predicate naming, since it also confirms primality when
+/// `isprime(n) == n`).
 pub fn isprime(n: f64) -> CalcResult<f64> {
-    let n = non_negative_integer("isprime", n)?;
+    let n = non_negative_integer("prime?", n)?;
     let mut candidate = n;
     loop {
         if is_prime_u64(candidate) {
             return Ok(candidate as f64);
         }
         if candidate == 0 {
-            return Err(CalcError::DomainError("isprime".to_string()));
+            return Err(CalcError::DomainError("prime?".to_string()));
         }
         candidate -= 1;
     }
@@ -416,11 +418,11 @@ mod tests {
         assert_eq!(isprime(2.0).unwrap(), 2.0);
         assert_eq!(
             isprime(-1.0),
-            Err(CalcError::DomainError("isprime".to_string()))
+            Err(CalcError::DomainError("prime?".to_string()))
         );
         assert_eq!(
             isprime(0.0),
-            Err(CalcError::DomainError("isprime".to_string()))
+            Err(CalcError::DomainError("prime?".to_string()))
         );
     }
 

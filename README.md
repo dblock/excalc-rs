@@ -126,7 +126,7 @@ calc "floor(-2.1)"        # -3
 calc "gcd(3213, 24)"       # 3
 calc "lcm(14, 4)"          # 28
 calc "fib(10)"             # 55
-calc "isprime(86)"         # 83        (closest prime <= 86)
+calc "prime?(86)"          # 83        (closest prime <= 86)
 calc "moebius(2)"          # -1        (Mobius function)
 calc "mersenne(7)"         # 127       (2^7 - 1)
 calc "perfect(1231)"       # 496       (closest known perfect number <= 1231)
