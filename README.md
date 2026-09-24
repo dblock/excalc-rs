@@ -196,3 +196,7 @@ cargo run -- "2 + 2 * 3"
 If you already have another `calc` on your `PATH`, check `which calc` after installing — `cargo install` won't warn you if it shadows an existing command.
 
 See [CHANGELOG.md](CHANGELOG.md) for release history, [RELEASING.md](RELEASING.md) for how to cut a new release, and [CONTRIBUTING.md](CONTRIBUTING.md) for how to build, test, and contribute. See [DESIGN.md](DESIGN.md) for the grammar, function catalog, and what's ported vs. deferred vs. skipped.
+
+## License
+
+MIT License, see [LICENSE](LICENSE) for details.
