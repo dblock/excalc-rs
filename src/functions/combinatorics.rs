@@ -102,6 +102,94 @@ pub fn multinomial(args: &[f64]) -> CalcResult<f64> {
     Ok(result.round())
 }
 
+/// Unsigned Stirling numbers of the first kind, `|s(n, k)|`: the number of
+/// permutations of `n` elements with exactly `k` cycles. Computed via the
+/// standard recurrence `|s(n, k)| = |s(n-1, k-1)| + (n-1) * |s(n-1, k)|`,
+/// with base cases `|s(0, 0)| = 1` and `|s(n, 0)| = 0` for `n > 0`.
+pub fn stirling1(n: f64, k: f64) -> CalcResult<f64> {
+    let n = non_negative_u64("stirling1", n)?;
+    let k = non_negative_u64("stirling1", k)?;
+    if k > n {
+        return Ok(0.0);
+    }
+    // row[j] holds |s(i, j)| for the current i, built up from i = 0.
+    let mut row = vec![0f64; (n + 1) as usize];
+    row[0] = 1.0;
+    for i in 1..=n {
+        for j in (1..=i).rev() {
+            row[j as usize] = row[j as usize - 1] + (i - 1) as f64 * row[j as usize];
+            if row[j as usize].is_infinite() {
+                return Err(CalcError::Overflow);
+            }
+        }
+        row[0] = 0.0;
+    }
+    Ok(row[k as usize])
+}
+
+/// Stirling numbers of the second kind, `S(n, k)`: the number of ways to
+/// partition a set of `n` elements into exactly `k` non-empty subsets.
+/// Computed via the standard recurrence
+/// `S(n, k) = k * S(n-1, k) + S(n-1, k-1)`, with base cases `S(0, 0) = 1`
+/// and `S(n, 0) = 0` for `n > 0`.
+pub fn stirling2(n: f64, k: f64) -> CalcResult<f64> {
+    let n = non_negative_u64("stirling2", n)?;
+    let k = non_negative_u64("stirling2", k)?;
+    if k > n {
+        return Ok(0.0);
+    }
+    let mut row = vec![0f64; (n + 1) as usize];
+    row[0] = 1.0;
+    for i in 1..=n {
+        for j in (1..=i).rev() {
+            row[j as usize] = j as f64 * row[j as usize] + row[j as usize - 1];
+            if row[j as usize].is_infinite() {
+                return Err(CalcError::Overflow);
+            }
+        }
+        row[0] = 0.0;
+    }
+    Ok(row[k as usize])
+}
+
+/// The number of derangements of `n` elements (permutations with no fixed
+/// points), via the recurrence `D(n) = (n-1) * (D(n-1) + D(n-2))`, with
+/// base cases `D(0) = 1`, `D(1) = 0`.
+pub fn derangement(n: f64) -> CalcResult<f64> {
+    let n = non_negative_u64("derangement", n)?;
+    if n == 0 {
+        return Ok(1.0);
+    }
+    if n == 1 {
+        return Ok(0.0);
+    }
+    let (mut prev2, mut prev1) = (1f64, 0f64); // D(0), D(1)
+    for i in 2..=n {
+        let current = (i - 1) as f64 * (prev1 + prev2);
+        if current.is_infinite() {
+            return Err(CalcError::Overflow);
+        }
+        prev2 = prev1;
+        prev1 = current;
+    }
+    Ok(prev1)
+}
+
+/// The `n`-th Bell number: the number of ways to partition a set of `n`
+/// elements into any number of non-empty subsets, i.e. `sum_{k=0}^{n}
+/// S(n, k)` (the sum of Stirling numbers of the second kind over all `k`).
+pub fn bell(n: f64) -> CalcResult<f64> {
+    let n_u = non_negative_u64("bell", n)?;
+    let mut total = 0f64;
+    for k in 0..=n_u {
+        total += stirling2(n, k as f64)?;
+        if total.is_infinite() {
+            return Err(CalcError::Overflow);
+        }
+    }
+    Ok(total)
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
@@ -179,5 +267,65 @@ mod tests {
                 got: 1,
             })
         );
+    }
+
+    #[test]
+    fn stirling1_matches_known_values() {
+        assert_eq!(stirling1(0.0, 0.0).unwrap(), 1.0);
+        assert_eq!(stirling1(4.0, 2.0).unwrap(), 11.0);
+        assert_eq!(stirling1(5.0, 1.0).unwrap(), 24.0);
+        assert_eq!(stirling1(5.0, 5.0).unwrap(), 1.0);
+    }
+
+    #[test]
+    fn stirling1_zero_when_k_exceeds_n() {
+        assert_eq!(stirling1(2.0, 5.0).unwrap(), 0.0);
+    }
+
+    #[test]
+    fn stirling2_matches_known_values() {
+        assert_eq!(stirling2(0.0, 0.0).unwrap(), 1.0);
+        assert_eq!(stirling2(4.0, 2.0).unwrap(), 7.0);
+        assert_eq!(stirling2(5.0, 1.0).unwrap(), 1.0);
+        assert_eq!(stirling2(5.0, 5.0).unwrap(), 1.0);
+    }
+
+    #[test]
+    fn stirling2_zero_when_k_exceeds_n() {
+        assert_eq!(stirling2(2.0, 5.0).unwrap(), 0.0);
+    }
+
+    #[test]
+    fn derangement_matches_known_values() {
+        assert_eq!(derangement(0.0).unwrap(), 1.0);
+        assert_eq!(derangement(1.0).unwrap(), 0.0);
+        assert_eq!(derangement(2.0).unwrap(), 1.0);
+        assert_eq!(derangement(3.0).unwrap(), 2.0);
+        assert_eq!(derangement(4.0).unwrap(), 9.0);
+        assert_eq!(derangement(5.0).unwrap(), 44.0);
+    }
+
+    #[test]
+    fn bell_matches_known_values() {
+        assert_eq!(bell(0.0).unwrap(), 1.0);
+        assert_eq!(bell(1.0).unwrap(), 1.0);
+        assert_eq!(bell(2.0).unwrap(), 2.0);
+        assert_eq!(bell(3.0).unwrap(), 5.0);
+        assert_eq!(bell(4.0).unwrap(), 15.0);
+        assert_eq!(bell(5.0).unwrap(), 52.0);
+    }
+
+    #[test]
+    fn stirling_and_bell_reject_negative_or_fractional_input() {
+        assert!(matches!(
+            stirling1(-1.0, 0.0),
+            Err(CalcError::DomainError(_))
+        ));
+        assert!(matches!(
+            stirling2(1.5, 0.0),
+            Err(CalcError::DomainError(_))
+        ));
+        assert!(matches!(derangement(-1.0), Err(CalcError::DomainError(_))));
+        assert!(matches!(bell(-1.0), Err(CalcError::DomainError(_))));
     }
 }

@@ -8,7 +8,7 @@ Expression Calculator (CLI, MCP, Rust)
 
 An expression calculator CLI tool and MCP server built for AI coding agents like Claude and GitHub Copilot to outsource arithmetic, saving tokens and avoiding LLM math hallucinations.
 
-A mathematical beast with 208 functions and operators across standard math, trigonometry, statistics, probability distributions, financial (NPV, IRR), number theory (GCD, totient, primality), base conversion, combinatorics, numeric integration, root finding, geometry (n-dimensional distance/dot/norm), unit conversion, and advanced/special functions (gamma, elliptic integrals, dilogarithm, and more).
+A mathematical beast with 212 functions and operators across standard math, trigonometry, statistics, probability distributions, financial (NPV, IRR), number theory (GCD, totient, primality), base conversion, combinatorics, numeric integration, root finding, geometry (n-dimensional distance/dot/norm), unit conversion, and advanced/special functions (gamma, elliptic integrals, dilogarithm, and more).
 
 Spiritual successor to the Vestris Inc. shareware Expression Calculator written in 1996 in Pascal. It was also pressed on a CD-ROM, translated, and sold in Germany under the name Global Calculator in 1997. See [HISTORY.md](HISTORY.md).
 
@@ -152,6 +152,10 @@ calc "factorial(5)"              # 120   (5!, same as postfix 5!)
 calc "perm(5, 2)"                # 20    (permutations of 2 out of 5)
 calc "catalan(3)"                # 5     (3rd Catalan number)
 calc "multinomial(10, 2, 3, 5)"  # 2520  (10! / (2! 3! 5!))
+calc "stirling1(4, 2)"           # 11    (unsigned Stirling number, 1st kind)
+calc "stirling2(4, 2)"           # 7     (Stirling number, 2nd kind)
+calc "derangement(5)"            # 44    (derangements of 5 elements)
+calc "bell(5)"                   # 52    (5th Bell number)
 ```
 
 **General / rounding** ([details](docs/functions/general.md)):

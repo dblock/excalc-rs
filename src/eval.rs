@@ -429,6 +429,16 @@ fn call_function(name: &str, args: &[f64]) -> CalcResult<f64> {
             combinatorics::perm(args[0], args[1])
         }
         "catalan" => one_arg(combinatorics::catalan),
+        "stirling1" => {
+            expect_args(&lower, args, 2)?;
+            combinatorics::stirling1(args[0], args[1])
+        }
+        "stirling2" => {
+            expect_args(&lower, args, 2)?;
+            combinatorics::stirling2(args[0], args[1])
+        }
+        "derangement" => one_arg(combinatorics::derangement),
+        "bell" => one_arg(combinatorics::bell),
 
         "abs" => one_arg(general::abs),
         "trunc" | "intg" => one_arg(general::trunc),

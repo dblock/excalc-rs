@@ -8,6 +8,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 
 ### Added
 
+- Combinatorics extras: `stirling1(n, k)`/`stirling2(n, k)` (Stirling numbers of the first/second kind), `derangement(n)`, and `bell(n)` (Bell numbers).
 - New statistics functions: `skewness` (population skewness) and `kurtosis` (population excess kurtosis).
 - Unit conversion functions: `c2f`/`f2c` (temperature), `km2mi`/`mi2km` (distance), `kg2lb`/`lb2kg` (mass), `m2ft`/`ft2m` (distance).
 - Probability distribution functions: `binomialpdf`/`binomialcdf` (binomial), `poissonpdf`/`poissoncdf` (Poisson), `normalpdf`/`normalcdf` (normal, reusing the existing `erf`), and `zscore` (standard score).
