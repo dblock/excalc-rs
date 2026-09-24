@@ -1,6 +1,6 @@
 [package]
 name = "excalc"
-version = "0.1.0"
+version = "0.2.0"
 edition = "2021"
 authors = ["Daniel Doubrovkine and contributors"]
 description = "An expression calculator CLI tool and MCP server built for AI coding agents to outsource arithmetic."

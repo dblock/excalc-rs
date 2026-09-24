@@ -6,6 +6,8 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 
 ## [Unreleased]
 
+## [0.2.0] - 2026-09-24
+
 ### Added
 
 - Homebrew formula (`Formula/excalc.rb`), installable via `brew tap dblock/excalc-rs https://github.com/dblock/excalc-rs && brew install excalc`. Builds from source via `cargo install`. CI audits/installs/tests the formula on every push/PR via `.github/workflows/homebrew.yml`; `RELEASING.md` documents updating its `url`/`sha256` on every release.
@@ -45,5 +47,6 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 - CLI binary (`excalc "2 + 2 * 3"`).
 - CI: build/test on Linux, macOS, Windows; `cargo fmt` and `cargo clippy` checks.
 
-[Unreleased]: https://github.com/dblock/excalc-rs/compare/v0.1.0...HEAD
+[Unreleased]: https://github.com/dblock/excalc-rs/compare/v0.2.0...HEAD
+[0.2.0]: https://github.com/dblock/excalc-rs/compare/v0.1.0...v0.2.0
 [0.1.0]: https://github.com/dblock/excalc-rs/releases/tag/v0.1.0
