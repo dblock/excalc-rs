@@ -148,7 +148,7 @@ calc "shr(2, 1)"           # 1        (2 / 2^1)
 **Variables**:
 
 ```
-calc "x := 5; x * 2"                # 10        (assign then use in a later statement)
+calc "x := 5; x * 2"                 # 10        (assign then use in a later statement)
 calc "x := 5
 y := x^2 + 1
 y"                                   # 26        (statements can also be newline-separated)
