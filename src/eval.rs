@@ -7,7 +7,7 @@ use crate::error::{CalcError, CalcResult};
 use crate::functions::{
     advanced, base, combinatorics, financial, general,
     integration::{self, Rule},
-    logic, number_theory, stats, trig,
+    logic, numbertheory, rootfinding, stats, trig,
 };
 
 /// The result of evaluating a program or expression: almost always a plain
@@ -112,6 +112,9 @@ pub fn eval(expr: &Expr, ctx: &Context) -> CalcResult<Value> {
                     &lower, arg_exprs, ctx,
                 )?));
             }
+            if matches!(lower.as_str(), "bisect" | "secant") {
+                return Ok(Value::Number(eval_root_finding(&lower, arg_exprs, ctx)?));
+            }
             if matches!(lower.as_str(), "hex" | "oct" | "bin") {
                 return eval_base_conversion(&lower, arg_exprs, ctx);
             }
@@ -201,6 +204,27 @@ fn eval_adaptive_integration(name: &str, arg_exprs: &[Expr], ctx: &Context) -> C
         eval_numeric(body, &work_ctx)
     };
     integration::adaptive(name, f, a, b, tolerance)
+}
+
+/// `bisect(expr, var, a, b, tolerance)` / `secant(expr, var, x0, x1,
+/// tolerance)`: root-finding functions sharing the same 5-argument shape
+/// (expression, bare variable, two numeric bracket/seed values, tolerance)
+/// as the numeric-integration functions above, so they reuse
+/// `integration_setup` for arity/variable/argument validation.
+fn eval_root_finding(name: &str, arg_exprs: &[Expr], ctx: &Context) -> CalcResult<f64> {
+    let (body, var_name, a, b, tolerance) = integration_setup(name, arg_exprs, ctx)?;
+    let mut work_ctx = Context {
+        variables: ctx.variables.clone(),
+    };
+    let f = |x: f64| -> CalcResult<f64> {
+        work_ctx.set(var_name.clone(), x);
+        eval_numeric(body, &work_ctx)
+    };
+    match name {
+        "bisect" => rootfinding::bisect(name, f, a, b, tolerance),
+        "secant" => rootfinding::secant(name, f, a, b, tolerance),
+        _ => unreachable!("eval_root_finding only called for bisect/secant"),
+    }
 }
 
 fn resolve_variable(name: &str, ctx: &Context) -> CalcResult<f64> {
@@ -306,8 +330,8 @@ fn call_function(name: &str, args: &[f64]) -> CalcResult<f64> {
         "percentile" => return stats::percentile(args),
         "covariance" => return stats::covariance(args),
         "correlation" => return stats::correlation(args),
-        "gcd" => return number_theory::gcd(args),
-        "lcm" => return number_theory::lcm(args),
+        "gcd" => return numbertheory::gcd(args),
+        "lcm" => return numbertheory::lcm(args),
         "multinomial" => return combinatorics::multinomial(args),
         _ => {}
     }
@@ -435,33 +459,33 @@ fn call_function(name: &str, args: &[f64]) -> CalcResult<f64> {
             general::mod2(args[0], args[1])
         }
 
-        "fib" | "fibonacci" => one_arg(number_theory::fib),
-        "lucas" => one_arg(number_theory::lucas),
-        "prime?" => one_arg(number_theory::isprime),
-        "moebius" => one_arg(number_theory::moebius),
-        "mersenne" => one_arg(number_theory::mersenne),
-        "perfect" => one_arg(number_theory::perfect),
-        "fermat" => one_arg(number_theory::fermat),
-        "safeprime" => one_arg(number_theory::safeprime),
-        "primec" => one_arg(number_theory::primec),
-        "primen" => one_arg(number_theory::primen),
-        "mersennegen" => one_arg(number_theory::mersennegen),
-        "mersgen" => one_arg(number_theory::mersgen),
-        "genmers" => one_arg(number_theory::genmers),
-        "tau" => one_arg(number_theory::tau),
-        "phi" | "eind" => one_arg(number_theory::phi),
+        "fib" | "fibonacci" => one_arg(numbertheory::fib),
+        "lucas" => one_arg(numbertheory::lucas),
+        "prime?" => one_arg(numbertheory::isprime),
+        "moebius" => one_arg(numbertheory::moebius),
+        "mersenne" => one_arg(numbertheory::mersenne),
+        "perfect" => one_arg(numbertheory::perfect),
+        "fermat" => one_arg(numbertheory::fermat),
+        "safeprime" => one_arg(numbertheory::safeprime),
+        "primec" => one_arg(numbertheory::primec),
+        "primen" => one_arg(numbertheory::primen),
+        "mersennegen" => one_arg(numbertheory::mersennegen),
+        "mersgen" => one_arg(numbertheory::mersgen),
+        "genmers" => one_arg(numbertheory::genmers),
+        "tau" => one_arg(numbertheory::tau),
+        "phi" | "eind" => one_arg(numbertheory::phi),
         "sigma" => {
             expect_args(&lower, args, 2)?;
-            number_theory::sigma(args[0], args[1])
+            numbertheory::sigma(args[0], args[1])
         }
-        "primorial" => one_arg(number_theory::primorial),
-        "digitsum" => one_arg(number_theory::digitsum),
-        "digitalroot" => one_arg(number_theory::digitalroot),
-        "palindrome?" => one_arg(number_theory::ispalindrome),
-        "nextprime" => one_arg(number_theory::nextprime),
-        "triangular" => one_arg(number_theory::triangular),
-        "pentagonal" => one_arg(number_theory::pentagonal),
-        "hexagonal" => one_arg(number_theory::hexagonal),
+        "primorial" => one_arg(numbertheory::primorial),
+        "digitsum" => one_arg(numbertheory::digitsum),
+        "digitalroot" => one_arg(numbertheory::digitalroot),
+        "palindrome?" => one_arg(numbertheory::ispalindrome),
+        "nextprime" => one_arg(numbertheory::nextprime),
+        "triangular" => one_arg(numbertheory::triangular),
+        "pentagonal" => one_arg(numbertheory::pentagonal),
+        "hexagonal" => one_arg(numbertheory::hexagonal),
 
         "not" => one_arg(logic::not),
         "shl" => {
@@ -1068,6 +1092,42 @@ mod tests {
         assert_eq!(
             crate::evaluate("simpson(sqrt(x), x, -1, 1, 4)"),
             Err(CalcError::DomainError("sqrt".to_string()))
+        );
+    }
+
+    #[test]
+    fn root_finding_finds_sqrt_2() {
+        let bisect = crate::evaluate("bisect(x^2 - 2, x, 0, 2, 0.000001)").unwrap();
+        assert!((bisect - std::f64::consts::SQRT_2).abs() < 1e-4);
+        let secant = crate::evaluate("secant(x^2 - 2, x, 0, 2, 0.000001)").unwrap();
+        assert!((secant - std::f64::consts::SQRT_2).abs() < 1e-4);
+    }
+
+    #[test]
+    fn root_finding_reuses_integration_arg_validation() {
+        // Wrong arity and invalid variable argument are validated by the
+        // shared `integration_setup`, exercised more thoroughly by the
+        // `integration_*` tests above; spot-check that bisect/secant go
+        // through the same path.
+        assert_eq!(
+            crate::evaluate("bisect(x^2 - 2, x, 0, 2)"),
+            Err(CalcError::WrongArgCount {
+                name: "bisect".to_string(),
+                expected: "5".to_string(),
+                got: 4,
+            })
+        );
+        assert_eq!(
+            crate::evaluate("secant(x^2 - 2, 5, 0, 2, 0.001)"),
+            Err(CalcError::DomainError("secant".to_string()))
+        );
+    }
+
+    #[test]
+    fn root_finding_does_not_converge_errors() {
+        assert_eq!(
+            crate::evaluate("bisect(x^2 + 1, x, -2, 2, 0.001)"),
+            Err(CalcError::DomainError("bisect".to_string()))
         );
     }
 

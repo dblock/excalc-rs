@@ -8,7 +8,7 @@ Expression Calculator (CLI, MCP, Rust)
 
 An expression calculator CLI tool and MCP server built for AI coding agents like Claude and GitHub Copilot to outsource arithmetic, saving tokens and avoiding LLM math hallucinations.
 
-A mathematical beast with 174 functions and operators across standard math, trigonometry, statistics, financial (NPV, IRR), number theory (GCD, totient, primality), base conversion, combinatorics, numeric integration, and advanced/special functions (gamma, elliptic integrals, dilogarithm, and more).
+A mathematical beast with 176 functions and operators across standard math, trigonometry, statistics, financial (NPV, IRR), number theory (GCD, totient, primality), base conversion, combinatorics, numeric integration, root finding, and advanced/special functions (gamma, elliptic integrals, dilogarithm, and more).
 
 Spiritual successor to the Vestris Inc. shareware Expression Calculator written in 1996 in Pascal. It was also pressed on a CD-ROM, translated, and sold in Germany under the name Global Calculator in 1997. See [HISTORY.md](HISTORY.md).
 
@@ -276,6 +276,13 @@ calc "boole(log(x^3), x, 1, 10, 64)"       # ~18.274048988489618 (Boole's rule)
 calc "ordersix(log(x^3), x, 1, 10, 64)"    # ~18.274048988543118 (6th-order Newton-Cotes rule)
 calc "weddle(log(x^3), x, 1, 10, 64)"      # ~18.274048988612115 (Weddle's rule)
 calc "int(log(x^3), x, 1, 10, 0.0000001)"  # ~18.274048987232057 (adaptive quadrature, alias gauss)
+```
+
+**Root finding** ([details](docs/functions/root-finding.md)) — also takes an expression and a bare variable:
+
+```
+calc "bisect(x^2 - 2, x, 0, 2, 0.000001)"  # ~1.4142141342163086 (bisection method; approximates sqrt(2))
+calc "secant(x^2 - 2, x, 0, 2, 0.000001)"  # ~1.4142135623730947 (secant method; approximates sqrt(2))
 ```
 
 **Financial functions** ([details](docs/functions/financial.md)):

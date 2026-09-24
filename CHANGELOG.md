@@ -8,12 +8,12 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 
 ### Added
 
+- Root-finding functions `bisect(expr, var, a, b, tolerance)` (bisection method) and `secant(expr, var, x0, x1, tolerance)` (secant method), sharing the same expression-and-bare-variable calling convention as the numeric-integration functions.
 - New sequence/figurate-number functions: `lucas(n)` (Lucas numbers, sibling to `fib`), `triangular(n)`, `pentagonal(n)`, `hexagonal(n)`.
 - Bit manipulation functions: `popcount(n)`, `bitlen(n)`, `bitreverse(n, width)`.
 - New general/rounding functions: `roundto(x, n)` (round to `n` decimal places), `floordiv(a, b)` and `mod2(a, b)` (floored division/modulo, complementing `/`/`mod`'s truncated-towards-zero convention).
 - Combinatorics functions: `factorial(n)` (named equivalent of postfix `!`), `perm(n, r)`, `catalan(n)`, `multinomial(n, k1, k2, ...)`.
 - `atan2(y, x)`: two-argument arctangent, using the sign of both arguments to determine the correct quadrant.
-
 - `excalc`/`calc` read the expression from stdin when no argument is given and stdin is not a TTY, e.g. `echo "2 + 2" | calc`.
 - `--help` and usage output now credit the author.
 - Windows MSI installer: renamed the default install directory from `excalc` to `ExCalc`; added an optional (on by default) "MCP Server Registration" feature that shells out to `copilot mcp add` and `claude mcp add` to register `excalc-mcp` with GitHub Copilot CLI and Claude Code CLI, if either is found on the machine (`src/bin/excalc-mcp-setup.rs`, run as a deferred, impersonated, best-effort custom action).

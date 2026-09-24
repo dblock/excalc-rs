@@ -5,6 +5,7 @@ pub mod financial;
 pub mod general;
 pub mod integration;
 pub mod logic;
-pub mod number_theory;
+pub mod numbertheory;
+pub mod rootfinding;
 pub mod stats;
 pub mod trig;
