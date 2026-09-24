@@ -14,6 +14,18 @@ cargo test
 
 CI runs the same checks on Linux, macOS, and Windows; don't push code that fails any of them locally.
 
+## Coverage
+
+CI reports test coverage to [Coveralls](https://coveralls.io/github/dblock/excalc-rs) via `cargo llvm-cov` on every push/PR (see the `coverage` job in `.github/workflows/ci.yml`). No secrets to configure — it authenticates with the built-in `GITHUB_TOKEN`. To check coverage locally:
+
+```bash
+cargo install cargo-llvm-cov
+rustup component add llvm-tools-preview   # if using rustup
+cargo llvm-cov --workspace --all-features
+```
+
+When adding new functions/features, add tests that exercise them rather than relying on coverage tooling to catch gaps after the fact.
+
 ## Markdown
 
 Do not hard-wrap prose in Markdown files. Write each paragraph as a single long line and let the reader's editor/viewer soft-wrap it. Only break lines for actual structure: headings, lists, code blocks, tables.

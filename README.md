@@ -1,6 +1,9 @@
 Expression Calculator (Rust)
 =============================
 
+[![CI](https://github.com/dblock/excalc-rs/actions/workflows/ci.yml/badge.svg)](https://github.com/dblock/excalc-rs/actions/workflows/ci.yml)
+[![Coverage Status](https://coveralls.io/repos/github/dblock/excalc-rs/badge.svg?branch=master)](https://coveralls.io/github/dblock/excalc-rs?branch=master)
+
 A portable expression calculator, built as a CLI tool (and soon an MCP server) so AI coding agents like Claude and GitHub Copilot can outsource arithmetic instead of computing it themselves — saving tokens and avoiding LLM math mistakes.
 
 Spiritual successor to [excalc](https://github.com/dblock/excalc) (Vestris Inc. Expression Calculator, Pascal, 1996). See [DESIGN.md](DESIGN.md) for the grammar, function catalog, and what's ported vs. deferred vs. skipped, and [docs/](docs/README.md) for detailed per-function reference documentation.
