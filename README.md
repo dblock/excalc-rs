@@ -417,7 +417,7 @@ cargo run -- "2 + 2 * 3"
 
 If you already have another `calc` on your `PATH`, check `which calc` after installing — `cargo install` won't warn you if it shadows an existing command.
 
-See [CONTRIBUTING.md](CONTRIBUTING.md) for how to build, test, and contribute, [RELEASING.md](RELEASING.md) for how to cut a new release, and [CHANGELOG.md](CHANGELOG.md) for release history. See [port/DESIGN.md](port/DESIGN.md) for the grammar, function catalog, and what's ported vs. deferred vs. skipped.
+See [CONTRIBUTING.md](CONTRIBUTING.md) for how to build, test, and contribute, [RELEASING.md](RELEASING.md) for how to cut a new release, and [CHANGELOG.md](CHANGELOG.md) for release history. See [port/DESIGN.md](port/DESIGN.md) for the grammar, function catalog, and what's ported vs. deferred vs. skipped. See [OTHERS.md](OTHERS.md) for how this compares to other command-line calculators (`bc`, `dc`, GNU `units`, Qalculate!, Numbat, Frink, and more).
 
 ## License
 
