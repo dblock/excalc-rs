@@ -1,16 +1,12 @@
 Expression Calculator (CLI, MCP, Rust)
 ======================================
 
-<img src="docs/images/small.jpg" alt="Expression Calculator NT" align="right" width="120">
-
 [![Test](https://github.com/dblock/excalc-rs/actions/workflows/test.yml/badge.svg)](https://github.com/dblock/excalc-rs/actions/workflows/test.yml)
 [![Coverage Status](https://coveralls.io/repos/github/dblock/excalc-rs/badge.svg?branch=master)](https://coveralls.io/github/dblock/excalc-rs?branch=master)
 
 An expression calculator CLI tool and MCP server built for AI coding agents like Claude and GitHub Copilot to outsource arithmetic, saving tokens and avoiding LLM math hallucinations. Also usable as a one-shot command, piped from stdin, or as an interactive REPL.
 
 A mathematical beast with 214 functions and operators across standard math, trigonometry, statistics, probability distributions, financial (NPV, IRR), number theory (GCD, totient, primality), base conversion, combinatorics, numeric integration, root finding, geometry (n-dimensional distance/dot/norm), unit conversion, and advanced/special functions (gamma, elliptic integrals, dilogarithm, and more).
-
-Spiritual successor to the Vestris Inc. shareware Expression Calculator written in 1996 in Pascal. It was also pressed on a CD-ROM, translated, and sold in Germany under the name Global Calculator in 1997. See [HISTORY.md](HISTORY.md).
 
 ## Install
 
@@ -424,6 +420,12 @@ cargo run -- "2 + 2 * 3"
 If you already have another `calc` on your `PATH`, check `which calc` after installing — `cargo install` won't warn you if it shadows an existing command.
 
 See [CONTRIBUTING.md](CONTRIBUTING.md) for how to build, test, and contribute, [RELEASING.md](RELEASING.md) for how to cut a new release, and [CHANGELOG.md](CHANGELOG.md) for release history. See [port/DESIGN.md](port/DESIGN.md) for the grammar, function catalog, and what's ported vs. deferred vs. skipped. See [OTHERS.md](OTHERS.md) for how this compares to other command-line calculators (`bc`, `dc`, GNU `units`, Qalculate!, Numbat, Frink, and more).
+
+## History
+
+Spiritual successor to the Vestris Inc. shareware Expression Calculator written in 1996 in Pascal. It was also pressed on a CD-ROM, translated, and sold in Germany under the name Global Calculator in 1997. See [HISTORY.md](HISTORY.md).
+
+![Expression Calculator NT](docs/images/small.jpg)
 
 ## License
 
