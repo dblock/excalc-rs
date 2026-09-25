@@ -205,6 +205,9 @@ Define your own functions with name(params) := expr, e.g. f(x) := x^2 + 1;
 they can call themselves or each other (deeply nested recursion errors
 instead of crashing once available stack space is running low) and stay
 available for later lines, same as variables.
+Use cond ? then : else (or if(cond, then, else)) for conditionals; only the
+taken branch is evaluated, so a recursive function can stop at a base case,
+e.g. fact(n) := n < 2 ? 1 : n * fact(n - 1).
 Press Tab while typing a function name to complete it; a unique match also
 opens the call for you (e.g. typing atan2 then pressing Tab adds the `(`).
 Inside a call's parentheses, argument names are shown as you type; Tab

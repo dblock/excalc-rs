@@ -113,6 +113,7 @@ pub const FUNCTIONS: &[(&str, &[&str])] = &[
     ("hex", &["n"]),
     ("hexagonal", &["n"]),
     ("hypot", &["x", "y"]),
+    ("if", &["cond", "then", "else"]),
     ("int", &["expr", "var", "a", "b", "tolerance"]),
     ("intg", &["x"]),
     ("ipaymt", &["rate", "per", "nper", "pv", "fv", "ptype"]),

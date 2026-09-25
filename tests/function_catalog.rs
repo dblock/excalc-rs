@@ -92,7 +92,9 @@ fn function_catalog_matches_dispatch_code() {
 
     // Handled as special cases directly in `eval::eval` rather than
     // through `call_function`'s match arms.
-    for special in ["int", "gauss", "bisect", "secant", "hex", "oct", "bin"] {
+    for special in [
+        "int", "gauss", "bisect", "secant", "hex", "oct", "bin", "if",
+    ] {
         names.insert(special.to_string());
     }
 

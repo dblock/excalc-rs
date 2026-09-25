@@ -1,15 +1,16 @@
 //! Recursive-descent parser using conventional calculator precedence
 //! (loosest to tightest binding):
 //!
-//! 1. Comparison:      `=  >  <`
-//! 2. Logical or:      `or  nor  xor  xnor`
-//! 3. Logical and:     `and  nand  &`
-//! 4. Additive:        `+  -`
-//! 5. Multiplicative:  `*  /  mod`
-//! 6. Unary prefix:    `-x`
-//! 7. Power / root:    `^` (right-assoc), `\` (n-th root, left-assoc)
-//! 8. Postfix:         `!` (factorial), `%` (percent)
-//! 9. Primary:         numbers, variables, `name(args, ...)`, `( expr )`
+//! 1. Ternary:         `cond ? then : else` (right-assoc)
+//! 2. Comparison:      `=  >  <`
+//! 3. Logical or:      `or  nor  xor  xnor`
+//! 4. Logical and:     `and  nand  &`
+//! 5. Additive:        `+  -`
+//! 6. Multiplicative:  `*  /  mod`
+//! 7. Unary prefix:    `-x`
+//! 8. Power / root:    `^` (right-assoc), `\` (n-th root, left-assoc)
+//! 9. Postfix:         `!` (factorial), `%` (percent)
+//! 10. Primary:        numbers, variables, `name(args, ...)`, `( expr )`
 //!
 //! This intentionally differs from the original Pascal engine, which bound
 //! `%` tighter than `* /` and `\` looser than `^`, and used `=` to mean
@@ -19,6 +20,15 @@
 //! `=` the more intuitive equality meaning; assignment instead uses `:=`
 //! (see [`Stmt::Assign`]) at the statement level, outside expression
 //! grammar entirely, so it's never ambiguous with equality.
+//!
+//! `cond ? then : else` is parsed as sugar for `if(cond, then, else)`
+//! (see [`Expr::Call`]) — both forms produce the exact same AST node and
+//! are evaluated identically (short-circuiting: only the taken branch is
+//! evaluated). The condition binds at comparison precedence (so
+//! `a < b ? x : y` needs no parens, but a ternary nested *inside* a
+//! condition does, e.g. `(a ? b : c) < d`); the `then` and `else` branches
+//! each admit a full nested ternary, right-associatively, so
+//! `a ? b : c ? d : e` reads as `a ? b : (c ? d : e)`.
 //!
 //! Above expressions sits one more layer: a full input is a `;`- or
 //! newline-separated sequence of statements (`parse_program`), each either
@@ -32,7 +42,7 @@ use crate::lexer::{tokenize, Token};
 pub fn parse(input: &str) -> CalcResult<Expr> {
     let tokens = tokenize(input)?;
     let mut parser = Parser { tokens, pos: 0 };
-    let expr = parser.parse_comparison()?;
+    let expr = parser.parse_ternary()?;
     parser.expect_eof()?;
     Ok(expr)
 }
@@ -118,17 +128,17 @@ impl Parser {
             if matches!(self.tokens.get(self.pos + 1), Some(Token::Assign)) {
                 self.advance(); // identifier
                 self.advance(); // :=
-                let expr = self.parse_comparison()?;
+                let expr = self.parse_ternary()?;
                 return Ok(Stmt::Assign(name, expr));
             }
             if matches!(self.tokens.get(self.pos + 1), Some(Token::LParen)) {
                 if let Some(params) = self.try_parse_function_def_header() {
-                    let body = self.parse_comparison()?;
+                    let body = self.parse_ternary()?;
                     return Ok(Stmt::DefineFunction(name, params, body));
                 }
             }
         }
-        Ok(Stmt::Expr(self.parse_comparison()?))
+        Ok(Stmt::Expr(self.parse_ternary()?))
     }
 
     /// Attempts to parse `(param, param, ...) :=` starting right after the
@@ -176,6 +186,30 @@ impl Parser {
         } else {
             self.pos = start;
             None
+        }
+    }
+
+    /// `cond ? then : else`, desugared to `Expr::Call("if", [cond, then,
+    /// else])` so evaluation (short-circuiting) is shared with the
+    /// function-call form. `cond` binds at comparison precedence; `then`
+    /// and `else` each recurse into `parse_ternary` so nested/chained
+    /// ternaries (`a ? b : c ? d : e`) and a ternary as the `then` branch
+    /// (`a ? b ? c : d : e`, which greedily consumes the inner `? :` as
+    /// part of `then` before the outer's mandatory `:`) both work without
+    /// requiring parens, matching C's conditional-expression grammar.
+    fn parse_ternary(&mut self) -> CalcResult<Expr> {
+        let cond = self.parse_comparison()?;
+        if matches!(self.peek(), Token::Question) {
+            self.advance();
+            let then_branch = self.parse_ternary()?;
+            self.expect(&Token::Colon, ":")?;
+            let else_branch = self.parse_ternary()?;
+            Ok(Expr::Call(
+                "if".to_string(),
+                vec![cond, then_branch, else_branch],
+            ))
+        } else {
+            Ok(cond)
         }
     }
 
@@ -321,7 +355,7 @@ impl Parser {
             }
             Token::LParen => {
                 self.advance();
-                let inner = self.parse_comparison()?;
+                let inner = self.parse_ternary()?;
                 self.expect(&Token::RParen, ")")?;
                 Ok(inner)
             }
@@ -348,10 +382,10 @@ impl Parser {
         if matches!(self.peek(), Token::RParen) {
             return Ok(args);
         }
-        args.push(self.parse_comparison()?);
+        args.push(self.parse_ternary()?);
         while matches!(self.peek(), Token::Comma) {
             self.advance();
-            args.push(self.parse_comparison()?);
+            args.push(self.parse_ternary()?);
         }
         Ok(args)
     }
@@ -674,6 +708,87 @@ mod tests {
                     Box::new(Expr::Number(5.0))
                 )
             )]
+        );
+    }
+
+    #[test]
+    fn ternary_desugars_to_if_call() {
+        assert_eq!(
+            parse("1 ? 2 : 3").unwrap(),
+            Expr::Call(
+                "if".to_string(),
+                vec![Expr::Number(1.0), Expr::Number(2.0), Expr::Number(3.0)]
+            )
+        );
+    }
+
+    #[test]
+    fn ternary_condition_binds_at_comparison_precedence() {
+        // `a < b ? x : y` needs no parens around the condition.
+        assert_eq!(
+            parse("1 < 2 ? 3 : 4").unwrap(),
+            Expr::Call(
+                "if".to_string(),
+                vec![
+                    Expr::Binary(
+                        BinaryOp::Lt,
+                        Box::new(Expr::Number(1.0)),
+                        Box::new(Expr::Number(2.0))
+                    ),
+                    Expr::Number(3.0),
+                    Expr::Number(4.0),
+                ]
+            )
+        );
+    }
+
+    #[test]
+    fn ternary_is_right_associative() {
+        // `a ? b : c ? d : e` reads as `a ? b : (c ? d : e)`.
+        assert_eq!(
+            parse("1 ? 2 : 3 ? 4 : 5").unwrap(),
+            Expr::Call(
+                "if".to_string(),
+                vec![
+                    Expr::Number(1.0),
+                    Expr::Number(2.0),
+                    Expr::Call(
+                        "if".to_string(),
+                        vec![Expr::Number(3.0), Expr::Number(4.0), Expr::Number(5.0)]
+                    ),
+                ]
+            )
+        );
+    }
+
+    #[test]
+    fn ternary_then_branch_may_itself_be_a_ternary_without_parens() {
+        // `a ? b ? c : d : e` greedily consumes `b ? c : d` as the `then`
+        // branch before the outer's mandatory `:`.
+        assert_eq!(
+            parse("1 ? 2 ? 3 : 4 : 5").unwrap(),
+            Expr::Call(
+                "if".to_string(),
+                vec![
+                    Expr::Number(1.0),
+                    Expr::Call(
+                        "if".to_string(),
+                        vec![Expr::Number(2.0), Expr::Number(3.0), Expr::Number(4.0)]
+                    ),
+                    Expr::Number(5.0),
+                ]
+            )
+        );
+    }
+
+    #[test]
+    fn ternary_missing_colon_errors() {
+        assert_eq!(
+            parse("1 ? 2"),
+            Err(CalcError::ExpectedToken {
+                expected: ":".to_string(),
+                position: 3,
+            })
         );
     }
 }

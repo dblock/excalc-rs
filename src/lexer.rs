@@ -19,6 +19,8 @@ pub enum Token {
     Lt,        // <  less than
     Amp,       // &  bitwise and (synonym for the `and` keyword)
     Assign,    // := variable assignment
+    Question,  // ?  ternary conditional: cond ? then : else
+    Colon,     // :  ternary conditional's separator (not part of `:=`)
     Semi,      // ;  or a newline: statement separator
     LParen,
     RParen,
@@ -67,12 +69,13 @@ impl<'a> Lexer<'a> {
                 '>' => Token::Gt,
                 '<' => Token::Lt,
                 '&' => Token::Amp,
+                '?' => Token::Question,
                 ':' => {
                     if self.peek_char() == Some('=') {
                         self.chars.next();
                         Token::Assign
                     } else {
-                        return Err(CalcError::InvalidCharacter(':', pos));
+                        Token::Colon
                     }
                 }
                 ';' | '\n' => Token::Semi,
@@ -364,8 +367,31 @@ mod tests {
     }
 
     #[test]
-    fn lone_colon_is_invalid() {
-        assert_eq!(tokenize(":"), Err(CalcError::InvalidCharacter(':', 0)));
-        assert_eq!(tokenize("x : 5"), Err(CalcError::InvalidCharacter(':', 2)));
+    fn lone_colon_tokenizes_as_colon() {
+        assert_eq!(tokenize(":"), Ok(vec![Token::Colon, Token::Eof]));
+        assert_eq!(
+            tokenize("x : 5"),
+            Ok(vec![
+                Token::Ident("x".to_string()),
+                Token::Colon,
+                Token::Number(5.0),
+                Token::Eof
+            ])
+        );
+    }
+
+    #[test]
+    fn question_mark_tokenizes_as_question_when_not_in_ident() {
+        assert_eq!(
+            tokenize("1 ? 2 : 3"),
+            Ok(vec![
+                Token::Number(1.0),
+                Token::Question,
+                Token::Number(2.0),
+                Token::Colon,
+                Token::Number(3.0),
+                Token::Eof
+            ])
+        );
     }
 }

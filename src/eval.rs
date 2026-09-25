@@ -207,6 +207,9 @@ pub fn eval(expr: &Expr, ctx: &Context) -> CalcResult<Value> {
             if matches!(lower.as_str(), "bisect" | "secant") {
                 return Ok(Value::Number(eval_root_finding(&lower, arg_exprs, ctx)?));
             }
+            if lower == "if" {
+                return Ok(Value::Number(eval_conditional(arg_exprs, ctx)?));
+            }
             if matches!(lower.as_str(), "hex" | "oct" | "bin") {
                 return eval_base_conversion(&lower, arg_exprs, ctx);
             }
@@ -277,6 +280,31 @@ fn eval_base_conversion(name: &str, arg_exprs: &[Expr], ctx: &Context) -> CalcRe
         _ => unreachable!("eval_base_conversion only called for hex/oct/bin"),
     };
     Ok(Value::Text(text))
+}
+
+/// `if(cond, then, else)`: evaluates `cond`, then evaluates and returns
+/// *only* the taken branch (nonzero `cond` takes `then`, zero takes
+/// `else`), matching the `1.0`/`0.0` truthiness convention already used by
+/// the comparison operators. This short-circuiting is what lets
+/// user-defined recursive functions actually terminate (e.g.
+/// `fact(n) := if(n <= 1, 1, n * fact(n - 1))`) instead of always
+/// recursing to the stack limit regardless of `n`. Also reachable via the
+/// `cond ? then : else` ternary syntax, which the parser desugars into an
+/// `if` call of this same shape.
+fn eval_conditional(arg_exprs: &[Expr], ctx: &Context) -> CalcResult<f64> {
+    if arg_exprs.len() != 3 {
+        return Err(CalcError::WrongArgCount {
+            name: "if".to_string(),
+            expected: "3".to_string(),
+            got: arg_exprs.len(),
+        });
+    }
+    let cond = eval_numeric(&arg_exprs[0], ctx)?;
+    if cond != 0.0 {
+        eval_numeric(&arg_exprs[1], ctx)
+    } else {
+        eval_numeric(&arg_exprs[2], ctx)
+    }
 }
 
 /// Shared setup for the numeric-integration functions (`int`, `gauss`, and
@@ -1434,6 +1462,75 @@ mod tests {
         assert_eq!(
             crate::evaluate("int(sin(x * 100000000), x, 0, 1, 0.000000000000001)"),
             Err(CalcError::Overflow)
+        );
+    }
+
+    #[test]
+    fn if_function_returns_the_taken_branch() {
+        assert_eq!(crate::evaluate("if(1, 10, 20)"), Ok(10.0));
+        assert_eq!(crate::evaluate("if(0, 10, 20)"), Ok(20.0));
+        assert_eq!(crate::evaluate("if(3 > 2, 10, 20)"), Ok(10.0));
+    }
+
+    #[test]
+    fn if_function_short_circuits_the_untaken_branch() {
+        // The untaken branch (an unknown variable / division by zero)
+        // would error if evaluated, so success proves it wasn't.
+        assert_eq!(crate::evaluate("if(1, 42, unknown_var)"), Ok(42.0));
+        assert_eq!(crate::evaluate("if(0, unknown_var, 42)"), Ok(42.0));
+    }
+
+    #[test]
+    fn if_function_wrong_arg_count_errors() {
+        assert_eq!(
+            crate::evaluate("if(1, 2)"),
+            Err(CalcError::WrongArgCount {
+                name: "if".to_string(),
+                expected: "3".to_string(),
+                got: 2,
+            })
+        );
+    }
+
+    #[test]
+    fn if_cannot_be_redefined_as_a_user_function() {
+        let stmts = crate::parser::parse_program("if(x) := x").unwrap();
+        let mut ctx = Context::new();
+        assert_eq!(
+            eval_program(&stmts, &mut ctx),
+            Err(CalcError::ReservedFunctionName("if".to_string()))
+        );
+    }
+
+    #[test]
+    fn ternary_syntax_matches_if_function() {
+        assert_eq!(crate::evaluate("1 ? 10 : 20"), Ok(10.0));
+        assert_eq!(crate::evaluate("0 ? 10 : 20"), Ok(20.0));
+        assert_eq!(crate::evaluate("3 > 2 ? 10 : 20"), Ok(10.0));
+    }
+
+    #[test]
+    fn ternary_short_circuits_the_untaken_branch() {
+        assert_eq!(crate::evaluate("1 ? 42 : unknown_var"), Ok(42.0));
+    }
+
+    #[test]
+    fn ternary_is_right_associative_and_chains() {
+        // `1 ? 2 : 0 ? 3 : 4` reads as `1 ? 2 : (0 ? 3 : 4)`.
+        assert_eq!(crate::evaluate("1 ? 2 : 0 ? 3 : 4"), Ok(2.0));
+        assert_eq!(crate::evaluate("0 ? 2 : 1 ? 3 : 4"), Ok(3.0));
+        assert_eq!(crate::evaluate("0 ? 2 : 0 ? 3 : 4"), Ok(4.0));
+    }
+
+    #[test]
+    fn ternary_enables_terminating_recursion() {
+        let stmts =
+            crate::parser::parse_program("fact(n) := n < 2 ? 1 : n * fact(n - 1); fact(10)")
+                .unwrap();
+        let mut ctx = Context::new();
+        assert_eq!(
+            eval_program(&stmts, &mut ctx).unwrap(),
+            Value::Number(3628800.0)
         );
     }
 }

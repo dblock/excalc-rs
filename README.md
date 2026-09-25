@@ -281,11 +281,22 @@ calc "f(x) := x^2 + 1; f(3)"          # 10 (define then call in a later statemen
 calc "double(x) := x * 2
 quad(x) := double(double(x))
 quad(3)"                              # 12 (functions can call other functions)
+calc "fact(n) := n < 2 ? 1 : n * fact(n - 1); fact(10)"  # 3628800 (real terminating recursion)
 calc "f(x) := f(x); f(1)"             # error: function call recursion limit exceeded: f
 calc "sqrt(x) := x"                   # error: cannot redefine built-in function: sqrt
 ```
 
-`name(params) := expr` defines a function, visible to later statements the same way a variable assignment is; calling it evaluates `expr` with each parameter bound to the corresponding argument (evaluated in the *caller's* scope, so a parameter can't accidentally see itself). Functions can call themselves or each other, but the language has no `if`/branching construct, so a self-recursive call always keeps recursing rather than stopping at a computed base case — recursion is only useful today for mutual/bounded call chains. There's no fixed call-count limit; instead, each nested call checks actual remaining stack space and errors gracefully (`function call recursion limit exceeded`) once it's running low, rather than crashing with a native stack overflow. Function names can't collide with built-in functions or `pi`/`e`, and definitions aren't saved to disk — like variables, they don't persist across separate `calc` invocations or MCP tool calls.
+`name(params) := expr` defines a function, visible to later statements the same way a variable assignment is; calling it evaluates `expr` with each parameter bound to the corresponding argument (evaluated in the *caller's* scope, so a parameter can't accidentally see itself). Functions can call themselves or each other; combined with the `cond ? then : else` conditional below, a self-recursive call can stop at a computed base case instead of always recursing. There's no fixed call-count limit; instead, each nested call checks actual remaining stack space and errors gracefully (`function call recursion limit exceeded`) once it's running low, rather than crashing with a native stack overflow. Function names can't collide with built-in functions or `pi`/`e`, and definitions aren't saved to disk — like variables, they don't persist across separate `calc` invocations or MCP tool calls.
+
+**Conditionals** ([details](docs/functions/logic.md)):
+
+```
+calc "3 > 2 ? 10 : 20"                # 10
+calc "if(3 > 2, 10, 20)"              # 10 (exact equivalent function form)
+calc "1 ? 2 : 0 ? 3 : 4"              # 2 (right-associative: a ? b : (c ? d : e))
+```
+
+`cond ? then : else` (and its exact equivalent, `if(cond, then, else)`) evaluates `cond`, then evaluates and returns *only* the taken branch — `then` if `cond` is nonzero, `else` otherwise — so the untaken branch is never evaluated, matching every other language's short-circuiting ternary/`if`. This is what lets self-recursive functions actually terminate (see `fact` above) instead of always recursing to the stack limit.
 
 **Advanced / special functions** ([details](docs/functions/advanced.md)):
 

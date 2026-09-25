@@ -10,7 +10,20 @@ These return `1` for true and `0` for false, rather than a boolean type — ther
 | `>` | Tests if leftmost is bigger | `3 > 2` | `1` |
 | `<` | Tests if leftmost is smaller | `3 < 2` | `0` |
 
-Note: in the original, `=` assigns a variable rather than testing equality, and `?` is the equality test. The port repurposes `=` as equality and drops `?` entirely; variable assignment instead uses a dedicated `:=` statement — see [Variables](../../README.md#variables).
+Note: in the original, `=` assigns a variable rather than testing equality, and `?` is the equality test. The port repurposes `=` as equality; `?` is instead used for the ternary conditional operator described below, and variable assignment uses a dedicated `:=` statement — see [Variables](../../README.md#variables).
+
+## Conditionals
+
+| Function | Meaning | Example | Result |
+|----------|---------|---------|--------|
+| `if(cond, then, else)` | Evaluates `cond`; returns `then` if it's nonzero, `else` otherwise | `if(3 > 2, 10, 20)` | `10` |
+| `cond ? then : else` | Ternary operator; exact sugar for `if(cond, then, else)` | `3 > 2 ? 10 : 20` | `10` |
+
+Both forms are short-circuiting: only the taken branch is evaluated, so the untaken one may reference undefined variables, divide by zero, or recurse further without being evaluated. This is what lets [user-defined functions](../../README.md#user-defined-functions) recurse to an actual base case instead of always recursing to the stack limit, e.g. `fact(n) := n < 2 ? 1 : n * fact(n - 1)`.
+
+The condition binds at comparison precedence, so `a < b ? x : y` needs no parens; a ternary nested *inside* a condition does, e.g. `(a ? b : c) < d`. The `then`/`else` branches admit nested ternaries right-associatively, so `a ? b : c ? d : e` reads as `a ? b : (c ? d : e)`.
+
+Note: since identifiers may end in a bare `?` (e.g. `prime?`, a Scheme-style predicate naming convention), a ternary condition that's a bare variable name needs a space before `?` (`x ? a : b`, not `x?a:b`), or the lexer reads `x?` as one identifier.
 
 ## Logical / bitwise
 
