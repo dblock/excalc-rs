@@ -119,16 +119,24 @@ fn integer_arg(name: &str, x: f64) -> CalcResult<i64> {
     Ok(x as i64)
 }
 
-/// Greatest common divisor of all arguments (Euclid's algorithm, folded
-/// pairwise across the argument list).
-pub fn gcd(args: &[f64]) -> CalcResult<f64> {
+/// Requires at least two arguments, erroring with `WrongArgCount(name)`
+/// otherwise. Shared by `gcd`/`lcm`, which both fold pairwise over at
+/// least two values.
+fn require_at_least_two(name: &str, args: &[f64]) -> CalcResult<()> {
     if args.len() < 2 {
         return Err(CalcError::WrongArgCount {
-            name: "gcd".to_string(),
+            name: name.to_string(),
             expected: "at least 2".to_string(),
             got: args.len(),
         });
     }
+    Ok(())
+}
+
+/// Greatest common divisor of all arguments (Euclid's algorithm, folded
+/// pairwise across the argument list).
+pub fn gcd(args: &[f64]) -> CalcResult<f64> {
+    require_at_least_two("gcd", args)?;
     let mut acc = non_negative_integer("gcd", args[0])?;
     for &a in &args[1..] {
         acc = gcd_two(acc, non_negative_integer("gcd", a)?);
@@ -138,13 +146,7 @@ pub fn gcd(args: &[f64]) -> CalcResult<f64> {
 
 /// Least common multiple of all arguments: `lcm(x, y) = (x / gcd(x, y)) * y`.
 pub fn lcm(args: &[f64]) -> CalcResult<f64> {
-    if args.len() < 2 {
-        return Err(CalcError::WrongArgCount {
-            name: "lcm".to_string(),
-            expected: "at least 2".to_string(),
-            got: args.len(),
-        });
-    }
+    require_at_least_two("lcm", args)?;
     let mut acc = non_negative_integer("lcm", args[0])?;
     for &a in &args[1..] {
         let b = non_negative_integer("lcm", a)?;

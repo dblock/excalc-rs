@@ -7,13 +7,7 @@ pub fn sum(args: &[f64]) -> CalcResult<f64> {
 }
 
 pub fn average(args: &[f64]) -> CalcResult<f64> {
-    if args.is_empty() {
-        return Err(CalcError::WrongArgCount {
-            name: "average".to_string(),
-            expected: "at least 1".to_string(),
-            got: 0,
-        });
-    }
+    require_at_least_one("average", args)?;
     Ok(args.iter().sum::<f64>() / args.len() as f64)
 }
 
@@ -22,25 +16,13 @@ pub fn product(args: &[f64]) -> CalcResult<f64> {
 }
 
 pub fn min(args: &[f64]) -> CalcResult<f64> {
-    args.iter()
-        .cloned()
-        .fold(None, |acc, x| Some(acc.map_or(x, |a: f64| a.min(x))))
-        .ok_or_else(|| CalcError::WrongArgCount {
-            name: "min".to_string(),
-            expected: "at least 1".to_string(),
-            got: 0,
-        })
+    require_at_least_one("min", args)?;
+    Ok(args.iter().cloned().fold(args[0], f64::min))
 }
 
 pub fn max(args: &[f64]) -> CalcResult<f64> {
-    args.iter()
-        .cloned()
-        .fold(None, |acc, x| Some(acc.map_or(x, |a: f64| a.max(x))))
-        .ok_or_else(|| CalcError::WrongArgCount {
-            name: "max".to_string(),
-            expected: "at least 1".to_string(),
-            got: 0,
-        })
+    require_at_least_one("max", args)?;
+    Ok(args.iter().cloned().fold(args[0], f64::max))
 }
 
 fn require_at_least_one(name: &str, args: &[f64]) -> CalcResult<()> {

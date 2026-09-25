@@ -235,13 +235,7 @@ fn eval_user_function(
     arg_exprs: &[Expr],
     ctx: &Context,
 ) -> CalcResult<f64> {
-    if arg_exprs.len() != func.params.len() {
-        return Err(CalcError::WrongArgCount {
-            name: name.to_string(),
-            expected: func.params.len().to_string(),
-            got: arg_exprs.len(),
-        });
-    }
+    expect_args(name, arg_exprs, func.params.len())?;
     // Bail out gracefully once the actual OS stack is getting low, rather
     // than risking an uncatchable native stack overflow that aborts the
     // whole process. This is the only guard against runaway recursion
@@ -265,13 +259,7 @@ fn eval_user_function(
 /// can't be combined into further arithmetic), so it's handled here rather
 /// than in `call_function`, which only ever returns numbers.
 fn eval_base_conversion(name: &str, arg_exprs: &[Expr], ctx: &Context) -> CalcResult<Value> {
-    if arg_exprs.len() != 1 {
-        return Err(CalcError::WrongArgCount {
-            name: name.to_string(),
-            expected: "1".to_string(),
-            got: arg_exprs.len(),
-        });
-    }
+    expect_args(name, arg_exprs, 1)?;
     let n = eval_numeric(&arg_exprs[0], ctx)?;
     let text = match name {
         "hex" => base::hex(n)?,
@@ -292,13 +280,7 @@ fn eval_base_conversion(name: &str, arg_exprs: &[Expr], ctx: &Context) -> CalcRe
 /// `cond ? then : else` ternary syntax, which the parser desugars into an
 /// `if` call of this same shape.
 fn eval_conditional(arg_exprs: &[Expr], ctx: &Context) -> CalcResult<f64> {
-    if arg_exprs.len() != 3 {
-        return Err(CalcError::WrongArgCount {
-            name: "if".to_string(),
-            expected: "3".to_string(),
-            got: arg_exprs.len(),
-        });
-    }
+    expect_args("if", arg_exprs, 3)?;
     let cond = eval_numeric(&arg_exprs[0], ctx)?;
     if cond != 0.0 {
         eval_numeric(&arg_exprs[1], ctx)
@@ -318,13 +300,7 @@ fn integration_setup<'a>(
     arg_exprs: &'a [Expr],
     ctx: &Context,
 ) -> CalcResult<(&'a Expr, String, f64, f64, f64)> {
-    if arg_exprs.len() != 5 {
-        return Err(CalcError::WrongArgCount {
-            name: name.to_string(),
-            expected: "5".to_string(),
-            got: arg_exprs.len(),
-        });
-    }
+    expect_args(name, arg_exprs, 5)?;
     let var_name = match &arg_exprs[1] {
         Expr::Variable(v) if !matches!(v.to_ascii_lowercase().as_str(), "pi" | "e") => v.clone(),
         _ => return Err(CalcError::DomainError(name.to_string())),
@@ -867,7 +843,7 @@ fn call_function(name: &str, args: &[f64]) -> CalcResult<f64> {
     }
 }
 
-fn expect_args(name: &str, args: &[f64], n: usize) -> CalcResult<()> {
+fn expect_args<T>(name: &str, args: &[T], n: usize) -> CalcResult<()> {
     if args.len() == n {
         Ok(())
     } else {
