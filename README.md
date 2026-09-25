@@ -68,7 +68,7 @@ excalc
   # with --no-history.
 ```
 
-Run `calc --help` (or `excalc --help`) for full usage.
+Run `excalc --help` (or `calc --help`) for full usage.
 
 ### Examples
 
