@@ -59,7 +59,8 @@ echo "2 + 2 * 3" | calc
 
 calc
   # starts an interactive REPL when run with no expression and stdin is a
-  # terminal; type expressions one per line (Tab-completes function names),
+  # terminal; type expressions one per line (Tab-completes function names,
+  # and shows/advances through argument hints inside a call's parentheses),
   # `help` for usage, `about` for version/author/license info, `vars` to
   # list assigned variables, and `exit`/`quit`/Ctrl-D to leave
 ```
