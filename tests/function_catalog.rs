@@ -57,8 +57,11 @@ fn match_arm_names(source: &str) -> BTreeSet<String> {
 
 #[test]
 fn function_catalog_matches_dispatch_code() {
+    // Normalize line endings so this works the same whether the source was
+    // checked out with LF or CRLF (e.g. Windows `core.autocrlf`).
     let eval_src = fs::read_to_string(concat!(env!("CARGO_MANIFEST_DIR"), "/src/eval.rs"))
-        .expect("failed to read src/eval.rs");
+        .expect("failed to read src/eval.rs")
+        .replace("\r\n", "\n");
     // Only scan the body of `call_function`, not the `#[cfg(test)] mod
     // tests` block below it (which also contains string literals, e.g. in
     // assertions, that aren't function names being dispatched).
@@ -74,7 +77,8 @@ fn function_catalog_matches_dispatch_code() {
         env!("CARGO_MANIFEST_DIR"),
         "/src/functions/integration.rs"
     ))
-    .expect("failed to read src/functions/integration.rs");
+    .expect("failed to read src/functions/integration.rs")
+    .replace("\r\n", "\n");
     let from_name_start = integration_src
         .find("fn from_name(")
         .expect("from_name not found in integration.rs");
