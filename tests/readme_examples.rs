@@ -1,4 +1,4 @@
-//! Runs every `calc "expr"  # expected` example from the `### Examples`
+//! Runs every `excalc "expr"  # expected` example from the `### Examples`
 //! section of README.md against the real evaluator, so the README can never
 //! silently drift out of sync with what the crate actually does.
 //!
@@ -17,7 +17,7 @@
 use std::fs;
 use std::path::Path;
 
-/// One `calc "expr"  # expected` line extracted from README.md.
+/// One `excalc "expr"  # expected` line extracted from README.md.
 struct Example {
     expr: String,
     expected: String,
@@ -27,7 +27,7 @@ fn parse_readme_examples(readme: &str) -> Vec<Example> {
     let mut examples = Vec::new();
     for line in readme.lines() {
         let line = line.trim();
-        let Some(rest) = line.strip_prefix("calc ") else {
+        let Some(rest) = line.strip_prefix("excalc ") else {
             continue;
         };
         let rest = rest.strip_prefix("-- ").unwrap_or(rest);
