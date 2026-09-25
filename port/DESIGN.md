@@ -97,5 +97,5 @@ Full reference (domains, formulas, examples) lives in [docs/](../docs/README.md)
 ## Interfaces
 
 - **Library** (`excalc::evaluate`) — the core.
-- **CLI** (`excalc "2 + 2 * 3"`, also installed as `calc`) — done. Also reads a piped expression from stdin, or starts an interactive REPL (`help`, `about`, `vars`, `exit`/`quit`) when run with no expression and stdin is a terminal.
+- **CLI** (`excalc "2 + 2 * 3"`, also installed as `calc`) — done. Also reads a piped expression from stdin, or starts an interactive REPL (`help`, `about`, `vars`, `exit`/`quit`, Tab-completes function names) when run with no expression and stdin is a terminal.
 - **MCP server** (`excalc-mcp`, installed by default via `cargo install excalc`; build with `cargo build`, or exclude via `--no-default-features`) — done. Exposes a single `evaluate` tool over stdio via [rmcp](https://crates.io/crates/rmcp) so Claude/Copilot/etc. can call it uniformly instead of shelling out. See the README's [MCP Server](../README.md#mcp-server) section.

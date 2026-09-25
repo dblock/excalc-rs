@@ -3,10 +3,15 @@
 //! one-shot [`crate::evaluate_value`] call, which only persists variables
 //! within that one call).
 
+use rustyline::completion::{Completer, Pair};
 use rustyline::error::ReadlineError;
-use rustyline::DefaultEditor;
+use rustyline::highlight::Highlighter;
+use rustyline::hint::Hinter;
+use rustyline::validate::Validator;
+use rustyline::{Context as RlContext, Editor, Helper};
 
 use crate::eval::Context;
+use crate::functions::catalog::FUNCTION_NAMES;
 
 /// What to do with a single line of REPL input.
 pub enum LineOutcome {
@@ -18,10 +23,62 @@ pub enum LineOutcome {
     Quit,
 }
 
+/// Word boundary used by [`FunctionCompleter`]: everything but letters,
+/// digits, `_`, and the trailing `?` used by predicate function names
+/// (e.g. `prime?`) breaks a word.
+fn is_word_char(c: char) -> bool {
+    c.is_alphanumeric() || c == '_' || c == '?'
+}
+
+/// Tab-completes function names (see [`FUNCTION_NAMES`]) at the cursor.
+/// Also serves as the REPL's [`Helper`] (with no-op hinting/highlighting/
+/// validation, since we only need completion).
+struct FunctionCompleter;
+
+impl Completer for FunctionCompleter {
+    type Candidate = Pair;
+
+    fn complete(
+        &self,
+        line: &str,
+        pos: usize,
+        _ctx: &RlContext<'_>,
+    ) -> rustyline::Result<(usize, Vec<Pair>)> {
+        let start = line[..pos]
+            .rfind(|c: char| !is_word_char(c))
+            .map(|i| i + 1)
+            .unwrap_or(0);
+        let word = &line[start..pos];
+        if word.is_empty() {
+            return Ok((start, Vec::new()));
+        }
+        let candidates = FUNCTION_NAMES
+            .iter()
+            .filter(|name| name.starts_with(word))
+            .map(|name| Pair {
+                display: name.to_string(),
+                replacement: name.to_string(),
+            })
+            .collect();
+        Ok((start, candidates))
+    }
+}
+
+impl Hinter for FunctionCompleter {
+    type Hint = String;
+}
+
+impl Highlighter for FunctionCompleter {}
+
+impl Validator for FunctionCompleter {}
+
+impl Helper for FunctionCompleter {}
+
 /// Text printed by the `help` REPL command.
 const HELP_TEXT: &str = "\
 Enter an expression to evaluate it, e.g. 2 + 2 * 3 or sqrt(16) + sin(pi/2).
 Assign variables with name := expr; they stay available for later lines.
+Press Tab while typing a function name to complete it.
 
 Commands:
   help          show this message
@@ -76,9 +133,11 @@ pub fn process_line(line: &str, ctx: &mut Context) -> LineOutcome {
 }
 
 /// Runs the interactive REPL against stdin/stdout until the user quits
-/// (`exit`, `quit`, or Ctrl-D) or an unrecoverable I/O error occurs.
+/// (`exit`, `quit`, or Ctrl-D) or an unrecoverable I/O error occurs. Tab
+/// completes function names via [`FunctionCompleter`].
 pub fn run() -> rustyline::Result<()> {
-    let mut rl = DefaultEditor::new()?;
+    let mut rl: Editor<FunctionCompleter, rustyline::history::DefaultHistory> = Editor::new()?;
+    rl.set_helper(Some(FunctionCompleter));
     let mut ctx = Context::new();
     println!(
         "excalc {} — type 'help' for usage, 'exit' or Ctrl-D to quit.",
@@ -185,5 +244,44 @@ mod tests {
             printed(process_line("x + 1", &mut ctx)),
             "error: unknown variable: x"
         );
+    }
+
+    fn complete(line: &str, pos: usize) -> (usize, Vec<String>) {
+        let history = rustyline::history::DefaultHistory::new();
+        let rl_ctx = RlContext::new(&history);
+        let (start, candidates) = FunctionCompleter
+            .complete(line, pos, &rl_ctx)
+            .expect("completion should not error");
+        (
+            start,
+            candidates.into_iter().map(|p| p.replacement).collect(),
+        )
+    }
+
+    #[test]
+    fn completes_function_name_prefix() {
+        let (start, candidates) = complete("sq", 2);
+        assert_eq!(start, 0);
+        assert!(candidates.contains(&"sqrt".to_string()));
+    }
+
+    #[test]
+    fn completes_mid_expression() {
+        // Cursor right after "sq" in "2 + sq(9)".
+        let (start, candidates) = complete("2 + sq(9)", 6);
+        assert_eq!(start, 4);
+        assert!(candidates.contains(&"sqrt".to_string()));
+    }
+
+    #[test]
+    fn no_candidates_for_unknown_prefix() {
+        let (_, candidates) = complete("zzz", 3);
+        assert!(candidates.is_empty());
+    }
+
+    #[test]
+    fn empty_word_yields_no_candidates() {
+        let (_, candidates) = complete("2 + ", 4);
+        assert!(candidates.is_empty());
     }
 }

@@ -1,5 +1,6 @@
 pub mod advanced;
 pub mod base;
+pub mod catalog;
 pub mod combinatorics;
 pub mod financial;
 pub mod general;
