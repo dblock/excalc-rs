@@ -6,6 +6,25 @@ You're encouraged to submit [pull requests](https://github.com/dblock/excalc-rs/
 
 In the examples below, substitute your Github username for `contributor` in URLs.
 
+### Prerequisites
+
+Install [Git](https://git-scm.com/) and the latest stable [Rust toolchain with rustup](https://rustup.rs/). Rustup installs `rustc` and Cargo and makes it easy to keep the compiler and required components current.
+
+You also need the native linker and build tools for your platform:
+
+- **Windows:** install [Visual Studio 2022 Build Tools](https://visualstudio.microsoft.com/downloads/) with the **Desktop development with C++** workload. On Windows ARM64, also select **MSVC v143 - VS 2022 C++ ARM64 build tools**.
+- **macOS:** install the Xcode command-line tools with `xcode-select --install`.
+- **Linux:** install your distribution's C/C++ build toolchain, such as `build-essential` on Debian and Ubuntu.
+
+Configure Rust stable with the formatter and linter used by CI, then verify the installation:
+
+```bash
+rustup default stable
+rustup component add rustfmt clippy
+rustc --version
+cargo --version
+```
+
 ### Fork the Project
 
 Fork the [project on Github](https://github.com/dblock/excalc-rs) and check out your copy.
@@ -22,6 +41,13 @@ Ensure that you can build the project and run tests.
 
 ```
 cargo build
+cargo test
+```
+
+On Windows, if `cargo test` reports that `excalc_mcp_setup-*.exe` requires elevation, Windows has mistaken the test executable for an installer because of its name. Set the compatibility override for the current PowerShell session and rerun the tests:
+
+```powershell
+$env:__COMPAT_LAYER = "RunAsInvoker"
 cargo test
 ```
 

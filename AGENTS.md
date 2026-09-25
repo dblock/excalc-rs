@@ -2,6 +2,10 @@
 
 excalc is a Rust library, CLI, and MCP server implementing a portable expression calculator — see [port/DESIGN.md](port/DESIGN.md) for scope, grammar, and the function catalog (what's ported, deferred, or skipped).
 
+## Prerequisites
+
+Before running Cargo commands, follow the platform setup instructions in [CONTRIBUTING.md](CONTRIBUTING.md#prerequisites), including the native linker requirements and the Windows test-runner workaround.
+
 ## Before Committing
 
 Run these and fix anything they report:
