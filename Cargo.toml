@@ -6,6 +6,7 @@ authors = ["Daniel Doubrovkine and contributors"]
 description = "An expression calculator CLI tool and MCP server built for AI coding agents to outsource arithmetic."
 license = "MIT"
 repository = "https://github.com/dblock/excalc-rs"
+default-run = "excalc"
 
 [lib]
 name = "excalc"
@@ -41,6 +42,7 @@ mcp = ["dep:rmcp", "dep:tokio", "dep:serde", "dep:anyhow"]
 thiserror = "1"
 clap = { version = "4", features = ["derive"] }
 rand = "0.10"
+rustyline = "15"
 rmcp = { version = "3.4", features = ["server", "macros", "transport-io"], optional = true }
 tokio = { version = "1", features = ["full"], optional = true }
 serde = { version = "1", features = ["derive"], optional = true }

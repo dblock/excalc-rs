@@ -12,6 +12,7 @@ pub mod eval;
 pub mod functions;
 pub mod lexer;
 pub mod parser;
+pub mod repl;
 
 pub use error::{CalcError, CalcResult};
 pub use eval::Value;
@@ -25,6 +26,14 @@ pub fn evaluate_value(input: &str) -> CalcResult<Value> {
     let stmts = parser::parse_program(input)?;
     let mut ctx = eval::Context::new();
     eval::eval_program(&stmts, &mut ctx)
+}
+
+/// Like [`evaluate_value`], but evaluates against a caller-supplied
+/// [`eval::Context`] so variable assignments persist across multiple calls
+/// (used by the REPL to keep variables alive between lines).
+pub fn evaluate_value_with_context(input: &str, ctx: &mut eval::Context) -> CalcResult<Value> {
+    let stmts = parser::parse_program(input)?;
+    eval::eval_program(&stmts, ctx)
 }
 
 /// Like [`evaluate_value`], but requires the result to be a plain number,

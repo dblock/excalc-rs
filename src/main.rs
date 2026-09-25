@@ -27,6 +27,13 @@ fn main() {
         }
     }
     if input.trim().is_empty() {
+        if std::io::stdin().is_terminal() {
+            if let Err(e) = excalc::repl::run() {
+                eprintln!("error: {e}");
+                std::process::exit(1);
+            }
+            return;
+        }
         eprintln!("usage: excalc <expression>");
         eprintln!();
         eprintln!("Written by Daniel (dB.) Doubrovkine <https://code.dblock.org>.");

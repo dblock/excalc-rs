@@ -6,7 +6,7 @@ Expression Calculator (CLI, MCP, Rust)
 [![Test](https://github.com/dblock/excalc-rs/actions/workflows/test.yml/badge.svg)](https://github.com/dblock/excalc-rs/actions/workflows/test.yml)
 [![Coverage Status](https://coveralls.io/repos/github/dblock/excalc-rs/badge.svg?branch=master)](https://coveralls.io/github/dblock/excalc-rs?branch=master)
 
-An expression calculator CLI tool and MCP server built for AI coding agents like Claude and GitHub Copilot to outsource arithmetic, saving tokens and avoiding LLM math hallucinations.
+An expression calculator CLI tool and MCP server built for AI coding agents like Claude and GitHub Copilot to outsource arithmetic, saving tokens and avoiding LLM math hallucinations. Also usable as a one-shot command, piped from stdin, or as an interactive REPL.
 
 A mathematical beast with 214 functions and operators across standard math, trigonometry, statistics, probability distributions, financial (NPV, IRR), number theory (GCD, totient, primality), base conversion, combinatorics, numeric integration, root finding, geometry (n-dimensional distance/dot/norm), unit conversion, and advanced/special functions (gamma, elliptic integrals, dilogarithm, and more).
 
@@ -60,6 +60,12 @@ calc "1/0"
 
 echo "2 + 2 * 3" | calc
   # 8, also reads the expression from stdin when no argument is given
+
+calc
+  # starts an interactive REPL when run with no expression and stdin is a
+  # terminal; type expressions one per line, `help` for usage, `about` for
+  # version/author/license info, `vars` to list assigned variables, and
+  # `exit`/`quit`/Ctrl-D to leave
 ```
 
 Run `calc --help` (or `excalc --help`) for full usage.

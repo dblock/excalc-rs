@@ -43,6 +43,12 @@ impl Context {
     pub fn set(&mut self, name: impl Into<String>, value: f64) {
         self.variables.insert(name.into(), value);
     }
+
+    /// Returns the currently assigned variables (name, value), in
+    /// unspecified order. Used by the REPL's `vars` command.
+    pub fn variables(&self) -> impl Iterator<Item = (&str, f64)> {
+        self.variables.iter().map(|(k, v)| (k.as_str(), *v))
+    }
 }
 
 /// Evaluates a full program: a sequence of statements executed in order,
