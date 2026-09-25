@@ -94,7 +94,7 @@ excalc -- "-5 + 3"    # -2   (unary minus needs -- so clap doesn't treat it as a
 excalc "1,234 + 1"      # 1,235   (comma thousands-grouping; echoed back in the result)
 excalc "1_000_000 / 4"  # 250_000 (underscore grouping works the same way)
 excalc "sum(1,2)"       # 3       (still 2 args: a group must be exactly 3 digits)
-excalc "\$1 + 10"        # $11     (currency symbols: ignored as input, echoed in the result)
+excalc "\$1 + 10"       # $11     (currency symbols: ignored as input, echoed in the result)
 excalc "£1,000 + 234"   # £1,234  (currency and grouping combine)
 ```
 
