@@ -11,8 +11,7 @@ use rustyline::validate::Validator;
 use rustyline::{Context as RlContext, Editor, Helper};
 
 use crate::eval::Context;
-use crate::functions::arg_hints::ARG_HINTS;
-use crate::functions::catalog::FUNCTION_NAMES;
+use crate::functions::catalog::{function_names, FUNCTIONS};
 
 /// What to do with a single line of REPL input.
 pub enum LineOutcome {
@@ -32,7 +31,7 @@ fn is_word_char(c: char) -> bool {
 }
 
 /// If `pos` sits inside the argument list of a recognized function call
-/// (an opening `(` immediately preceded by a name in [`ARG_HINTS`]),
+/// (an opening `(` immediately preceded by a name in [`FUNCTIONS`]),
 /// returns that lowercased name, the zero-based index of the argument the
 /// cursor is currently inside, and the byte offset where that argument's
 /// text begins (right after the enclosing `(` or the last top-level `,`
@@ -56,7 +55,7 @@ fn call_context(line: &str, pos: usize) -> Option<(String, usize, usize)> {
         .map(|i| i + 1)
         .unwrap_or(0);
     let name = before_paren[name_start..].to_lowercase();
-    if name.is_empty() || !ARG_HINTS.iter().any(|(n, _)| *n == name) {
+    if name.is_empty() || !FUNCTIONS.iter().any(|(n, _)| *n == name) {
         return None;
     }
 
@@ -82,7 +81,7 @@ fn call_context(line: &str, pos: usize) -> Option<(String, usize, usize)> {
 /// function's open-ended tail (e.g. `average(a, b, ...)`) keeps hinting
 /// its last placeholder for any later argument.
 fn arg_hint(name: &str, index: usize) -> Option<&'static str> {
-    let args = ARG_HINTS.iter().find(|(n, _)| *n == name)?.1;
+    let args = FUNCTIONS.iter().find(|(n, _)| *n == name)?.1;
     let last = args.len().checked_sub(1)?;
     let effective = index.min(last);
     let raw = args[effective];
@@ -93,11 +92,11 @@ fn arg_hint(name: &str, index: usize) -> Option<&'static str> {
     })
 }
 
-/// Tab-completes function names (see [`FUNCTION_NAMES`]) at the cursor, and
+/// Tab-completes function names (see [`FUNCTIONS`]) at the cursor, and
 /// offers argument-name and closing-paren completions inside a recognized
-/// call's argument list (see [`ARG_HINTS`]). Also serves as the REPL's
-/// [`Helper`] (with a [`Hinter`] impl for the ghost-text argument hints, and
-/// no-op highlighting/validation).
+/// call's argument list. Also serves as the REPL's [`Helper`] (with a
+/// [`Hinter`] impl for the ghost-text argument hints, and no-op
+/// highlighting/validation).
 struct FunctionCompleter;
 
 impl Completer for FunctionCompleter {
@@ -115,15 +114,29 @@ impl Completer for FunctionCompleter {
             .unwrap_or(0);
         let word = &line[start..pos];
         if !word.is_empty() {
-            let candidates: Vec<Pair> = FUNCTION_NAMES
-                .iter()
+            let matches: Vec<&str> = function_names()
                 .filter(|name| name.starts_with(word))
-                .map(|name| Pair {
-                    display: name.to_string(),
-                    replacement: name.to_string(),
-                })
                 .collect();
-            if !candidates.is_empty() {
+            if matches.len() == 1 {
+                // Unambiguous: complete the name and open the call for the
+                // user, e.g. typing "atan2" then Tab yields "atan2(".
+                let name = matches[0];
+                return Ok((
+                    start,
+                    vec![Pair {
+                        display: name.to_string(),
+                        replacement: format!("{name}("),
+                    }],
+                ));
+            }
+            if !matches.is_empty() {
+                let candidates = matches
+                    .into_iter()
+                    .map(|name| Pair {
+                        display: name.to_string(),
+                        replacement: name.to_string(),
+                    })
+                    .collect();
                 return Ok((start, candidates));
             }
         }
@@ -138,7 +151,7 @@ impl Completer for FunctionCompleter {
         let Some((name, index, segment_start)) = call_context(line, pos) else {
             return Ok((start, Vec::new()));
         };
-        let Some(args) = ARG_HINTS
+        let Some(args) = FUNCTIONS
             .iter()
             .find(|(n, _)| *n == name)
             .map(|(_, args)| *args)
@@ -188,7 +201,8 @@ impl Helper for FunctionCompleter {}
 const HELP_TEXT: &str = "\
 Enter an expression to evaluate it, e.g. 2 + 2 * 3 or sqrt(16) + sin(pi/2).
 Assign variables with name := expr; they stay available for later lines.
-Press Tab while typing a function name to complete it.
+Press Tab while typing a function name to complete it; a unique match also
+opens the call for you (e.g. typing atan2 then pressing Tab adds the `(`).
 Inside a call's parentheses, argument names are shown as you type; Tab
 moves to the next argument or writes the closing `)` once you're done.
 
@@ -372,9 +386,11 @@ mod tests {
 
     #[test]
     fn completes_function_name_prefix() {
+        // "sqrt" is the only function starting with "sq", so completion
+        // also opens the call for the user.
         let (start, candidates) = complete("sq", 2);
         assert_eq!(start, 0);
-        assert!(candidates.contains(&"sqrt".to_string()));
+        assert!(candidates.contains(&"sqrt(".to_string()));
     }
 
     #[test]
@@ -382,13 +398,28 @@ mod tests {
         // Cursor right after "sq" in "2 + sq(9)".
         let (start, candidates) = complete("2 + sq(9)", 6);
         assert_eq!(start, 4);
-        assert!(candidates.contains(&"sqrt".to_string()));
+        assert!(candidates.contains(&"sqrt(".to_string()));
     }
 
     #[test]
     fn no_candidates_for_unknown_prefix() {
         let (_, candidates) = complete("zzz", 3);
         assert!(candidates.is_empty());
+    }
+
+    #[test]
+    fn completes_full_unique_name_with_open_paren() {
+        let (start, candidates) = complete("atan2", 5);
+        assert_eq!(start, 0);
+        assert_eq!(candidates, vec!["atan2(".to_string()]);
+    }
+
+    #[test]
+    fn ambiguous_prefix_does_not_open_paren() {
+        // "atan", "atan2", "atand", and "atanh" all start with "atan".
+        let (_, candidates) = complete("atan", 4);
+        assert!(candidates.len() > 1);
+        assert!(candidates.iter().all(|c| !c.ends_with('(')));
     }
 
     #[test]

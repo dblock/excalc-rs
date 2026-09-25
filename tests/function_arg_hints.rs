@@ -1,6 +1,6 @@
-//! Guards against `excalc::functions::arg_hints::ARG_HINTS` (used for the
-//! REPL's inline function-call hinter) drifting out of sync with the
-//! documented function signatures in `docs/functions/*.md`.
+//! Guards against the argument-name lists in `excalc::functions::catalog::FUNCTIONS`
+//! (used for the REPL's inline function-call hinter) drifting out of sync
+//! with the documented function signatures in `docs/functions/*.md`.
 //!
 //! Every function's row in those tables starts with a Markdown table cell
 //! whose first backtick-quoted span is its call signature, e.g.:
@@ -13,7 +13,7 @@
 //! name, e.g. `ellipticF(k, z)` over `ellipticF(k)`) and, for a small set of
 //! documented aliases whose own row doesn't repeat the signature, borrow
 //! the canonical function's argument names. The result must exactly match
-//! `ARG_HINTS`, both directions.
+//! `FUNCTIONS`'s argument lists, both directions.
 
 use std::collections::BTreeMap;
 use std::fs;
@@ -114,7 +114,7 @@ fn scrape_docs() -> BTreeMap<String, Vec<String>> {
 #[test]
 fn arg_hints_match_documented_signatures() {
     let scraped = scrape_docs();
-    let catalog: BTreeMap<String, Vec<String>> = excalc::functions::arg_hints::ARG_HINTS
+    let catalog: BTreeMap<String, Vec<String>> = excalc::functions::catalog::FUNCTIONS
         .iter()
         .map(|(name, args)| {
             (
@@ -125,26 +125,26 @@ fn arg_hints_match_documented_signatures() {
         .collect();
 
     // Every catalog function name should have a documented signature.
-    for name in excalc::functions::catalog::FUNCTION_NAMES {
+    for (name, _) in excalc::functions::catalog::FUNCTIONS {
         assert!(
             scraped.contains_key(*name),
             "no documented `{name}(...)` signature found in docs/functions/*.md \
-             (needed for ARG_HINTS)"
+             (needed for FUNCTIONS' argument list)"
         );
     }
 
     for (name, args) in &catalog {
         let Some(expected) = scraped.get(name) else {
             panic!(
-                "ARG_HINTS has an entry for `{name}` with no matching documented \
-                 signature in docs/functions/*.md; remove it from src/functions/arg_hints.rs \
-                 or add/fix the alias mapping in tests/arg_hints.rs"
+                "FUNCTIONS has an entry for `{name}` with no matching documented \
+                 signature in docs/functions/*.md; remove it from src/functions/catalog.rs \
+                 or add/fix the alias mapping in tests/function_arg_hints.rs"
             );
         };
         assert_eq!(
             args, expected,
-            "ARG_HINTS entry for `{name}` is {args:?} but docs/functions/*.md \
-             documents {expected:?}; update src/functions/arg_hints.rs"
+            "FUNCTIONS' argument list for `{name}` is {args:?} but docs/functions/*.md \
+             documents {expected:?}; update src/functions/catalog.rs"
         );
     }
 
@@ -152,7 +152,7 @@ fn arg_hints_match_documented_signatures() {
         assert!(
             catalog.contains_key(name),
             "docs/functions/*.md documents `{name}(...)` but it's missing from \
-             ARG_HINTS in src/functions/arg_hints.rs"
+             FUNCTIONS in src/functions/catalog.rs"
         );
     }
 }

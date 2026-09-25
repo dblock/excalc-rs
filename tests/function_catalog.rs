@@ -1,5 +1,5 @@
-//! Guards against `excalc::functions::catalog::FUNCTION_NAMES` (used for
-//! the REPL's tab completion) drifting out of sync with the actual function
+//! Guards against `excalc::functions::catalog::FUNCTIONS` (used for the
+//! REPL's tab completion) drifting out of sync with the actual function
 //! dispatch code in `src/eval.rs` and `src/functions/integration.rs`.
 //!
 //! Every match-arm string literal in this codebase that names a callable
@@ -92,9 +92,9 @@ fn function_catalog_matches_dispatch_code() {
         names.insert(special.to_string());
     }
 
-    let catalog: BTreeSet<String> = excalc::functions::catalog::FUNCTION_NAMES
+    let catalog: BTreeSet<String> = excalc::functions::catalog::FUNCTIONS
         .iter()
-        .map(|s| s.to_string())
+        .map(|(name, _)| name.to_string())
         .collect();
 
     let missing_from_catalog: Vec<_> = names.difference(&catalog).collect();
@@ -103,11 +103,11 @@ fn function_catalog_matches_dispatch_code() {
     assert!(
         missing_from_catalog.is_empty(),
         "functions dispatched in eval.rs/integration.rs but missing from \
-         FUNCTION_NAMES (add them to src/functions/catalog.rs): {missing_from_catalog:?}"
+         FUNCTIONS (add them to src/functions/catalog.rs): {missing_from_catalog:?}"
     );
     assert!(
         stale_in_catalog.is_empty(),
-        "names in FUNCTION_NAMES that no longer appear in eval.rs/integration.rs \
+        "names in FUNCTIONS that no longer appear in eval.rs/integration.rs \
          dispatch code (remove them from src/functions/catalog.rs): {stale_in_catalog:?}"
     );
 }
