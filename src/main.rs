@@ -52,8 +52,8 @@ fn main() {
         eprintln!("Written by Daniel (dB.) Doubrovkine <https://code.dblock.org>.");
         std::process::exit(2);
     }
-    match excalc::evaluate_value(&input) {
-        Ok(value) => println!("{value}"),
+    match excalc::evaluate_value_formatted(&input) {
+        Ok(text) => println!("{text}"),
         Err(e) => {
             eprintln!("error: {e}");
             std::process::exit(1);

@@ -49,7 +49,11 @@ fn parse_readme_examples(readme: &str) -> Vec<Example> {
         }
 
         examples.push(Example {
-            expr: expr.to_string(),
+            // README examples inside "..." escape a literal `$` as `\$` so
+            // real bash doesn't try to expand it as a positional parameter
+            // (`\` isn't otherwise meaningful before `$` in this
+            // language); undo that here to get the real expression.
+            expr: expr.replace("\\$", "$"),
             expected,
         });
     }
@@ -103,6 +107,27 @@ fn readme_examples_match_evaluator() {
                 Err(e) => failures.push(format!(
                     "{:?}: expected {expected_text:?}, got error {:?}",
                     example.expr,
+                    e.to_string()
+                )),
+            }
+            continue;
+        }
+
+        // A `,`/`_`-grouped and/or `$`/`£`/`€`/`¥`-currency-prefixed expected
+        // value (e.g. `1,235`, `250_000`, or `$11`) is compared against the
+        // exact formatted (grouping/currency-aware) output rather than a
+        // plain numeric comparison.
+        if example.expected.contains([',', '_', '$', '£', '€', '¥']) {
+            match excalc::evaluate_value_formatted(&example.expr) {
+                Ok(text) if text == example.expected => {}
+                Ok(text) => failures.push(format!(
+                    "{:?}: expected {:?}, got {text:?}",
+                    example.expr, example.expected
+                )),
+                Err(e) => failures.push(format!(
+                    "{:?}: expected {:?}, got error {:?}",
+                    example.expr,
+                    example.expected,
                     e.to_string()
                 )),
             }

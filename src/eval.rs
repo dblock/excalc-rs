@@ -9,6 +9,7 @@ use crate::functions::{
     integration::{self, Rule},
     logic, numbertheory, probability, rootfinding, stats, trig, units,
 };
+use crate::lexer::NumberFormat;
 
 /// Minimum stack space (in bytes) that must remain before starting another
 /// nested user-function call; if less than this is left, evaluation fails
@@ -34,6 +35,73 @@ impl std::fmt::Display for Value {
             Value::Number(n) => write!(f, "{n}"),
             Value::Text(s) => write!(f, "{s}"),
         }
+    }
+}
+
+/// Formats `value` the same way [`Value`]'s `Display` impl does, except
+/// that a numeric result is prefixed/grouped according to `format`: if
+/// `format.separator` is `Some`, the integer part is thousands-grouped
+/// with that character; if `format.currency` is `Some`, that symbol is
+/// prefixed. Used to echo back whichever `,`/`_` grouping and/or
+/// `$`/`£`/`€`/`¥` currency symbol (if any) the *input* used — e.g.
+/// `1,000 + 1` prints `1,001` and `$1 + 10` prints `$11` — while plain
+/// input keeps plain output. Text results (`hex`/`oct`/`bin`) are never
+/// formatted this way; math involving different currencies isn't
+/// tracked/rejected, only the first symbol seen anywhere is echoed back.
+pub fn format_value(value: &Value, format: NumberFormat) -> String {
+    match value {
+        Value::Number(n) => format_number(*n, format),
+        Value::Text(s) => s.clone(),
+    }
+}
+
+/// Thousands-groups the integer part of `n`'s default `f64` formatting
+/// with `format.separator`, inserting it every 3 digits from the right,
+/// and prefixes the result with `format.currency` if set; the fractional
+/// part (if any) is left untouched. A no-op if `format` is the default
+/// (no separator/currency) or the integer part has 3 or fewer digits (for
+/// grouping specifically; currency prefixing still applies regardless of
+/// magnitude).
+fn format_number(n: f64, format: NumberFormat) -> String {
+    let plain = n.to_string();
+    let (sign, rest) = match plain.strip_prefix('-') {
+        Some(r) => ("-", r),
+        None => ("", plain.as_str()),
+    };
+    let grouped = match format.separator {
+        Some(sep) => group_digits(rest, sep),
+        None => rest.to_string(),
+    };
+    match format.currency {
+        Some(symbol) => format!("{sign}{symbol}{grouped}"),
+        None => format!("{sign}{grouped}"),
+    }
+}
+
+/// Inserts `sep` every 3 digits from the right within `text`'s integer
+/// part (the part before any `.`); the fractional part is left untouched.
+/// A no-op if the integer part has 3 or fewer digits or contains anything
+/// other than ASCII digits (e.g. `NaN`/`inf`).
+fn group_digits(text: &str, sep: char) -> String {
+    let (int_part, frac_part) = match text.split_once('.') {
+        Some((i, f)) => (i, Some(f)),
+        None => (text, None),
+    };
+    if int_part.len() <= 3 || !int_part.bytes().all(|b| b.is_ascii_digit()) {
+        return text.to_string();
+    }
+    let digits: Vec<char> = int_part.chars().rev().collect();
+    let mut grouped: Vec<char> = Vec::with_capacity(digits.len() + digits.len() / 3);
+    for (i, c) in digits.into_iter().enumerate() {
+        if i > 0 && i % 3 == 0 {
+            grouped.push(sep);
+        }
+        grouped.push(c);
+    }
+    let grouped: String = grouped.into_iter().rev().collect();
+    match frac_part {
+        Some(frac) => format!("{grouped}.{frac}"),
+        None => grouped,
     }
 }
 
@@ -859,6 +927,89 @@ fn expect_args<T>(name: &str, args: &[T], n: usize) -> CalcResult<()> {
 mod tests {
     use super::*;
     use crate::ast::Expr;
+
+    #[test]
+    fn format_number_groups_integer_part() {
+        let sep = |c| NumberFormat {
+            separator: Some(c),
+            currency: None,
+        };
+        assert_eq!(format_number(1234.0, sep(',')), "1,234");
+        assert_eq!(format_number(1_234_567.0, sep('_')), "1_234_567");
+        assert_eq!(format_number(1234.56, sep(',')), "1,234.56");
+        assert_eq!(format_number(-1234.0, sep(',')), "-1,234");
+    }
+
+    #[test]
+    fn format_number_no_separator_is_plain() {
+        assert_eq!(format_number(1234.0, NumberFormat::default()), "1234");
+    }
+
+    #[test]
+    fn format_number_short_integer_unaffected() {
+        assert_eq!(
+            format_number(
+                123.0,
+                NumberFormat {
+                    separator: Some(','),
+                    currency: None
+                }
+            ),
+            "123"
+        );
+    }
+
+    #[test]
+    fn format_number_with_currency() {
+        assert_eq!(
+            format_number(
+                11.0,
+                NumberFormat {
+                    separator: None,
+                    currency: Some('$')
+                }
+            ),
+            "$11"
+        );
+        assert_eq!(
+            format_number(
+                -11.0,
+                NumberFormat {
+                    separator: None,
+                    currency: Some('$')
+                }
+            ),
+            "-$11"
+        );
+    }
+
+    #[test]
+    fn format_number_with_currency_and_grouping() {
+        assert_eq!(
+            format_number(
+                1234.56,
+                NumberFormat {
+                    separator: Some(','),
+                    currency: Some('£')
+                }
+            ),
+            "£1,234.56"
+        );
+    }
+
+    #[test]
+    fn format_value_passes_through_text() {
+        assert_eq!(
+            format_value(
+                &Value::Text("0xff".to_string()),
+                NumberFormat {
+                    separator: Some(','),
+                    currency: Some('$')
+                }
+            ),
+            "0xff"
+        );
+    }
 
     #[test]
     fn context_set_and_resolve_variable() {

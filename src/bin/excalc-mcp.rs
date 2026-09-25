@@ -46,10 +46,8 @@ impl ExcalcServer {
         &self,
         Parameters(EvaluateRequest { expression }): Parameters<EvaluateRequest>,
     ) -> Result<CallToolResult, McpError> {
-        match excalc::evaluate_value(&expression) {
-            Ok(value) => Ok(CallToolResult::success(vec![ContentBlock::text(
-                value.to_string(),
-            )])),
+        match excalc::evaluate_value_formatted(&expression) {
+            Ok(text) => Ok(CallToolResult::success(vec![ContentBlock::text(text)])),
             // A malformed/undefined expression is the caller's input, not a
             // protocol-level error, so report it as a tool error rather than
             // an McpError (which would surface as a JSON-RPC error instead).

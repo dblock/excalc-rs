@@ -36,6 +36,32 @@ pub fn evaluate_value_with_context(input: &str, ctx: &mut eval::Context) -> Calc
     eval::eval_program(&stmts, ctx)
 }
 
+/// Like [`evaluate_value`], but pre-formats the result to a `String`,
+/// echoing back whichever `,`/`_` thousands-grouping separator and/or
+/// `$`/`£`/`€`/`¥` currency symbol (if any) `input`'s number literals
+/// used — e.g. `1,000 + 1` evaluates to `1,001`, `1_000 + 1` to `1_001`,
+/// `$1 + 10` to `$11`, and plain input is formatted plainly. If multiple
+/// different separators/currencies appear, the first one of each
+/// encountered wins; math involving different currencies isn't tracked or
+/// rejected, only the first symbol seen anywhere is echoed back.
+pub fn evaluate_value_formatted(input: &str) -> CalcResult<String> {
+    let (stmts, format) = parser::parse_program_with_number_format(input)?;
+    let mut ctx = eval::Context::new();
+    let value = eval::eval_program(&stmts, &mut ctx)?;
+    Ok(eval::format_value(&value, format))
+}
+
+/// Like [`evaluate_value_formatted`], but evaluates against a
+/// caller-supplied [`eval::Context`] (used by the REPL).
+pub fn evaluate_value_with_context_formatted(
+    input: &str,
+    ctx: &mut eval::Context,
+) -> CalcResult<String> {
+    let (stmts, format) = parser::parse_program_with_number_format(input)?;
+    let value = eval::eval_program(&stmts, ctx)?;
+    Ok(eval::format_value(&value, format))
+}
+
 /// Like [`evaluate_value`], but requires the result to be a plain number,
 /// erroring with [`CalcError::NotANumber`] if the expression is (or ends
 /// in) a text result such as `hex(255)`.
@@ -49,6 +75,70 @@ pub fn evaluate(input: &str) -> CalcResult<f64> {
 #[cfg(test)]
 mod tests {
     use super::*;
+
+    #[test]
+    fn formatted_evaluation_echoes_comma_separator() {
+        assert_eq!(evaluate_value_formatted("1,000 + 1").unwrap(), "1,001");
+    }
+
+    #[test]
+    fn formatted_evaluation_echoes_underscore_separator() {
+        assert_eq!(evaluate_value_formatted("1_000 + 1").unwrap(), "1_001");
+    }
+
+    #[test]
+    fn formatted_evaluation_first_separator_wins() {
+        // "," appears first in the input, so it's used for the output even
+        // though "_" also appears later.
+        assert_eq!(evaluate_value_formatted("1,000 + 1_000").unwrap(), "2,000");
+    }
+
+    #[test]
+    fn formatted_evaluation_ungrouped_input_is_plain() {
+        assert_eq!(evaluate_value_formatted("1000 + 1").unwrap(), "1001");
+    }
+
+    #[test]
+    fn formatted_evaluation_echoes_dollar_currency() {
+        assert_eq!(evaluate_value_formatted("$1 + 10").unwrap(), "$11");
+    }
+
+    #[test]
+    fn formatted_evaluation_echoes_pound_currency() {
+        assert_eq!(evaluate_value_formatted("£1 + 10").unwrap(), "£11");
+    }
+
+    #[test]
+    fn formatted_evaluation_currency_with_grouping() {
+        assert_eq!(evaluate_value_formatted("$1,000 + 234").unwrap(), "$1,234");
+    }
+
+    #[test]
+    fn formatted_evaluation_mixed_currencies_use_first_no_error() {
+        // Math across different currency symbols isn't tracked or
+        // rejected; only the first symbol seen anywhere is echoed back.
+        assert_eq!(evaluate_value_formatted("$1 + £2").unwrap(), "$3");
+    }
+
+    #[test]
+    fn formatted_evaluation_with_context_persists_variables() {
+        // The grouping separator is detected per call (per REPL line), not
+        // persisted in the context, so only lines that themselves contain a
+        // grouped literal get grouped output.
+        let mut ctx = eval::Context::new();
+        assert_eq!(
+            evaluate_value_with_context_formatted("x := 1,000", &mut ctx).unwrap(),
+            "1,000"
+        );
+        assert_eq!(
+            evaluate_value_with_context_formatted("x + 1", &mut ctx).unwrap(),
+            "1001"
+        );
+        assert_eq!(
+            evaluate_value_with_context_formatted("x + 1,000", &mut ctx).unwrap(),
+            "2,000"
+        );
+    }
 
     #[test]
     fn basic_arithmetic() {

@@ -208,6 +208,10 @@ available for later lines, same as variables.
 Use cond ? then : else (or if(cond, then, else)) for conditionals; only the
 taken branch is evaluated, so a recursive function can stop at a base case,
 e.g. fact(n) := n < 2 ? 1 : n * fact(n - 1).
+Numbers may use , or _ as a thousands separator, e.g. 1,234 or 1_234_567;
+whichever one appears first is echoed back in the result (1,000 + 1 -> 1,001).
+Numbers may also be prefixed with a currency symbol ($, £, €, ¥), ignored
+for math; whichever appears first is echoed back (e.g. $1 + 10 -> $11).
 Press Tab while typing a function name to complete it; a unique match also
 opens the call for you (e.g. typing atan2 then pressing Tab adds the `(`).
 Inside a call's parentheses, argument names are shown as you type; Tab
@@ -266,8 +270,8 @@ pub fn process_line(line: &str, ctx: &mut Context) -> LineOutcome {
                 LineOutcome::Print(lines.join("\n"))
             }
         }
-        _ => match crate::evaluate_value_with_context(trimmed, ctx) {
-            Ok(value) => LineOutcome::Print(value.to_string()),
+        _ => match crate::evaluate_value_with_context_formatted(trimmed, ctx) {
+            Ok(text) => LineOutcome::Print(text),
             Err(e) => LineOutcome::Print(format!("error: {e}")),
         },
     }

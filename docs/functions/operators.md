@@ -47,6 +47,10 @@ excalc "0 - 5 + 3"
 
 Parentheses `( )` override precedence as usual: `(2 + 3) * 4` is `20`.
 
+## Number literals
+
+Digits may use `,` or `_` as a thousands separator, e.g. `1,234` or `1_234_567`. A separator's group must be exactly 3 digits, so `sum(1,2)` is still parsed as a 2-argument call, not a single grouped number. Numbers may also be prefixed with a currency symbol — `$`, `£`, `€`, or `¥` — which is purely cosmetic and ignored for math (`$100 + 1` is `101`, not a currency error). Whichever separator/currency appears *first* in the expression is echoed back in the printed result, independently of each other (e.g. `1,000 + 1` prints `1,001`, `$1 + 10` prints `$11`, `£1,000 + 234` prints `£1,234`); plain input prints plainly. Math across different currency symbols isn't tracked or rejected — only the first symbol seen anywhere in the expression is echoed back. Radix literals (`0x`/`0o`/`0b`) don't support grouping or currency prefixes.
+
 ## Constants
 
 | Name | Value |

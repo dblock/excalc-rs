@@ -37,7 +37,7 @@
 
 use crate::ast::{BinaryOp, Expr, Program, Stmt, UnaryOp};
 use crate::error::{CalcError, CalcResult};
-use crate::lexer::{tokenize, Token};
+use crate::lexer::{tokenize, tokenize_with_number_format, NumberFormat, Token};
 
 pub fn parse(input: &str) -> CalcResult<Expr> {
     let tokens = tokenize(input)?;
@@ -54,6 +54,19 @@ pub fn parse_program(input: &str) -> CalcResult<Program> {
     let stmts = parser.parse_statements()?;
     parser.expect_eof()?;
     Ok(stmts)
+}
+
+/// Like [`parse_program`], but also returns the [`NumberFormat`] hints (the
+/// first `,`/`_` thousands-grouping separator and the first `$`/`£`/`€`/`¥`
+/// currency symbol used by any number literal in `input`; see
+/// [`crate::lexer::tokenize_with_number_format`]), so the top-level
+/// evaluation entry points can echo them back in the printed result.
+pub fn parse_program_with_number_format(input: &str) -> CalcResult<(Program, NumberFormat)> {
+    let (tokens, format) = tokenize_with_number_format(input)?;
+    let mut parser = Parser { tokens, pos: 0 };
+    let stmts = parser.parse_statements()?;
+    parser.expect_eof()?;
+    Ok((stmts, format))
 }
 
 struct Parser {
@@ -394,6 +407,26 @@ impl Parser {
 #[cfg(test)]
 mod tests {
     use super::*;
+
+    #[test]
+    fn parse_program_with_group_separator_surfaces_separator() {
+        let (program, format) = parse_program_with_number_format("1,234 + 1").unwrap();
+        assert_eq!(format.separator, Some(','));
+        assert_eq!(format.currency, None);
+        assert_eq!(program.len(), 1);
+    }
+
+    #[test]
+    fn parse_program_with_group_separator_none_when_ungrouped() {
+        let (_, format) = parse_program_with_number_format("1 + 2").unwrap();
+        assert_eq!(format, NumberFormat::default());
+    }
+
+    #[test]
+    fn parse_program_with_currency_surfaces_currency() {
+        let (_, format) = parse_program_with_number_format("$1 + 1").unwrap();
+        assert_eq!(format.currency, Some('$'));
+    }
 
     #[test]
     fn missing_closing_paren_errors() {

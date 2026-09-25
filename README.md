@@ -88,6 +88,18 @@ calc "(2 + 3) * 4"  # 20   (grouping)
 calc -- "-5 + 3"    # -2   (unary minus needs -- so clap doesn't treat it as a flag)
 ```
 
+**Number literals** ([details](docs/functions/operators.md)):
+
+```
+calc "1,234 + 1"      # 1,235   (comma thousands-grouping; echoed back in the result)
+calc "1_000_000 / 4"  # 250_000 (underscore grouping works the same way)
+calc "sum(1,2)"       # 3       (still 2 args: a group must be exactly 3 digits)
+calc "\$1 + 10"        # $11     (currency symbols: ignored as input, echoed in the result)
+calc "£1,000 + 234"   # £1,234  (currency and grouping combine)
+```
+
+Digit literals may use `,` or `_` as a thousands separator (e.g. `1,234` or `1_234_567`); a group after a separator must be exactly 3 digits, so short argument lists like `sum(1,2)` are unaffected. Numbers may also be prefixed with a currency symbol (`$`, `£`, `€`, `¥`), which is ignored for math purposes. Whichever separator/currency is used *first* in an expression is echoed back in the printed result (independently of each other); math across different currencies isn't tracked or rejected — only the first symbol seen anywhere is echoed back. Plain input prints plainly.
+
 **Standard math** ([details](docs/functions/standard-math.md)), all angles in radians (see `deg`/`rad` below for degree conversion):
 
 ```
