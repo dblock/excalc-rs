@@ -62,7 +62,10 @@ calc
   # terminal; type expressions one per line (Tab-completes function names,
   # and shows/advances through argument hints inside a call's parentheses),
   # `help` for usage, `about` for version/author/license info, `vars` to
-  # list assigned variables, and `exit`/`quit`/Ctrl-D to leave
+  # list assigned variables, and `exit`/`quit`/Ctrl-D to leave. Command
+  # history persists across sessions in ~/.excalc_history by default;
+  # override with --history-file <path>, $EXCALC_HISTORY_FILE, or disable
+  # with --no-history.
 ```
 
 Run `calc --help` (or `excalc --help`) for full usage.

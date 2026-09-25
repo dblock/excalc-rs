@@ -9,6 +9,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 ### Added
 
 - Interactive REPL: running `calc`/`excalc` with no expression while stdin is a terminal now starts a read-eval-print loop (variables persist across lines within the session, Tab-completes function names, and shows/advances through argument-name hints inside a call's parentheses), with `help` for usage, `about` for version/author/license info, `vars` to list assigned variables, and `exit`/`quit`/Ctrl-D to leave, instead of just printing usage.
+- REPL command history now persists across sessions, saved to `~/.excalc_history` by default (`%USERPROFILE%\.excalc_history` on Windows if `$HOME` isn't set); override the location with `--history-file <path>` or the `EXCALC_HISTORY_FILE` environment variable, or disable persistence entirely with `--no-history`.
 - New general/numeric-analysis functions: `nthroot(x, n)` (general n-th root) and `isqrt(n)` (integer square root).
 - Combinatorics extras: `stirling1(n, k)`/`stirling2(n, k)` (Stirling numbers of the first/second kind), `derangement(n)`, and `bell(n)` (Bell numbers).
 - New statistics functions: `skewness` (population skewness) and `kurtosis` (population excess kurtosis).

@@ -205,6 +205,8 @@ Press Tab while typing a function name to complete it; a unique match also
 opens the call for you (e.g. typing atan2 then pressing Tab adds the `(`).
 Inside a call's parentheses, argument names are shown as you type; Tab
 moves to the next argument or writes the closing `)` once you're done.
+Command history persists across sessions (~/.excalc_history by default;
+override with --history-file <path>, $EXCALC_HISTORY_FILE, or --no-history).
 
 Commands:
   help          show this message
@@ -258,18 +260,64 @@ pub fn process_line(line: &str, ctx: &mut Context) -> LineOutcome {
     }
 }
 
+/// Name of the environment variable that overrides the default REPL
+/// history file location (checked after an explicit `--history-file` CLI
+/// flag, before falling back to `~/.excalc_history`).
+pub const HISTORY_FILE_ENV_VAR: &str = "EXCALC_HISTORY_FILE";
+
+/// Default history file name, placed in the user's home directory.
+const DEFAULT_HISTORY_FILE_NAME: &str = ".excalc_history";
+
+/// Resolves where REPL command history should be persisted, in priority
+/// order:
+/// 1. `cli_override` — the `--history-file <PATH>` flag, if given.
+/// 2. the [`HISTORY_FILE_ENV_VAR`] (`EXCALC_HISTORY_FILE`) environment
+///    variable, if set to a non-empty value.
+/// 3. `~/.excalc_history` (`$HOME` on Unix, `%USERPROFILE%` on Windows).
+///
+/// Returns `None` if none of the above yields a path (e.g. no home
+/// directory can be found and no override was given), in which case the
+/// REPL simply doesn't persist history across sessions. Passing
+/// `--no-history` should short-circuit this entirely at the call site
+/// rather than calling this function.
+pub fn resolve_history_path(cli_override: Option<&str>) -> Option<std::path::PathBuf> {
+    if let Some(p) = cli_override.filter(|p| !p.is_empty()) {
+        return Some(std::path::PathBuf::from(p));
+    }
+    if let Ok(p) = std::env::var(HISTORY_FILE_ENV_VAR) {
+        if !p.is_empty() {
+            return Some(std::path::PathBuf::from(p));
+        }
+    }
+    let home = std::env::var("HOME")
+        .or_else(|_| std::env::var("USERPROFILE"))
+        .ok()
+        .filter(|h| !h.is_empty())?;
+    Some(std::path::PathBuf::from(home).join(DEFAULT_HISTORY_FILE_NAME))
+}
+
 /// Runs the interactive REPL against stdin/stdout until the user quits
 /// (`exit`, `quit`, or Ctrl-D) or an unrecoverable I/O error occurs. Tab
 /// completes function names via [`FunctionCompleter`].
-pub fn run() -> rustyline::Result<()> {
+///
+/// `history_path` is where command history is loaded from on startup and
+/// saved to on exit; pass `None` to disable persistence for the session
+/// (history still works via arrow keys, it's just not written to disk).
+/// Missing files/parent directories and I/O errors while loading/saving
+/// are silently ignored, so a REPL session never fails just because
+/// history couldn't be persisted.
+pub fn run(history_path: Option<std::path::PathBuf>) -> rustyline::Result<()> {
     let mut rl: Editor<FunctionCompleter, rustyline::history::DefaultHistory> = Editor::new()?;
     rl.set_helper(Some(FunctionCompleter));
+    if let Some(path) = &history_path {
+        let _ = rl.load_history(path);
+    }
     let mut ctx = Context::new();
     println!(
         "excalc {} — type 'help' for usage, 'exit' or Ctrl-D to quit.",
         env!("CARGO_PKG_VERSION")
     );
-    loop {
+    let result = loop {
         match rl.readline("excalc> ") {
             Ok(line) => {
                 if !line.trim().is_empty() {
@@ -278,15 +326,21 @@ pub fn run() -> rustyline::Result<()> {
                 match process_line(&line, &mut ctx) {
                     LineOutcome::Silent => {}
                     LineOutcome::Print(msg) => println!("{msg}"),
-                    LineOutcome::Quit => break,
+                    LineOutcome::Quit => break Ok(()),
                 }
             }
             Err(ReadlineError::Interrupted) => continue, // Ctrl-C: abandon the current line
-            Err(ReadlineError::Eof) => break,            // Ctrl-D
-            Err(e) => return Err(e),
+            Err(ReadlineError::Eof) => break Ok(()),     // Ctrl-D
+            Err(e) => break Err(e),
         }
+    };
+    if let Some(path) = &history_path {
+        if let Some(parent) = path.parent() {
+            let _ = std::fs::create_dir_all(parent);
+        }
+        let _ = rl.save_history(path);
     }
-    Ok(())
+    result
 }
 
 #[cfg(test)]
@@ -299,6 +353,53 @@ mod tests {
             LineOutcome::Silent => String::new(),
             LineOutcome::Quit => "<quit>".to_string(),
         }
+    }
+
+    // Guards tests below that mutate process-wide environment variables,
+    // since `cargo test` runs tests in parallel threads within one process.
+    static ENV_LOCK: std::sync::Mutex<()> = std::sync::Mutex::new(());
+
+    #[test]
+    fn history_path_cli_override_takes_priority() {
+        let _guard = ENV_LOCK.lock().unwrap();
+        std::env::set_var(HISTORY_FILE_ENV_VAR, "/env/history");
+        let path = resolve_history_path(Some("/cli/history"));
+        std::env::remove_var(HISTORY_FILE_ENV_VAR);
+        assert_eq!(path, Some(std::path::PathBuf::from("/cli/history")));
+    }
+
+    #[test]
+    fn history_path_falls_back_to_env_var() {
+        let _guard = ENV_LOCK.lock().unwrap();
+        std::env::set_var(HISTORY_FILE_ENV_VAR, "/env/history");
+        let path = resolve_history_path(None);
+        std::env::remove_var(HISTORY_FILE_ENV_VAR);
+        assert_eq!(path, Some(std::path::PathBuf::from("/env/history")));
+    }
+
+    #[test]
+    fn history_path_falls_back_to_home_dir() {
+        let _guard = ENV_LOCK.lock().unwrap();
+        std::env::remove_var(HISTORY_FILE_ENV_VAR);
+        std::env::set_var("HOME", "/home/tester");
+        let path = resolve_history_path(None);
+        assert_eq!(
+            path,
+            Some(std::path::PathBuf::from("/home/tester/.excalc_history"))
+        );
+    }
+
+    #[test]
+    fn history_path_ignores_empty_override_and_env_var() {
+        let _guard = ENV_LOCK.lock().unwrap();
+        std::env::set_var(HISTORY_FILE_ENV_VAR, "");
+        std::env::set_var("HOME", "/home/tester");
+        let path = resolve_history_path(Some(""));
+        std::env::remove_var(HISTORY_FILE_ENV_VAR);
+        assert_eq!(
+            path,
+            Some(std::path::PathBuf::from("/home/tester/.excalc_history"))
+        );
     }
 
     #[test]
