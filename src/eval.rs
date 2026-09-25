@@ -5,10 +5,19 @@ use std::collections::HashMap;
 use crate::ast::{BinaryOp, Expr, Stmt, UnaryOp};
 use crate::error::{CalcError, CalcResult};
 use crate::functions::{
-    advanced, base, combinatorics, financial, general, geometry,
+    advanced, base, catalog, combinatorics, financial, general, geometry,
     integration::{self, Rule},
     logic, numbertheory, probability, rootfinding, stats, trig, units,
 };
+
+/// Minimum stack space (in bytes) that must remain before starting another
+/// nested user-function call; if less than this is left, evaluation fails
+/// with [`CalcError::RecursionLimit`] instead of risking a native stack
+/// overflow (which aborts the whole process, uncatchably). Chosen with a
+/// comfortable margin above the deepest single call frame observed in
+/// testing (expression evaluation, argument binding, and a `HashMap`
+/// clone per level).
+const MIN_STACK_HEADROOM_BYTES: usize = 256 * 1024;
 
 /// The result of evaluating a program or expression: almost always a plain
 /// number, except for the base-conversion functions (`hex`/`oct`/`bin`),
@@ -28,11 +37,21 @@ impl std::fmt::Display for Value {
     }
 }
 
-/// Evaluation context: currently just variable bindings. Constants (`pi`,
-/// `e`) are always available and can't be shadowed.
+/// A user-defined function (`name(params) := body`), as stored in a
+/// [`Context`].
+#[derive(Debug, Clone, PartialEq)]
+struct UserFunction {
+    params: Vec<String>,
+    body: Expr,
+}
+
+/// Evaluation context: variable bindings and user-defined functions.
+/// Constants (`pi`, `e`) are always available and can't be shadowed, and
+/// built-in function names can't be redefined.
 #[derive(Default)]
 pub struct Context {
     variables: HashMap<String, f64>,
+    functions: HashMap<String, UserFunction>,
 }
 
 impl Context {
@@ -49,14 +68,42 @@ impl Context {
     pub fn variables(&self) -> impl Iterator<Item = (&str, f64)> {
         self.variables.iter().map(|(k, v)| (k.as_str(), *v))
     }
+
+    fn define_function(&mut self, name: impl Into<String>, params: Vec<String>, body: Expr) {
+        self.functions
+            .insert(name.into(), UserFunction { params, body });
+    }
+
+    /// Returns the currently defined user functions as (name, parameter
+    /// names, body), in unspecified order. Used by the REPL's `vars`
+    /// command to show the actual definition.
+    pub fn functions(&self) -> impl Iterator<Item = (&str, &[String], &Expr)> {
+        self.functions
+            .iter()
+            .map(|(k, f)| (k.as_str(), f.params.as_slice(), &f.body))
+    }
+
+    /// Clones this context for a nested user-function call scope: shares
+    /// the same `functions` catalog (so mutual function visibility is
+    /// preserved), but starts with its own copy of `variables` (parameters
+    /// are bound into it, without leaking into or being polluted by the
+    /// caller's variables).
+    fn child_scope(&self) -> Context {
+        Context {
+            variables: self.variables.clone(),
+            functions: self.functions.clone(),
+        }
+    }
 }
 
 /// Evaluates a full program: a sequence of statements executed in order,
-/// with variable assignments visible to later statements. Returns the value
-/// of the last statement (an assignment's value is the value assigned, so a
-/// program that ends in `x := 5` evaluates to `5`). Variables are always
-/// numbers, so an assignment's right-hand side must evaluate to a number
-/// (not the text result of `hex`/`oct`/`bin`).
+/// with variable assignments and function definitions visible to later
+/// statements. Returns the value of the last statement (an assignment's
+/// value is the value assigned, so a program that ends in `x := 5`
+/// evaluates to `5`; a function definition's value is a short text
+/// confirmation). Variables are always numbers, so an assignment's
+/// right-hand side must evaluate to a number (not the text result of
+/// `hex`/`oct`/`bin`).
 pub fn eval_program(stmts: &[Stmt], ctx: &mut Context) -> CalcResult<Value> {
     let mut last = Value::Number(0.0);
     for stmt in stmts {
@@ -69,10 +116,44 @@ pub fn eval_program(stmts: &[Stmt], ctx: &mut Context) -> CalcResult<Value> {
                 ctx.set(name.clone(), value);
                 Value::Number(value)
             }
+            Stmt::DefineFunction(name, params, body) => {
+                if is_reserved_constant(name) || is_builtin_function(name) {
+                    return Err(CalcError::ReservedFunctionName(name.clone()));
+                }
+                if let Some(dup) = first_duplicate(params) {
+                    return Err(CalcError::DuplicateParameter {
+                        function: name.clone(),
+                        param: dup.clone(),
+                    });
+                }
+                ctx.define_function(name.clone(), params.clone(), body.clone());
+                Value::Text(format!("{name}({}) defined", params.join(", ")))
+            }
             Stmt::Expr(expr) => eval(expr, ctx)?,
         };
     }
     Ok(last)
+}
+
+/// True if `name` (case-insensitively) is any built-in function or alias in
+/// [`catalog::FUNCTIONS`] — the full set of names a user-defined function
+/// isn't allowed to shadow, including the specially-dispatched ones (`int`,
+/// `gauss`, `bisect`, `secant`, `hex`/`oct`/`bin`) since they're all listed
+/// there too.
+fn is_builtin_function(name: &str) -> bool {
+    catalog::FUNCTIONS
+        .iter()
+        .any(|(n, _)| n.eq_ignore_ascii_case(name))
+}
+
+/// Returns the first parameter name that appears more than once, if any.
+fn first_duplicate(params: &[String]) -> Option<&String> {
+    for (i, p) in params.iter().enumerate() {
+        if params[..i].contains(p) {
+            return Some(p);
+        }
+    }
+    None
 }
 
 fn is_reserved_constant(name: &str) -> bool {
@@ -107,6 +188,11 @@ pub fn eval(expr: &Expr, ctx: &Context) -> CalcResult<Value> {
         }
 
         Expr::Call(name, arg_exprs) => {
+            if let Some(func) = ctx.functions.get(name) {
+                return Ok(Value::Number(eval_user_function(
+                    name, func, arg_exprs, ctx,
+                )?));
+            }
             let lower = name.to_ascii_lowercase();
             if let Some(rule) = Rule::from_name(&lower) {
                 return Ok(Value::Number(eval_composite_integration(
@@ -131,6 +217,44 @@ pub fn eval(expr: &Expr, ctx: &Context) -> CalcResult<Value> {
             Ok(Value::Number(call_function(name, &args)?))
         }
     }
+}
+
+/// Calls a user-defined function: binds each parameter (evaluated in the
+/// *caller's* context, i.e. lexical, non-recursive-by-default argument
+/// evaluation) into a fresh child scope, then evaluates the body there.
+/// Tracks a shared call-depth counter across the whole call chain (not just
+/// direct self-recursion) so mutual or self-recursion that never
+/// terminates fails with [`CalcError::RecursionLimit`] instead of
+/// overflowing the stack.
+fn eval_user_function(
+    name: &str,
+    func: &UserFunction,
+    arg_exprs: &[Expr],
+    ctx: &Context,
+) -> CalcResult<f64> {
+    if arg_exprs.len() != func.params.len() {
+        return Err(CalcError::WrongArgCount {
+            name: name.to_string(),
+            expected: func.params.len().to_string(),
+            got: arg_exprs.len(),
+        });
+    }
+    // Bail out gracefully once the actual OS stack is getting low, rather
+    // than risking an uncatchable native stack overflow that aborts the
+    // whole process. This is the only guard against runaway recursion
+    // (e.g. `f(x) := f(x)`) — there's no separate call-count limit.
+    // `remaining_stack()` returns `None` on platforms/threads it can't
+    // introspect, in which case recursion is left unchecked.
+    if matches!(stacker::remaining_stack(), Some(remaining) if remaining < MIN_STACK_HEADROOM_BYTES)
+    {
+        return Err(CalcError::RecursionLimit(name.to_string()));
+    }
+    let mut call_ctx = ctx.child_scope();
+    for (param, arg_expr) in func.params.iter().zip(arg_exprs) {
+        let value = eval_numeric(arg_expr, ctx)?;
+        call_ctx.set(param.clone(), value);
+    }
+    eval_numeric(&func.body, &call_ctx)
 }
 
 /// `hex(n)`, `oct(n)`, `bin(n)`: format a non-negative integer as a string
@@ -190,9 +314,7 @@ fn eval_composite_integration(
     ctx: &Context,
 ) -> CalcResult<f64> {
     let (body, var_name, a, b, n) = integration_setup(name, arg_exprs, ctx)?;
-    let mut work_ctx = Context {
-        variables: ctx.variables.clone(),
-    };
+    let mut work_ctx = ctx.child_scope();
     let f = |x: f64| -> CalcResult<f64> {
         work_ctx.set(var_name.clone(), x);
         eval_numeric(body, &work_ctx)
@@ -202,9 +324,7 @@ fn eval_composite_integration(
 
 fn eval_adaptive_integration(name: &str, arg_exprs: &[Expr], ctx: &Context) -> CalcResult<f64> {
     let (body, var_name, a, b, tolerance) = integration_setup(name, arg_exprs, ctx)?;
-    let mut work_ctx = Context {
-        variables: ctx.variables.clone(),
-    };
+    let mut work_ctx = ctx.child_scope();
     let f = |x: f64| -> CalcResult<f64> {
         work_ctx.set(var_name.clone(), x);
         eval_numeric(body, &work_ctx)
@@ -219,9 +339,7 @@ fn eval_adaptive_integration(name: &str, arg_exprs: &[Expr], ctx: &Context) -> C
 /// `integration_setup` for arity/variable/argument validation.
 fn eval_root_finding(name: &str, arg_exprs: &[Expr], ctx: &Context) -> CalcResult<f64> {
     let (body, var_name, a, b, tolerance) = integration_setup(name, arg_exprs, ctx)?;
-    let mut work_ctx = Context {
-        variables: ctx.variables.clone(),
-    };
+    let mut work_ctx = ctx.child_scope();
     let f = |x: f64| -> CalcResult<f64> {
         work_ctx.set(var_name.clone(), x);
         eval_numeric(body, &work_ctx)
@@ -790,6 +908,97 @@ mod tests {
                 Err(CalcError::ReservedIdentifier(name.to_string()))
             );
         }
+    }
+
+    #[test]
+    fn eval_program_defines_and_calls_a_user_function() {
+        let stmts = crate::parser::parse_program("f(x) := x^2 + 1; f(3)").unwrap();
+        let mut ctx = Context::new();
+        assert_eq!(eval_program(&stmts, &mut ctx).unwrap(), Value::Number(10.0));
+    }
+
+    #[test]
+    fn eval_program_function_definition_returns_a_confirmation() {
+        let stmts = crate::parser::parse_program("f(x, y) := x + y").unwrap();
+        let mut ctx = Context::new();
+        assert_eq!(
+            eval_program(&stmts, &mut ctx).unwrap(),
+            Value::Text("f(x, y) defined".to_string())
+        );
+    }
+
+    #[test]
+    fn user_function_does_not_leak_params_into_caller_scope() {
+        let stmts = crate::parser::parse_program("f(x) := x * 2; f(5)").unwrap();
+        let mut ctx = Context::new();
+        eval_program(&stmts, &mut ctx).unwrap();
+        assert!(!ctx.variables.contains_key("x"));
+    }
+
+    #[test]
+    fn user_function_arguments_are_evaluated_in_caller_scope() {
+        // `x` inside the call means the caller's `x`, not the parameter
+        // `x` of `f` itself (no accidental self-shadowing of arguments).
+        let stmts = crate::parser::parse_program("x := 3; f(x) := x + 1; f(x + 10)").unwrap();
+        let mut ctx = Context::new();
+        assert_eq!(eval_program(&stmts, &mut ctx).unwrap(), Value::Number(14.0));
+    }
+
+    #[test]
+    fn user_function_can_call_another_user_function() {
+        let stmts = crate::parser::parse_program(
+            "double(x) := x * 2; quad(x) := double(double(x)); quad(3)",
+        )
+        .unwrap();
+        let mut ctx = Context::new();
+        assert_eq!(eval_program(&stmts, &mut ctx).unwrap(), Value::Number(12.0));
+    }
+
+    #[test]
+    fn eval_program_rejects_redefining_a_builtin_function() {
+        let stmts = crate::parser::parse_program("sqrt(x) := x").unwrap();
+        let mut ctx = Context::new();
+        assert_eq!(
+            eval_program(&stmts, &mut ctx),
+            Err(CalcError::ReservedFunctionName("sqrt".to_string()))
+        );
+    }
+
+    #[test]
+    fn eval_program_rejects_duplicate_parameter_names() {
+        let stmts = crate::parser::parse_program("f(x, x) := x").unwrap();
+        let mut ctx = Context::new();
+        assert_eq!(
+            eval_program(&stmts, &mut ctx),
+            Err(CalcError::DuplicateParameter {
+                function: "f".to_string(),
+                param: "x".to_string(),
+            })
+        );
+    }
+
+    #[test]
+    fn eval_program_wrong_arg_count_for_user_function() {
+        let stmts = crate::parser::parse_program("f(x, y) := x + y; f(1)").unwrap();
+        let mut ctx = Context::new();
+        assert_eq!(
+            eval_program(&stmts, &mut ctx),
+            Err(CalcError::WrongArgCount {
+                name: "f".to_string(),
+                expected: "2".to_string(),
+                got: 1,
+            })
+        );
+    }
+
+    #[test]
+    fn user_function_infinite_recursion_hits_the_depth_limit() {
+        let stmts = crate::parser::parse_program("f(x) := f(x); f(1)").unwrap();
+        let mut ctx = Context::new();
+        assert_eq!(
+            eval_program(&stmts, &mut ctx),
+            Err(CalcError::RecursionLimit("f".to_string()))
+        );
     }
 
     #[test]

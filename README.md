@@ -274,6 +274,19 @@ calc "pi := 5"        # error: cannot assign to reserved constant: pi
 
 `name := expr` assigns to a variable, visible to later statements in the same input (separated by `;` or a newline); the value of the last statement is the result. Assignment is a statement, not an expression — it can't be nested inside a larger expression or chained (`x := y := 5`). Variables don't persist across separate `calc` invocations or MCP tool calls; `pi`/`e` are reserved and can't be reassigned.
 
+**User-defined functions**:
+
+```
+calc "f(x) := x^2 + 1; f(3)"          # 10 (define then call in a later statement)
+calc "double(x) := x * 2
+quad(x) := double(double(x))
+quad(3)"                              # 12 (functions can call other functions)
+calc "f(x) := f(x); f(1)"             # error: function call recursion limit exceeded: f
+calc "sqrt(x) := x"                   # error: cannot redefine built-in function: sqrt
+```
+
+`name(params) := expr` defines a function, visible to later statements the same way a variable assignment is; calling it evaluates `expr` with each parameter bound to the corresponding argument (evaluated in the *caller's* scope, so a parameter can't accidentally see itself). Functions can call themselves or each other, but the language has no `if`/branching construct, so a self-recursive call always keeps recursing rather than stopping at a computed base case — recursion is only useful today for mutual/bounded call chains. There's no fixed call-count limit; instead, each nested call checks actual remaining stack space and errors gracefully (`function call recursion limit exceeded`) once it's running low, rather than crashing with a native stack overflow. Function names can't collide with built-in functions or `pi`/`e`, and definitions aren't saved to disk — like variables, they don't persist across separate `calc` invocations or MCP tool calls.
+
 **Advanced / special functions** ([details](docs/functions/advanced.md)):
 
 ```

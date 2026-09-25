@@ -21,6 +21,15 @@ pub enum CalcError {
     #[error("cannot assign to reserved constant: {0}")]
     ReservedIdentifier(String),
 
+    #[error("cannot redefine built-in function: {0}")]
+    ReservedFunctionName(String),
+
+    #[error("duplicate parameter '{param}' in function {function}")]
+    DuplicateParameter { function: String, param: String },
+
+    #[error("function call recursion limit exceeded: {0}")]
+    RecursionLimit(String),
+
     #[error("wrong number of arguments for {name}: expected {expected}, got {got}")]
     WrongArgCount {
         name: String,

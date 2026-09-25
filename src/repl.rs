@@ -201,6 +201,10 @@ impl Helper for FunctionCompleter {}
 const HELP_TEXT: &str = "\
 Enter an expression to evaluate it, e.g. 2 + 2 * 3 or sqrt(16) + sin(pi/2).
 Assign variables with name := expr; they stay available for later lines.
+Define your own functions with name(params) := expr, e.g. f(x) := x^2 + 1;
+they can call themselves or each other (deeply nested recursion errors
+instead of crashing once available stack space is running low) and stay
+available for later lines, same as variables.
 Press Tab while typing a function name to complete it; a unique match also
 opens the call for you (e.g. typing atan2 then pressing Tab adds the `(`).
 Inside a call's parentheses, argument names are shown as you type; Tab
@@ -211,7 +215,7 @@ override with --history-file <path>, $EXCALC_HISTORY_FILE, or --no-history).
 Commands:
   help          show this message
   about         show version, author, and license info
-  vars          list currently assigned variables
+  vars          list currently assigned variables and defined functions
   exit, quit    leave the REPL (Ctrl-D also works)
 
 See https://github.com/dblock/excalc-rs/tree/master/docs for the full function reference.";
@@ -241,16 +245,22 @@ pub fn process_line(line: &str, ctx: &mut Context) -> LineOutcome {
         "about" => LineOutcome::Print(about_text()),
         "vars" => {
             let mut vars: Vec<(&str, f64)> = ctx.variables().collect();
-            if vars.is_empty() {
+            let mut funcs: Vec<(&str, &[String], &crate::ast::Expr)> = ctx.functions().collect();
+            if vars.is_empty() && funcs.is_empty() {
                 LineOutcome::Print("(no variables assigned)".to_string())
             } else {
                 vars.sort_by(|a, b| a.0.cmp(b.0));
-                let joined = vars
+                funcs.sort_by(|a, b| a.0.cmp(b.0));
+                let mut lines: Vec<String> = vars
                     .iter()
                     .map(|(name, value)| format!("{name} = {value}"))
-                    .collect::<Vec<_>>()
-                    .join("\n");
-                LineOutcome::Print(joined)
+                    .collect();
+                lines.extend(
+                    funcs.iter().map(|(name, params, body)| {
+                        format!("{name}({}) = {body}", params.join(", "))
+                    }),
+                );
+                LineOutcome::Print(lines.join("\n"))
             }
         }
         _ => match crate::evaluate_value_with_context(trimmed, ctx) {
@@ -439,6 +449,43 @@ mod tests {
         process_line("x := 5", &mut ctx);
         process_line("y := 10", &mut ctx);
         assert_eq!(printed(process_line("vars", &mut ctx)), "x = 5\ny = 10");
+    }
+
+    #[test]
+    fn vars_command_lists_defined_functions() {
+        let mut ctx = Context::new();
+        process_line("x := 5", &mut ctx);
+        process_line("f(a, b) := a + b", &mut ctx);
+        assert_eq!(
+            printed(process_line("vars", &mut ctx)),
+            "x = 5\nf(a, b) = a + b"
+        );
+    }
+
+    #[test]
+    fn defines_and_calls_a_user_function() {
+        let mut ctx = Context::new();
+        assert_eq!(
+            printed(process_line("f(x) := x^2 + 1", &mut ctx)),
+            "f(x) defined"
+        );
+        assert_eq!(printed(process_line("f(3)", &mut ctx)), "10");
+    }
+
+    #[test]
+    fn user_function_infinite_recursion_errors_instead_of_crashing() {
+        let mut ctx = Context::new();
+        process_line("f(x) := f(x)", &mut ctx);
+        assert!(printed(process_line("f(1)", &mut ctx)).starts_with("error:"));
+    }
+
+    #[test]
+    fn cannot_redefine_a_builtin_function() {
+        let mut ctx = Context::new();
+        assert_eq!(
+            printed(process_line("sqrt(x) := x", &mut ctx)),
+            "error: cannot redefine built-in function: sqrt"
+        );
     }
 
     #[test]

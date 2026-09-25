@@ -110,7 +110,9 @@ impl Parser {
     }
 
     /// `name := expr` (assignment) if the next two tokens are an identifier
-    /// followed by `:=`, otherwise a plain expression.
+    /// followed by `:=`; `name(params) := body` (function definition) if an
+    /// identifier is followed by a parenthesized, comma-separated list of
+    /// bare parameter names and then `:=`; otherwise a plain expression.
     fn parse_statement(&mut self) -> CalcResult<Stmt> {
         if let Token::Ident(name) = self.peek().clone() {
             if matches!(self.tokens.get(self.pos + 1), Some(Token::Assign)) {
@@ -119,8 +121,62 @@ impl Parser {
                 let expr = self.parse_comparison()?;
                 return Ok(Stmt::Assign(name, expr));
             }
+            if matches!(self.tokens.get(self.pos + 1), Some(Token::LParen)) {
+                if let Some(params) = self.try_parse_function_def_header() {
+                    let body = self.parse_comparison()?;
+                    return Ok(Stmt::DefineFunction(name, params, body));
+                }
+            }
         }
         Ok(Stmt::Expr(self.parse_comparison()?))
+    }
+
+    /// Attempts to parse `(param, param, ...) :=` starting right after the
+    /// function name identifier (which the caller has peeked but not yet
+    /// consumed). On success, consumes through the `:=` and returns the
+    /// parameter names; on any mismatch (e.g. a real call's expression
+    /// arguments, not bare names, or no trailing `:=`), restores the
+    /// parser's position and returns `None` so the caller falls back to
+    /// parsing a plain expression/call.
+    fn try_parse_function_def_header(&mut self) -> Option<Vec<String>> {
+        let start = self.pos;
+        self.advance(); // name
+        self.advance(); // (
+        let mut params = Vec::new();
+        if matches!(self.peek(), Token::RParen) {
+            self.advance();
+        } else {
+            loop {
+                match self.peek().clone() {
+                    Token::Ident(p) => params.push(p),
+                    _ => {
+                        self.pos = start;
+                        return None;
+                    }
+                }
+                self.advance();
+                match self.peek() {
+                    Token::Comma => {
+                        self.advance();
+                    }
+                    Token::RParen => {
+                        self.advance();
+                        break;
+                    }
+                    _ => {
+                        self.pos = start;
+                        return None;
+                    }
+                }
+            }
+        }
+        if matches!(self.peek(), Token::Assign) {
+            self.advance();
+            Some(params)
+        } else {
+            self.pos = start;
+            None
+        }
     }
 
     fn parse_comparison(&mut self) -> CalcResult<Expr> {
@@ -530,6 +586,47 @@ mod tests {
         assert_eq!(
             parse_program("x := 5").unwrap(),
             vec![Stmt::Assign("x".to_string(), Expr::Number(5.0))]
+        );
+    }
+
+    #[test]
+    fn parse_program_function_definition_statement() {
+        assert_eq!(
+            parse_program("f(x, y) := x + y").unwrap(),
+            vec![Stmt::DefineFunction(
+                "f".to_string(),
+                vec!["x".to_string(), "y".to_string()],
+                Expr::Binary(
+                    BinaryOp::Add,
+                    Box::new(Expr::Variable("x".to_string())),
+                    Box::new(Expr::Variable("y".to_string())),
+                )
+            )]
+        );
+    }
+
+    #[test]
+    fn parse_program_function_definition_with_no_params() {
+        assert_eq!(
+            parse_program("f() := 42").unwrap(),
+            vec![Stmt::DefineFunction(
+                "f".to_string(),
+                vec![],
+                Expr::Number(42.0)
+            )]
+        );
+    }
+
+    #[test]
+    fn parse_program_call_with_expression_args_is_not_a_definition() {
+        // `sqrt(4)` on its own is a plain call statement, not a function
+        // definition attempt, since there's no trailing `:=`.
+        assert_eq!(
+            parse_program("sqrt(4)").unwrap(),
+            vec![Stmt::Expr(Expr::Call(
+                "sqrt".to_string(),
+                vec![Expr::Number(4.0)]
+            ))]
         );
     }
 
