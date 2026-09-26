@@ -6,7 +6,7 @@ on:
   workflow_dispatch:
     inputs:
       tag:
-        description: "Release tag to attach the MSI to (defaults to the triggering release)"
+        description: "Release tag to attach artifacts to (defaults to the triggering release)"
         required: false
 
 env:
@@ -32,6 +32,81 @@ jobs:
         run: cargo publish
         env:
           CARGO_REGISTRY_TOKEN: ${{ steps.auth.outputs.token }}
+
+  archives:
+    name: Archive (${{ matrix.target }})
+    runs-on: ${{ matrix.runner }}
+    permissions:
+      contents: write
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - target: aarch64-apple-darwin
+            runner: macos-14
+            format: tar
+          - target: x86_64-apple-darwin
+            runner: macos-15-intel
+            format: tar
+          - target: aarch64-unknown-linux-musl
+            runner: ubuntu-22.04-arm
+            format: tar
+          - target: x86_64-unknown-linux-musl
+            runner: ubuntu-22.04
+            format: tar
+          - target: x86_64-pc-windows-msvc
+            runner: windows-2022
+            format: zip
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ env.RELEASE_TAG }}
+      - uses: dtolnay/rust-toolchain@stable
+        with:
+          targets: ${{ matrix.target }}
+      - uses: Swatinem/rust-cache@v2
+        with:
+          key: release-${{ matrix.target }}
+      - name: Install musl tools
+        if: contains(matrix.target, 'linux-musl')
+        run: sudo apt-get update && sudo apt-get install -y musl-tools
+      - name: Build binaries
+        run: cargo build --release --target "${{ matrix.target }}" --bin excalc --bin calc --bin excalc-mcp
+      - name: Package Unix archive
+        if: matrix.format == 'tar'
+        shell: bash
+        run: |
+          version="${RELEASE_TAG#v}"
+          name="excalc-${version}-${{ matrix.target }}"
+          mkdir -p "target/release-archives/${name}"
+          cp "target/${{ matrix.target }}/release/excalc" "target/${{ matrix.target }}/release/calc" "target/${{ matrix.target }}/release/excalc-mcp" README.md CHANGELOG.md LICENSE "target/release-archives/${name}/"
+          tar -C target/release-archives -czf "target/release-archives/${name}.tar.gz" "${name}"
+          cd target/release-archives
+          shasum -a 256 "${name}.tar.gz" > "${name}.tar.gz.sha256"
+      - name: Package Windows archive
+        if: matrix.format == 'zip'
+        shell: pwsh
+        run: |
+          $version = $env:RELEASE_TAG.TrimStart("v")
+          $name = "excalc-$version-${{ matrix.target }}"
+          $directory = "target/release-archives/$name"
+          New-Item -ItemType Directory -Force -Path $directory
+          Copy-Item "target/${{ matrix.target }}/release/excalc.exe", "target/${{ matrix.target }}/release/calc.exe", "target/${{ matrix.target }}/release/excalc-mcp.exe", "README.md", "CHANGELOG.md", "LICENSE" -Destination $directory
+          Compress-Archive -Path "$directory/*" -DestinationPath "target/release-archives/$name.zip"
+          $hash = (Get-FileHash "target/release-archives/$name.zip" -Algorithm SHA256).Hash.ToLower()
+          "$hash  $name.zip" | Set-Content "target/release-archives/$name.zip.sha256"
+      - name: Upload Unix archive to release
+        if: matrix.format == 'tar'
+        env:
+          GH_TOKEN: ${{ github.token }}
+        shell: bash
+        run: gh release upload "$RELEASE_TAG" target/release-archives/*.tar.gz target/release-archives/*.sha256 --clobber
+      - name: Upload Windows archive to release
+        if: matrix.format == 'zip'
+        env:
+          GH_TOKEN: ${{ github.token }}
+        shell: pwsh
+        run: gh release upload "$env:RELEASE_TAG" target/release-archives/*.zip target/release-archives/*.sha256 --clobber
 
   msi:
     name: Attach MSI installer to release

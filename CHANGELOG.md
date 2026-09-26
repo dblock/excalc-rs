@@ -6,6 +6,10 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 
 ## [Unreleased]
 
+### Added
+
+- Prebuilt portable release archives for macOS (Apple Silicon and Intel), Linux (ARM64 and x86-64, statically linked with musl), and Windows x86-64, built and checksummed by release CI.
+
 ## [0.3.0] - 2026-09-26
 
 ### Added

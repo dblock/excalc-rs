@@ -37,27 +37,35 @@ This regenerates `Cargo.lock` with the new version. Commit both files.
 cargo fmt --all -- --check
 cargo clippy --all-targets --all-features -- -D warnings
 cargo test
+cargo publish --dry-run
 ```
 
 Fix anything that fails before proceeding. Do not release on a red build.
 
-## 5. Commit, tag, and push
+## 5. Commit and push
 
 ```bash
 git add Cargo.toml Cargo.lock CHANGELOG.md
 git commit -m "Release v0.2.0"
-git tag -a v0.2.0 -m "v0.2.0"
 git push origin master
+```
+
+Wait for CI on `master` to pass before tagging the release commit.
+
+## 6. Tag and release
+
+```bash
+git tag -a v0.2.0 -m "v0.2.0"
 git push origin v0.2.0
 ```
 
-## 6. Verify the crates.io package
+Create the GitHub release after pushing the tag:
 
 ```bash
-cargo publish --dry-run
+gh release create v0.2.0 --title "v0.2.0" --notes-from-tag
 ```
 
-Do not run `cargo publish` locally. Publishing is handled by the GitHub release workflow using crates.io Trusted Publishing (OIDC), so no long-lived crates.io token is stored in GitHub.
+Publishing the GitHub release triggers `.github/workflows/release.yml`. A build matrix creates checksummed portable archives for macOS (Apple Silicon and Intel), Linux (ARM64 and x86-64, statically linked with musl), and Windows x86-64. The same workflow publishes the crate to crates.io using Trusted Publishing and attaches the Windows MSI.
 
 One-time setup on crates.io:
 
@@ -69,26 +77,7 @@ The workflow needs only the built-in GitHub OIDC permission (`id-token: write`);
 
 Publishing is one-way: a version can never be replaced or deleted, only yanked (hidden from new installs, but not removed). If publishing fails after an upload, do not retry with the same version number after changing package contents — bump to the next patch version instead.
 
-## 7. Create the GitHub release and publish to crates.io
-
-```bash
-gh release create v0.2.0 --title "v0.2.0" --notes-from-tag
-```
-
-Or, to use the changelog entry as the release notes instead of the raw commit log:
-
-```bash
-gh release create v0.2.0 --title "v0.2.0" --notes "$(sed -n '/## \[0.2.0\]/,/## \[/p' CHANGELOG.md | sed '$d')"
-```
-
-Publishing the GitHub release triggers `.github/workflows/release.yml`, which publishes the crate to crates.io and builds/uploads the Windows MSI. Confirm the crate is available before continuing:
-
-```bash
-gh run list --workflow=release.yml --limit 1
-cargo search excalc --limit 1
-```
-
-## 8. Update the Homebrew formula
+## 7. Update the Homebrew formula
 
 Update `Formula/excalc.rb`'s `url` and `sha256` to point at the new tag:
 
@@ -117,18 +106,18 @@ git push origin master
 
 CI also runs this same audit/install/test on every push via `.github/workflows/homebrew.yml` — treat a red run there as a blocker, same as any other CI failure.
 
-## 9. Verify the release workflow
+## 8. Verify the release workflow
 
-Confirm the release workflow published the crate and attached the Windows MSI:
+Confirm the release workflow published the crate, portable archives, checksums, and Windows MSI:
 
 ```bash
 gh run list --workflow=release.yml --limit 1
 gh release view v0.2.0
 ```
 
-The release should list an `excalc-<version>-x86_64.msi` asset once the workflow finishes, and `cargo search excalc --limit 1` should show the new version. Treat a missing asset, missing crate version, or red run as a release blocker.
+The release should list five platform archives, their `.sha256` files, and an `excalc-<version>-x86_64.msi` asset once the workflow finishes. `cargo search excalc --limit 1` should show the new version. Treat a missing asset, missing crate version, or red run as a release blocker.
 
-## 10. Verify CI passed on the release commit
+## 9. Verify CI passed on the formula update
 
 ```bash
 gh run list --branch master --limit 1
@@ -140,4 +129,4 @@ Confirm it's green before telling anyone the release is out.
 
 - Never force-push tags or rewrite an already-pushed release tag. If a release was cut with a mistake, ship a new patch version instead.
 - Homebrew users install via `brew tap dblock/excalc-rs https://github.com/dblock/excalc-rs && brew install excalc` (no `homebrew-` prefix needed since the URL is explicit). The tap lives in this same repo's `Formula/` directory — there is no separate tap repo.
-- The MSI installer's WiX definition lives in `wix/main.wxs` (generated once with `cargo wix init`, then committed and hand-maintained). It bundles all three binaries (`excalc`, `calc`, `excalc-mcp`) and an optional "add to PATH" component. `.github/workflows/msi.yml` builds it on every push/PR to catch regressions; `.github/workflows/release.yml` rebuilds it and attaches it to the GitHub release when one is published.
+- The MSI installer's WiX definition lives in `wix/main.wxs` (generated once with `cargo wix init`, then committed and hand-maintained). It bundles all three binaries (`excalc`, `calc`, `excalc-mcp`) and an optional "add to PATH" component. `.github/workflows/msi.yml` builds it on every push/PR to catch regressions; `.github/workflows/release.yml` rebuilds it and attaches it to each published GitHub release.
