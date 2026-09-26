@@ -171,12 +171,13 @@ fn readme_examples_match_evaluator() {
     );
 }
 
-/// Checks that within every fenced code block whose lines are all
-/// `excalc "expr"  # comment`-style examples, the `#` starts at the same
-/// column, so the block reads as a tidy table rather than ragged text.
-/// Blocks containing multi-line statements (e.g. a newline-separated
-/// `excalc "x := 5\ny := ..."` example) are skipped, since not every line
-/// in those blocks is its own aligned example.
+/// Checks that within every fenced code block made up of `excalc "expr"  #
+/// comment`-style examples, the `#` (and, where every example in the block
+/// has one, the trailing `(description)`) starts at the same column, so the
+/// block reads as a tidy table rather than ragged text. Examples whose
+/// expression spans multiple lines (e.g. a newline-separated `excalc "x :=
+/// 5\ny := ..."` example) still count as one row, aligned on their closing
+/// line, since that's the line actually holding the `#`.
 #[test]
 fn readme_examples_hash_comments_are_column_aligned() {
     let readme_path = Path::new(env!("CARGO_MANIFEST_DIR")).join("README.md");
@@ -210,33 +211,107 @@ fn readme_examples_hash_comments_are_column_aligned() {
     );
 }
 
-/// Only checks a block if every non-blank line is a single-line `excalc
-/// "..."` example (so multi-line statement examples, or blocks that aren't
-/// `excalc` examples at all, are silently skipped).
+/// One row of a block: the README line holding the trailing `# comment`
+/// (for a multi-line `excalc "..."` statement, this is its closing line,
+/// since that's the only line expected to carry a comment) and that line's
+/// 1-indexed line number in README.md.
+struct Row<'a> {
+    line: &'a str,
+    lineno: usize,
+}
+
+/// Groups a block's lines into one `Row` per example, tracked by counting
+/// `"` characters to know when a quoted expression is still open across a
+/// line break. Returns `None` if the block isn't made of `excalc` examples
+/// at all (e.g. a plain shell/bash snippet).
+fn terminal_rows<'a>(block: &[&'a str], block_start_line: usize) -> Option<Vec<Row<'a>>> {
+    let mut rows = Vec::new();
+    let mut in_string = false;
+    let mut saw_any_start = false;
+    for (offset, line) in block.iter().enumerate() {
+        if line.trim().is_empty() {
+            continue;
+        }
+        if !in_string {
+            let starts = line.starts_with("excalc \"") || line.starts_with("excalc -- \"");
+            if !starts {
+                return None; // a non-continuation line that isn't its own example
+            }
+            saw_any_start = true;
+        }
+        if line.matches('"').count() % 2 == 1 {
+            in_string = !in_string;
+        }
+        if !in_string {
+            rows.push(Row {
+                line,
+                lineno: block_start_line + offset,
+            });
+        }
+    }
+    if !saw_any_start || in_string {
+        return None;
+    }
+    Some(rows)
+}
+
 fn check_block_alignment(block: &[&str], block_start_line: usize, failures: &mut Vec<String>) {
-    let lines: Vec<&str> = block
-        .iter()
-        .copied()
-        .filter(|l| !l.trim().is_empty())
-        .collect();
-    if lines.is_empty() || !lines.iter().all(|l| l.starts_with("excalc ")) {
+    let Some(rows) = terminal_rows(block, block_start_line) else {
+        return;
+    };
+    if rows.is_empty() {
         return;
     }
+
     let mut hash_column = None;
-    for (offset, line) in lines.iter().enumerate() {
+    for row in &rows {
         // Use the char count (display column), not the byte offset, so
         // multi-byte UTF-8 characters before the `#` (e.g. `£`) don't
         // throw off alignment checks.
-        let Some(col) = line.chars().position(|c| c == '#') else {
-            return; // not every line has a trailing comment; not a table, skip
+        let Some(col) = row.line.chars().position(|c| c == '#') else {
+            return; // not every example has a trailing comment; not a table, skip
         };
         match hash_column {
             None => hash_column = Some(col),
             Some(expected_col) if expected_col != col => {
                 failures.push(format!(
                     "README.md:{}: `#` at column {col}, expected column {expected_col} \
-                     to match the rest of this block: {line:?}",
-                    block_start_line + offset
+                     to match the rest of this block: {:?}",
+                    row.lineno, row.line
+                ));
+            }
+            _ => {}
+        }
+    }
+
+    // Only enforce paren alignment if every example in the block has a
+    // trailing `(description)`; some rows are bare numbers or `error: ...`
+    // with no parenthetical. Search after the `#`, not from the start of
+    // the line — the expression itself commonly contains `(`, e.g.
+    // `excalc "erfc(1)"  # ... (complementary error function)`.
+    let hash_col = hash_column.unwrap();
+    let paren_cols: Vec<Option<usize>> = rows
+        .iter()
+        .map(|row| {
+            row.line
+                .chars()
+                .skip(hash_col)
+                .position(|c| c == '(')
+                .map(|offset| hash_col + offset)
+        })
+        .collect();
+    if paren_cols.iter().any(Option::is_none) {
+        return;
+    }
+    let mut paren_column = None;
+    for (row, col) in rows.iter().zip(paren_cols.into_iter().flatten()) {
+        match paren_column {
+            None => paren_column = Some(col),
+            Some(expected_col) if expected_col != col => {
+                failures.push(format!(
+                    "README.md:{}: `(` at column {col}, expected column {expected_col} \
+                     to match the rest of this block: {:?}",
+                    row.lineno, row.line
                 ));
             }
             _ => {}

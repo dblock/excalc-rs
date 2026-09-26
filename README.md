@@ -142,13 +142,13 @@ excalc "min(3, 1, 2)"                     # 1       (minimum)
 excalc "max(3, 1, 2)"                     # 3       (maximum)
 excalc "median(3, 1, 2)"                  # 2       (median)
 excalc "mode(1, 2, 2, 3)"                 # 2       (mode)
-excalc "variance(2, 4, 4, 4, 5, 5, 7, 9)" # 4  (population variance)
-excalc "stddev(2, 4, 4, 4, 5, 5, 7, 9)"   # 2  (population standard deviation)
-excalc "percentile(50, 1, 2, 3)"          # 2  (50th percentile)
+excalc "variance(2, 4, 4, 4, 5, 5, 7, 9)" # 4       (population variance)
+excalc "stddev(2, 4, 4, 4, 5, 5, 7, 9)"   # 2       (population standard deviation)
+excalc "percentile(50, 1, 2, 3)"          # 2       (50th percentile)
 excalc "covariance(1, 2, 2, 4, 3, 6)"     # ~1.3333 (population covariance of (x,y) pairs)
-excalc "correlation(1, 2, 2, 4, 3, 6)"    # 1  (Pearson correlation of (x,y) pairs)
-excalc "skewness(1, 2, 2, 3, 10)"         # ~1.361 (population skewness)
-excalc "kurtosis(1, 2, 3, 4, 5)"          # -1.3   (population excess kurtosis)
+excalc "correlation(1, 2, 2, 4, 3, 6)"    # 1       (Pearson correlation of (x,y) pairs)
+excalc "skewness(1, 2, 2, 3, 10)"         # ~1.361  (population skewness)
+excalc "kurtosis(1, 2, 3, 4, 5)"          # -1.3    (population excess kurtosis)
 excalc "harmonic(4)"                      # ~2.0833 (harmonic mean)
 excalc "binom(5, 2)"                      # 10      (5 choose 2)
 ```
@@ -156,8 +156,8 @@ excalc "binom(5, 2)"                      # 10      (5 choose 2)
 **Probability distributions** ([details](docs/functions/probability.md)):
 
 ```
-excalc "binomialpdf(10, 0.5, 5)" # ~0.246 (P(X = 5) for Binomial(10, 0.5))
-excalc "binomialcdf(10, 0.5, 5)" # ~0.623 (P(X <= 5) for Binomial(10, 0.5))
+excalc "binomialpdf(10, 0.5, 5)" # ~0.246  (P(X = 5) for Binomial(10, 0.5))
+excalc "binomialcdf(10, 0.5, 5)" # ~0.623  (P(X <= 5) for Binomial(10, 0.5))
 excalc "poissonpdf(4, 2)"        # ~0.1465 (P(X = 2) for Poisson(4))
 excalc "poissoncdf(4, 2)"        # ~0.2381 (P(X <= 2) for Poisson(4))
 excalc "normalpdf(0, 0, 1)"      # ~0.3989 (density of the standard normal at 0)
@@ -168,14 +168,14 @@ excalc "zscore(85, 70, 10)"      # 1.5     (standard score)
 **Combinatorics** ([details](docs/functions/combinatorics.md)):
 
 ```
-excalc "factorial(5)"             # 120   (5!, same as postfix 5!)
-excalc "perm(5, 2)"               # 20    (permutations of 2 out of 5)
-excalc "catalan(3)"               # 5     (3rd Catalan number)
-excalc "multinomial(10, 2, 3, 5)" # 2520  (10! / (2! 3! 5!))
-excalc "stirling1(4, 2)"          # 11    (unsigned Stirling number, 1st kind)
-excalc "stirling2(4, 2)"          # 7     (Stirling number, 2nd kind)
-excalc "derangement(5)"           # 44    (derangements of 5 elements)
-excalc "bell(5)"                  # 52    (5th Bell number)
+excalc "factorial(5)"             # 120  (5!, same as postfix 5!)
+excalc "perm(5, 2)"               # 20   (permutations of 2 out of 5)
+excalc "catalan(3)"               # 5    (3rd Catalan number)
+excalc "multinomial(10, 2, 3, 5)" # 2520 (10! / (2! 3! 5!))
+excalc "stirling1(4, 2)"          # 11   (unsigned Stirling number, 1st kind)
+excalc "stirling2(4, 2)"          # 7    (Stirling number, 2nd kind)
+excalc "derangement(5)"           # 44   (derangements of 5 elements)
+excalc "bell(5)"                  # 52   (5th Bell number)
 ```
 
 **General / rounding** ([details](docs/functions/general.md)):
@@ -189,8 +189,8 @@ excalc "trunc(2.1)"          # 2     (truncate towards zero)
 excalc "ceil(-2.1)"          # -2    (round up)
 excalc "floor(-2.1)"         # -3    (round down)
 excalc "sign(-5)"            # -1    (sign)
-excalc "clamp(15, 0, 10)"    # 10 (restrict to a range)
-excalc "lerp(0, 10, 0.5)"    # 5  (linear interpolation)
+excalc "clamp(15, 0, 10)"    # 10    (restrict to a range)
+excalc "lerp(0, 10, 0.5)"    # 5     (linear interpolation)
 excalc "roundto(3.14159, 2)" # 3.14  (round to 2 decimal places)
 excalc "floordiv(-7, 2)"     # -4    (integer division towards -infinity)
 excalc "mod2(-7, 3)"         # 2     (floored modulo; remainder takes sign of divisor)
@@ -221,8 +221,8 @@ excalc "tau(9)"             # 13    (sum of divisors of 9)
 excalc "phi(12)"            # 4     (Euler's totient of 12)
 excalc "primorial(10)"      # 210   (product of primes <= 10)
 excalc "digitsum(12345)"    # 15    (sum of decimal digits)
-excalc "digitalroot(12345)" # 6  (repeated digit sum)
-excalc "palindrome?(12321)" # 1  (true; reads the same forwards and backwards)
+excalc "digitalroot(12345)" # 6     (repeated digit sum)
+excalc "palindrome?(12321)" # 1     (true; reads the same forwards and backwards)
 excalc "nextprime(10)"      # 11    (smallest prime > 10)
 excalc "triangular(10)"     # 55    (10th triangular number)
 excalc "pentagonal(10)"     # 145   (10th pentagonal number)
@@ -232,20 +232,20 @@ excalc "aliquot(220)"       # 284   (sum of proper divisors of 220)
 excalc "amicable?(220)"     # 1     (true; 220 and 284 are an amicable pair)
 excalc "coprime?(14, 15)"   # 1     (true; gcd(14, 15) = 1)
 excalc "order(2, 5)"        # 4     (multiplicative order of 2 mod 5)
-excalc "jacobi(1001, 9907)" # -1 (Jacobi symbol)
+excalc "jacobi(1001, 9907)" # -1    (Jacobi symbol)
 ```
 
 **Base conversion** ([details](docs/functions/base-conversion.md)):
 
 ```
-excalc "hex(255)"   # "0xff"    (format as hexadecimal)
-excalc "oct(8)"     # "0o10"    (format as octal)
-excalc "bin(10)"    # "0b1010"  (format as binary)
-excalc "0xff"       # 255     (hexadecimal literal)
-excalc "0o17"       # 15      (octal literal)
-excalc "0b1010"     # 10      (binary literal)
-excalc "0xff + 1"   # 256     (radix literals are just numbers, usable anywhere)
-excalc "0XA + 0b10" # 12      (uppercase prefixes and mixed bases both work)
+excalc "hex(255)"   # "0xff"   (format as hexadecimal)
+excalc "oct(8)"     # "0o10"   (format as octal)
+excalc "bin(10)"    # "0b1010" (format as binary)
+excalc "0xff"       # 255      (hexadecimal literal)
+excalc "0o17"       # 15       (octal literal)
+excalc "0b1010"     # 10       (binary literal)
+excalc "0xff + 1"   # 256      (radix literals are just numbers, usable anywhere)
+excalc "0XA + 0b10" # 12       (uppercase prefixes and mixed bases both work)
 ```
 
 `hex`/`oct`/`bin` accept a single non-negative integer and return text, not a number — the result can't be used inside a larger expression (`1 + hex(255)` is an error), and only the last statement of an `excalc` invocation may be text. `0x`/`0o`/`0b`-prefixed literals go the other way, parsing a hex/octal/binary number as an ordinary numeric value usable anywhere.
@@ -279,7 +279,7 @@ excalc "bitreverse(1, 4)" # 8  (reverse the lowest 4 bits)
 excalc "x := 5; x * 2"  # 10 (assign then use in a later statement)
 excalc "x := 5
 y := x^2 + 1
-y"                    # 26 (statements can also be newline-separated)
+y"                      # 26 (statements can also be newline-separated)
 excalc "x := 41 + 1"    # 42 (assignment's value is the assigned value)
 excalc "pi := 5"        # error: cannot assign to reserved constant: pi
 ```
@@ -289,13 +289,13 @@ excalc "pi := 5"        # error: cannot assign to reserved constant: pi
 **User-defined functions**:
 
 ```
-excalc "f(x) := x^2 + 1; f(3)"          # 10 (define then call in a later statement)
+excalc "f(x) := x^2 + 1; f(3)"                            # 10 (define then call in a later statement)
 excalc "double(x) := x * 2
 quad(x) := double(double(x))
-quad(3)"                              # 12 (functions can call other functions)
-excalc "fact(n) := n < 2 ? 1 : n * fact(n - 1); fact(10)"  # 3628800 (real terminating recursion)
-excalc "f(x) := f(x); f(1)"             # error: function call recursion limit exceeded: f
-excalc "sqrt(x) := x"                   # error: cannot redefine built-in function: sqrt
+quad(3)"                                                  # 12 (functions can call other functions)
+excalc "fact(n) := n < 2 ? 1 : n * fact(n - 1); fact(10)" # 3628800 (real terminating recursion)
+excalc "f(x) := f(x); f(1)"                               # error: function call recursion limit exceeded: f
+excalc "sqrt(x) := x"                                     # error: cannot redefine built-in function: sqrt
 ```
 
 `name(params) := expr` defines a function, visible to later statements the same way a variable assignment is; calling it evaluates `expr` with each parameter bound to the corresponding argument (evaluated in the *caller's* scope, so a parameter can't accidentally see itself). Functions can call themselves or each other; combined with the `cond ? then : else` conditional below, a self-recursive call can stop at a computed base case instead of always recursing. There's no fixed call-count limit; instead, each nested call checks actual remaining stack space and errors gracefully (`function call recursion limit exceeded`) once it's running low, rather than crashing with a native stack overflow. Function names can't collide with built-in functions or `pi`/`e`, and definitions aren't saved to disk — like variables, they don't persist across separate `excalc` invocations or MCP tool calls.
@@ -305,7 +305,7 @@ excalc "sqrt(x) := x"                   # error: cannot redefine built-in functi
 ```
 excalc "3 > 2 ? 10 : 20"   # 10
 excalc "if(3 > 2, 10, 20)" # 10 (exact equivalent function form)
-excalc "1 ? 2 : 0 ? 3 : 4" # 2 (right-associative: a ? b : (c ? d : e))
+excalc "1 ? 2 : 0 ? 3 : 4" # 2  (right-associative: a ? b : (c ? d : e))
 ```
 
 `cond ? then : else` (and its exact equivalent, `if(cond, then, else)`) evaluates `cond`, then evaluates and returns *only* the taken branch — `then` if `cond` is nonzero, `else` otherwise — so the untaken branch is never evaluated, matching every other language's short-circuiting ternary/`if`. This is what lets self-recursive functions actually terminate (see `fact` above) instead of always recursing to the stack limit.
@@ -356,14 +356,14 @@ excalc "secant(x^2 - 2, x, 0, 2, 0.000001)" # ~1.4142135623730947 (secant method
 **Geometry** ([details](docs/functions/geometry.md)) — `distance`/`manhattan`/`dot` work in any dimension, split their argument list in half between the two points/vectors:
 
 ```
-excalc "distance(0, 0, 3, 4)"       # 5       (2D Euclidean distance)
-excalc "distance(0, 0, 0, 1, 1, 1)" # ~1.732  (3D Euclidean distance)
-excalc "manhattan(0, 0, 3, 4)"      # 7       (2D Manhattan/taxicab distance)
-excalc "dot(1, 2, 3, 4)"            # 11      (2D dot product)
-excalc "norm(3, 4)"                 # 5       (Euclidean magnitude of a vector)
-excalc "triarea(3, 4, 5)"           # 6       (triangle area via Heron's formula)
-excalc "circlearea(2)"              # ~12.566 (area of a circle)
-excalc "circumference(2)"           # ~12.566 (circumference of a circle)
+excalc "distance(0, 0, 3, 4)"       # 5        (2D Euclidean distance)
+excalc "distance(0, 0, 0, 1, 1, 1)" # ~1.732   (3D Euclidean distance)
+excalc "manhattan(0, 0, 3, 4)"      # 7        (2D Manhattan/taxicab distance)
+excalc "dot(1, 2, 3, 4)"            # 11       (2D dot product)
+excalc "norm(3, 4)"                 # 5        (Euclidean magnitude of a vector)
+excalc "triarea(3, 4, 5)"           # 6        (triangle area via Heron's formula)
+excalc "circlearea(2)"              # ~12.566  (area of a circle)
+excalc "circumference(2)"           # ~12.566  (circumference of a circle)
 excalc "spherevol(3)"               # ~113.097 (volume of a sphere)
 excalc "spherearea(3)"              # ~113.097 (surface area of a sphere)
 ```
@@ -371,14 +371,14 @@ excalc "spherearea(3)"              # ~113.097 (surface area of a sphere)
 **Unit conversion** ([details](docs/functions/units.md)):
 
 ```
-excalc "c2f(100)" # 212     (Celsius to Fahrenheit)
-excalc "f2c(212)" # 100     (Fahrenheit to Celsius)
-excalc "km2mi(1)" # ~0.6214 (kilometers to miles)
-excalc "mi2km(1)" # 1.609344 (miles to kilometers)
-excalc "kg2lb(1)" # ~2.2046 (kilograms to pounds)
+excalc "c2f(100)" # 212        (Celsius to Fahrenheit)
+excalc "f2c(212)" # 100        (Fahrenheit to Celsius)
+excalc "km2mi(1)" # ~0.6214    (kilometers to miles)
+excalc "mi2km(1)" # 1.609344   (miles to kilometers)
+excalc "kg2lb(1)" # ~2.2046    (kilograms to pounds)
 excalc "lb2kg(1)" # 0.45359237 (pounds to kilograms)
-excalc "m2ft(1)"  # ~3.2808 (meters to feet)
-excalc "ft2m(1)"  # 0.3048  (feet to meters)
+excalc "m2ft(1)"  # ~3.2808    (meters to feet)
+excalc "ft2m(1)"  # 0.3048     (feet to meters)
 ```
 
 **Financial functions** ([details](docs/functions/financial.md)):
