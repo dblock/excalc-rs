@@ -16,11 +16,9 @@ cargo install excalc
 
 This installs the `excalc`, `calc` (a shorter alias for `excalc`), and `excalc-mcp` (see [MCP Server](#mcp-server)) binaries to `~/.cargo/bin` (make sure it's on your `PATH`). Requires a [Rust toolchain](https://rustup.rs/). Works on macOS, Linux, and Windows.
 
-Starting with the next release, prebuilt portable archives for macOS (Apple Silicon and Intel), Linux (ARM64 and x86-64), and Windows x86-64 will also be available from the [latest release](https://github.com/dblock/excalc-rs/releases/latest). Each archive contains `excalc`, `calc`, and `excalc-mcp`, plus a SHA-256 checksum.
+### macOS
 
-### macOS/Linux
-
-Install via [Homebrew](https://brew.sh/):
+If you don't want to install with Cargo, use [Homebrew](https://brew.sh/):
 
 ```bash
 brew tap dblock/excalc-rs https://github.com/dblock/excalc-rs
@@ -28,9 +26,15 @@ brew trust --formula dblock/excalc-rs/excalc
 brew install excalc
 ```
 
+Alternatively, download the Apple Silicon (`aarch64-apple-darwin`) or Intel (`x86_64-apple-darwin`) portable archive and its SHA-256 checksum from the [latest release](https://github.com/dblock/excalc-rs/releases/latest). Each archive contains `excalc`, `calc`, and `excalc-mcp`. The macOS portable binaries are not signed or notarized. After verifying the archive's SHA-256 checksum, remove the download quarantine attribute before running each binary, e.g. `xattr -d com.apple.quarantine ./calc`.
+
+### Linux
+
+If you don't want to install with Cargo, download the ARM64 (`aarch64-unknown-linux-musl`) or x86-64 (`x86_64-unknown-linux-musl`) portable archive and its SHA-256 checksum from the [latest release](https://github.com/dblock/excalc-rs/releases/latest). Each statically linked archive contains `excalc`, `calc`, and `excalc-mcp` and does not require a Rust toolchain.
+
 ### Windows
 
-Download and run the MSI installer from the [latest release](https://github.com/dblock/excalc-rs/releases/latest) (installs `excalc.exe`, `calc.exe`, and `excalc-mcp.exe`, with options to add them to your `PATH` and to register `excalc-mcp` with [GitHub Copilot CLI](https://docs.github.com/en/copilot/how-tos/copilot-cli) and [Claude Code](https://docs.claude.com/en/docs/claude-code/overview) if either is installed, both on by default), or install it silently from the command line with the [GitHub CLI](https://cli.github.com/):
+Download and run the MSI installer from the [latest release](https://github.com/dblock/excalc-rs/releases/latest). It installs `excalc.exe`, `calc.exe`, and `excalc-mcp.exe`, with options to put the binaries on your `PATH` and register `excalc-mcp` with [GitHub Copilot CLI](https://docs.github.com/en/copilot/how-tos/copilot-cli) and [Claude Code](https://docs.claude.com/en/docs/claude-code/overview), both on by default. You can also install it silently from the command line with the [GitHub CLI](https://cli.github.com/):
 
 ```powershell
 gh release download --repo dblock/excalc-rs --pattern "*.msi" --output excalc.msi
@@ -44,6 +48,8 @@ $asset = (Invoke-RestMethod https://api.github.com/repos/dblock/excalc-rs/releas
 Invoke-WebRequest $asset.browser_download_url -OutFile excalc.msi
 msiexec /i excalc.msi /quiet
 ```
+
+If you don't want to use the MSI, download the x86-64 (`x86_64-pc-windows-msvc`) portable ZIP and its SHA-256 checksum from the [latest release](https://github.com/dblock/excalc-rs/releases/latest). It contains the same three executables.
 
 ## Usage
 
