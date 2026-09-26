@@ -77,53 +77,18 @@ The workflow needs only the built-in GitHub OIDC permission (`id-token: write`);
 
 Publishing is one-way: a version can never be replaced or deleted, only yanked (hidden from new installs, but not removed). If publishing fails after an upload, do not retry with the same version number after changing package contents — bump to the next patch version instead.
 
-## 7. Update the Homebrew formula
+## 7. Verify the release workflow
 
-Update `Formula/excalc.rb`'s `url` and `sha256` to point at the new tag:
-
-```bash
-curl -sL https://github.com/dblock/excalc-rs/archive/refs/tags/v0.2.0.tar.gz -o /tmp/excalc.tar.gz
-shasum -a 256 /tmp/excalc.tar.gz
-```
-
-Update the `url` to `.../refs/tags/v0.2.0.tar.gz` and `sha256` to the value printed above. Then verify it locally before committing:
-
-```bash
-brew tap dblock/excalc-rs "$(pwd)"
-brew audit --strict dblock/excalc-rs/excalc
-brew install --build-from-source dblock/excalc-rs/excalc
-brew test dblock/excalc-rs/excalc
-brew uninstall excalc && brew untap dblock/excalc-rs
-```
-
-Commit and push the formula update:
-
-```bash
-git add Formula/excalc.rb
-git commit -m "Update Homebrew formula to v0.2.0"
-git push origin master
-```
-
-CI also runs this same audit/install/test on every push via `.github/workflows/homebrew.yml` — treat a red run there as a blocker, same as any other CI failure.
-
-## 8. Verify the release workflow
-
-Confirm the release workflow published the crate, portable archives, checksums, and Windows MSI:
+Confirm the release workflow published the crate, portable archives, checksums, and Windows MSI, then updated the Homebrew formula on `master`:
 
 ```bash
 gh run list --workflow=release.yml --limit 1
 gh release view v0.2.0
 ```
 
-The release should list five platform archives, their `.sha256` files, and an `excalc-<version>-x86_64.msi` asset once the workflow finishes. `cargo search excalc --limit 1` should show the new version. Treat a missing asset, missing crate version, or red run as a release blocker.
+The release should list five platform archives, their `.sha256` files, and an `excalc-<version>-x86_64.msi` asset once the workflow finishes. `cargo search excalc --limit 1` should show the new version, and `Formula/excalc.rb` on `master` should point at the new tag and checksum. Treat a missing asset, missing crate version, stale formula, or red run as a release blocker.
 
-## 9. Verify CI passed on the formula update
-
-```bash
-gh run list --branch master --limit 1
-```
-
-Confirm it's green before telling anyone the release is out.
+The release job audits, installs, and tests the updated formula before committing it. The commit is pushed with the built-in `GITHUB_TOKEN`, so it does not trigger another set of workflows.
 
 ## Notes
 

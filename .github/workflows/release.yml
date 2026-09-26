@@ -134,3 +134,47 @@ jobs:
         env:
           GH_TOKEN: ${{ github.token }}
         run: gh release upload "$env:RELEASE_TAG" target/wix/*.msi --clobber
+
+  homebrew:
+    name: Update Homebrew formula
+    needs: [publish, archives, msi]
+    if: ${{ always() && github.event_name == 'release' && needs.publish.result == 'success' && needs.archives.result == 'success' && needs.msi.result == 'success' }}
+    runs-on: macos-latest
+    permissions:
+      contents: write
+    concurrency:
+      group: homebrew-formula-update
+      cancel-in-progress: false
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: master
+      - name: Update formula URL and checksum
+        run: |
+          curl -fsSL "https://github.com/${GITHUB_REPOSITORY}/archive/refs/tags/${RELEASE_TAG}.tar.gz" -o "$RUNNER_TEMP/excalc.tar.gz"
+          archive_sha="$(shasum -a 256 "$RUNNER_TEMP/excalc.tar.gz" | awk '{print $1}')"
+          ARCHIVE_SHA="$archive_sha" ruby -pi -e 'gsub(%r{/refs/tags/v[^/"]+\.tar\.gz}, "/refs/tags/#{ENV.fetch("RELEASE_TAG")}.tar.gz"); gsub(/sha256 "[0-9a-f]+"/, "sha256 #{ENV.fetch("ARCHIVE_SHA").inspect}")' Formula/excalc.rb
+      - name: Tap this checkout
+        run: brew tap dblock/excalc-rs "$GITHUB_WORKSPACE"
+      - name: Audit formula
+        run: brew audit --strict dblock/excalc-rs/excalc
+      - name: Install formula
+        run: brew install --build-from-source dblock/excalc-rs/excalc
+      - name: Test formula
+        run: brew test dblock/excalc-rs/excalc
+      - name: Clean up Homebrew
+        if: always()
+        run: |
+          brew uninstall --force excalc || true
+          brew untap --force dblock/excalc-rs || true
+      - name: Commit and push formula
+        run: |
+          if git diff --quiet -- Formula/excalc.rb; then
+            echo "Formula already points at ${RELEASE_TAG}."
+            exit 0
+          fi
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add Formula/excalc.rb
+          git commit -m "Update Homebrew formula to ${RELEASE_TAG}" -m "Co-authored-by: Copilot <223556219+Copilot@users.noreply.github.com>"
+          git push origin HEAD:master

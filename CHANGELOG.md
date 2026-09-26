@@ -9,6 +9,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 ### Added
 
 - Prebuilt portable release archives for macOS (Apple Silicon and Intel), Linux (ARM64 and x86-64, statically linked with musl), and Windows x86-64, built and checksummed by release CI.
+- Release CI now updates, validates, commits, and pushes the Homebrew formula's tag URL and SHA-256 checksum after the crate, portable archives, and MSI publish successfully.
 
 ## [0.3.0] - 2026-09-26
 
