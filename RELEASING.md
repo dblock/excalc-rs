@@ -51,23 +51,25 @@ git push origin master
 git push origin v0.2.0
 ```
 
-## 6. Publish to crates.io
-
-Requires, one-time, on the maintainer's machine:
-
-- A crates.io account with a **verified email address** (crates.io → Account Settings → Profile → set and verify email). `cargo publish` fails with a 400 error until this is done.
-- An API token with the "publish-new" scope (crates.io → Account Settings → API Tokens → New Token), logged in locally with `cargo login` (it reads the token from stdin — do not pass it as a command-line argument).
-
-Check whether login has already happened with `cat ~/.cargo/credentials.toml`. If there's no token configured, stop and ask the maintainer to run `cargo login` themselves — don't attempt to work around missing credentials.
+## 6. Verify the crates.io package
 
 ```bash
-cargo publish --dry-run   # sanity check packaging first
-cargo publish
+cargo publish --dry-run
 ```
 
-Publishing is one-way: a version can never be replaced or deleted, only yanked (hidden from new installs, but not removed). If `cargo publish` fails partway, do not retry with the same version number after fixing the issue — bump to the next patch version instead.
+Do not run `cargo publish` locally. Publishing is handled by the GitHub release workflow using crates.io Trusted Publishing (OIDC), so no long-lived crates.io token is stored in GitHub.
 
-## 7. Create the GitHub release
+One-time setup on crates.io:
+
+1. Open the `excalc` crate's **Settings → Trusted Publishing** page.
+2. Add a GitHub Actions publisher for owner `dblock`, repository `excalc-rs`, and workflow `release.yml`.
+3. Leave the environment blank; the workflow does not use a GitHub environment.
+
+The workflow needs only the built-in GitHub OIDC permission (`id-token: write`); no GitHub Actions secret or local `cargo login` credential is required.
+
+Publishing is one-way: a version can never be replaced or deleted, only yanked (hidden from new installs, but not removed). If publishing fails after an upload, do not retry with the same version number after changing package contents — bump to the next patch version instead.
+
+## 7. Create the GitHub release and publish to crates.io
 
 ```bash
 gh release create v0.2.0 --title "v0.2.0" --notes-from-tag
@@ -77,6 +79,13 @@ Or, to use the changelog entry as the release notes instead of the raw commit lo
 
 ```bash
 gh release create v0.2.0 --title "v0.2.0" --notes "$(sed -n '/## \[0.2.0\]/,/## \[/p' CHANGELOG.md | sed '$d')"
+```
+
+Publishing the GitHub release triggers `.github/workflows/release.yml`, which publishes the crate to crates.io and builds/uploads the Windows MSI. Confirm the crate is available before continuing:
+
+```bash
+gh run list --workflow=release.yml --limit 1
+cargo search excalc --limit 1
 ```
 
 ## 8. Update the Homebrew formula
@@ -108,16 +117,16 @@ git push origin master
 
 CI also runs this same audit/install/test on every push via `.github/workflows/homebrew.yml` — treat a red run there as a blocker, same as any other CI failure.
 
-## 9. Verify the MSI installer was attached to the release
+## 9. Verify the release workflow
 
-Publishing the release (step 7) triggers `.github/workflows/release.yml`, which builds a Windows MSI installer with `cargo wix` and uploads it as a release asset automatically. Confirm it showed up:
+Confirm the release workflow published the crate and attached the Windows MSI:
 
 ```bash
 gh run list --workflow=release.yml --limit 1
 gh release view v0.2.0
 ```
 
-The release should list an `excalc-<version>-x86_64.msi` asset once the workflow finishes. Treat a missing asset or a red run the same as any other CI failure.
+The release should list an `excalc-<version>-x86_64.msi` asset once the workflow finishes, and `cargo search excalc --limit 1` should show the new version. Treat a missing asset, missing crate version, or red run as a release blocker.
 
 ## 10. Verify CI passed on the release commit
 
