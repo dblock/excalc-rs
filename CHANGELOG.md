@@ -6,6 +6,8 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 
 ## [Unreleased]
 
+## [0.3.0] - 2026-09-26
+
 ### Added
 
 - Interactive REPL: running `calc`/`excalc` with no expression while stdin is a terminal now starts a read-eval-print loop (variables persist across lines within the session, Tab-completes function names, and shows/advances through argument-name hints inside a call's parentheses), with `help` for usage, `about` for version/author/license info, `vars` to list assigned variables, and `exit`/`quit`/Ctrl-D to leave, instead of just printing usage.
@@ -76,6 +78,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 - CLI binary (`excalc "2 + 2 * 3"`).
 - CI: build/test on Linux, macOS, Windows; `cargo fmt` and `cargo clippy` checks.
 
-[Unreleased]: https://github.com/dblock/excalc-rs/compare/v0.2.0...HEAD
+[Unreleased]: https://github.com/dblock/excalc-rs/compare/v0.3.0...HEAD
+[0.3.0]: https://github.com/dblock/excalc-rs/compare/v0.2.0...v0.3.0
 [0.2.0]: https://github.com/dblock/excalc-rs/compare/v0.1.0...v0.2.0
 [0.1.0]: https://github.com/dblock/excalc-rs/releases/tag/v0.1.0
