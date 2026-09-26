@@ -170,3 +170,76 @@ fn readme_examples_match_evaluator() {
         failures.join("\n")
     );
 }
+
+/// Checks that within every fenced code block whose lines are all
+/// `excalc "expr"  # comment`-style examples, the `#` starts at the same
+/// column, so the block reads as a tidy table rather than ragged text.
+/// Blocks containing multi-line statements (e.g. a newline-separated
+/// `excalc "x := 5\ny := ..."` example) are skipped, since not every line
+/// in those blocks is its own aligned example.
+#[test]
+fn readme_examples_hash_comments_are_column_aligned() {
+    let readme_path = Path::new(env!("CARGO_MANIFEST_DIR")).join("README.md");
+    let readme = fs::read_to_string(&readme_path).expect("README.md should be readable");
+
+    let mut failures = Vec::new();
+    let mut in_fence = false;
+    let mut block: Vec<&str> = Vec::new();
+    let mut block_start_line = 0;
+
+    for (i, line) in readme.lines().enumerate() {
+        if line.trim() == "```" {
+            if in_fence {
+                check_block_alignment(&block, block_start_line, &mut failures);
+                block.clear();
+            } else {
+                block_start_line = i + 2; // 1-indexed, first line inside the fence
+            }
+            in_fence = !in_fence;
+            continue;
+        }
+        if in_fence {
+            block.push(line);
+        }
+    }
+
+    assert!(
+        failures.is_empty(),
+        "README.md code blocks have misaligned `#` comments:\n{}",
+        failures.join("\n")
+    );
+}
+
+/// Only checks a block if every non-blank line is a single-line `excalc
+/// "..."` example (so multi-line statement examples, or blocks that aren't
+/// `excalc` examples at all, are silently skipped).
+fn check_block_alignment(block: &[&str], block_start_line: usize, failures: &mut Vec<String>) {
+    let lines: Vec<&str> = block
+        .iter()
+        .copied()
+        .filter(|l| !l.trim().is_empty())
+        .collect();
+    if lines.is_empty() || !lines.iter().all(|l| l.starts_with("excalc ")) {
+        return;
+    }
+    let mut hash_column = None;
+    for (offset, line) in lines.iter().enumerate() {
+        // Use the char count (display column), not the byte offset, so
+        // multi-byte UTF-8 characters before the `#` (e.g. `£`) don't
+        // throw off alignment checks.
+        let Some(col) = line.chars().position(|c| c == '#') else {
+            return; // not every line has a trailing comment; not a table, skip
+        };
+        match hash_column {
+            None => hash_column = Some(col),
+            Some(expected_col) if expected_col != col => {
+                failures.push(format!(
+                    "README.md:{}: `#` at column {col}, expected column {expected_col} \
+                     to match the rest of this block: {line:?}",
+                    block_start_line + offset
+                ));
+            }
+            _ => {}
+        }
+    }
+}
