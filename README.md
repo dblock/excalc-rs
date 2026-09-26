@@ -22,6 +22,7 @@ Install via [Homebrew](https://brew.sh/):
 
 ```bash
 brew tap dblock/excalc-rs https://github.com/dblock/excalc-rs
+brew trust --formula dblock/excalc-rs/excalc
 brew install excalc
 ```
 
