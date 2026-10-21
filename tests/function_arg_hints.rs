@@ -75,6 +75,8 @@ fn parse_signature(form: &str) -> Option<(String, Vec<String>)> {
 
 fn scrape_docs() -> BTreeMap<String, Vec<String>> {
     let mut sigs: BTreeMap<String, Vec<String>> = BTreeMap::new();
+    // This integration test reads the checkout's documentation, not a production path.
+    #[cfg_attr(dylint_lib = "general", allow(abs_home_path))]
     let dir = concat!(env!("CARGO_MANIFEST_DIR"), "/docs/functions");
     for entry in fs::read_dir(dir).expect("failed to read docs/functions") {
         let path = entry.expect("dir entry").path();

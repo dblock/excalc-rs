@@ -24,7 +24,7 @@ use crate::error::{CalcError, CalcResult};
 /// set themselves (undefined variables default to `0`) — almost certainly a
 /// bug rather than intentional, since `Ci`/`Chi` are meaningless without the
 /// correct constant. This port uses the real mathematical constant.
-const EULER_MASCHERONI: f64 = 0.5772156649015329;
+const EULER_MASCHERONI: f64 = std::f64::consts::EULER_GAMMA;
 
 /// Absolute convergence tolerance used for every integral-based function in
 /// this module — tight enough that switching from the module's old private

@@ -90,6 +90,20 @@ cargo test
 
 CI runs the same checks on Linux, macOS, and Windows; don't push code that fails any of them locally.
 
+### Dylint
+
+[Dylint](https://github.com/trailofbits/dylint) runs additional compiler-based lints alongside Clippy. Install its tools using a rustup-managed stable toolchain:
+
+```bash
+cargo +stable install cargo-dylint dylint-link --version 6.2.0 --locked
+RUSTFLAGS="-D warnings" cargo +stable dylint --all -- --all-targets --all-features
+RUSTFLAGS="-D warnings" cargo +stable dylint --all -- --all-targets --no-default-features
+```
+
+If Rust was installed through Homebrew, install `rustup` with `brew install rustup`, put `$(brew --prefix rustup)/bin` first in `PATH`, and run `rustup toolchain install stable` before these commands.
+
+`Cargo.toml` pins the upstream general-purpose lint collection to a Git revision. Dylint installs the nightly compiler and components specified by that collection and builds its lint libraries automatically; the application's normal build remains on stable Rust. Updating the revision may change both the lint rules and their required toolchain, so rerun both commands when updating it. CI runs these checks in a separate Linux job. This currently enables upstream general-purpose lints, not spelling checks.
+
 ### Write Documentation
 
 Document any new or changed function, operator, or CLI behavior in the relevant page under [docs/](docs/README.md), in [port/DESIGN.md](port/DESIGN.md)'s function catalog, and in the `### Examples` section of [README.md](README.md) (which is checked against the evaluator by `tests/readme_examples.rs`, so it can't drift out of sync). See [AGENTS.md](AGENTS.md#documentation) for details.

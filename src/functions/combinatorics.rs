@@ -316,6 +316,8 @@ mod tests {
     }
 
     #[test]
+    // These assertions handle the errors; the lint mistakes local Vec writes for external effects.
+    #[cfg_attr(dylint_lib = "general", allow(non_local_effect_before_unhandled_error))]
     fn stirling_and_bell_reject_negative_or_fractional_input() {
         assert!(matches!(
             stirling1(-1.0, 0.0),
