@@ -1,0 +1,2 @@
+[dylint-spellcheck]
+dictionaries = ["crate:dylint-spellcheck/data/en", ".spellcheck.txt"]

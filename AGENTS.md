@@ -16,7 +16,7 @@ cargo clippy --all-targets --all-features -- -D warnings
 cargo test --all-features
 ```
 
-When changing Rust code or Dylint configuration, also run both Dylint commands in [CONTRIBUTING.md](CONTRIBUTING.md#dylint). They use the pinned upstream general-purpose lint collection and run in a separate Linux CI job.
+When changing Rust code or Dylint configuration, also run both Dylint commands in [CONTRIBUTING.md](CONTRIBUTING.md#dylint) from the repository root. They use the pinned upstream general-purpose lint collection and comment spelling adapter and run in a separate Linux CI job. Fix spelling errors; add legitimate technical terms to the case-sensitive `.spellcheck.txt` vocabulary, not to the upstream dictionary.
 
 CI runs the same checks on Linux, macOS, and Windows; don't push code that fails any of them locally.
 
