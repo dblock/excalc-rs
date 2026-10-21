@@ -297,6 +297,8 @@ mod tests {
     }
 
     #[test]
+    // This test only modifies its own process-specific temporary directory.
+    #[cfg_attr(dylint_lib = "general", allow(non_thread_safe_call_in_test))]
     fn winget_copilot_dirs_filters_by_prefix_and_ignores_missing_dir() {
         assert!(winget_copilot_dirs(Path::new("/does/not/exist")).is_empty());
 

@@ -298,17 +298,23 @@ const DEFAULT_HISTORY_FILE_NAME: &str = ".excalc_history";
 /// `--no-history` should short-circuit this entirely at the call site
 /// rather than calling this function.
 pub fn resolve_history_path(cli_override: Option<&str>) -> Option<std::path::PathBuf> {
+    resolve_history_path_with_env(cli_override, |name| std::env::var(name).ok())
+}
+
+fn resolve_history_path_with_env(
+    cli_override: Option<&str>,
+    env_var: impl Fn(&str) -> Option<String>,
+) -> Option<std::path::PathBuf> {
     if let Some(p) = cli_override.filter(|p| !p.is_empty()) {
         return Some(std::path::PathBuf::from(p));
     }
-    if let Ok(p) = std::env::var(HISTORY_FILE_ENV_VAR) {
+    if let Some(p) = env_var(HISTORY_FILE_ENV_VAR) {
         if !p.is_empty() {
             return Some(std::path::PathBuf::from(p));
         }
     }
-    let home = std::env::var("HOME")
-        .or_else(|_| std::env::var("USERPROFILE"))
-        .ok()
+    let home = env_var("HOME")
+        .or_else(|| env_var("USERPROFILE"))
         .filter(|h| !h.is_empty())?;
     Some(std::path::PathBuf::from(home).join(DEFAULT_HISTORY_FILE_NAME))
 }
@@ -372,34 +378,27 @@ mod tests {
         }
     }
 
-    // Guards tests below that mutate process-wide environment variables,
-    // since `cargo test` runs tests in parallel threads within one process.
-    static ENV_LOCK: std::sync::Mutex<()> = std::sync::Mutex::new(());
-
     #[test]
     fn history_path_cli_override_takes_priority() {
-        let _guard = ENV_LOCK.lock().unwrap();
-        std::env::set_var(HISTORY_FILE_ENV_VAR, "/env/history");
-        let path = resolve_history_path(Some("/cli/history"));
-        std::env::remove_var(HISTORY_FILE_ENV_VAR);
+        let path =
+            resolve_history_path_with_env(Some("/cli/history"), |_| Some("/env/history".into()));
         assert_eq!(path, Some(std::path::PathBuf::from("/cli/history")));
+        assert_eq!(resolve_history_path(Some("/cli/history")), path);
     }
 
     #[test]
     fn history_path_falls_back_to_env_var() {
-        let _guard = ENV_LOCK.lock().unwrap();
-        std::env::set_var(HISTORY_FILE_ENV_VAR, "/env/history");
-        let path = resolve_history_path(None);
-        std::env::remove_var(HISTORY_FILE_ENV_VAR);
+        let path = resolve_history_path_with_env(None, |name| {
+            (name == HISTORY_FILE_ENV_VAR).then(|| "/env/history".into())
+        });
         assert_eq!(path, Some(std::path::PathBuf::from("/env/history")));
     }
 
     #[test]
     fn history_path_falls_back_to_home_dir() {
-        let _guard = ENV_LOCK.lock().unwrap();
-        std::env::remove_var(HISTORY_FILE_ENV_VAR);
-        std::env::set_var("HOME", "/home/tester");
-        let path = resolve_history_path(None);
+        let path = resolve_history_path_with_env(None, |name| {
+            (name == "HOME").then(|| "/home/tester".into())
+        });
         assert_eq!(
             path,
             Some(std::path::PathBuf::from("/home/tester/.excalc_history"))
@@ -408,14 +407,34 @@ mod tests {
 
     #[test]
     fn history_path_ignores_empty_override_and_env_var() {
-        let _guard = ENV_LOCK.lock().unwrap();
-        std::env::set_var(HISTORY_FILE_ENV_VAR, "");
-        std::env::set_var("HOME", "/home/tester");
-        let path = resolve_history_path(Some(""));
-        std::env::remove_var(HISTORY_FILE_ENV_VAR);
+        let path = resolve_history_path_with_env(Some(""), |name| match name {
+            HISTORY_FILE_ENV_VAR => Some(String::new()),
+            "HOME" => Some("/home/tester".into()),
+            _ => None,
+        });
         assert_eq!(
             path,
             Some(std::path::PathBuf::from("/home/tester/.excalc_history"))
+        );
+    }
+
+    #[test]
+    fn history_path_falls_back_to_userprofile_without_home() {
+        let path = resolve_history_path_with_env(None, |name| {
+            (name == "USERPROFILE").then(|| "C:/Users/tester".into())
+        });
+        assert_eq!(
+            path,
+            Some(std::path::PathBuf::from("C:/Users/tester").join(".excalc_history"))
+        );
+    }
+
+    #[test]
+    fn history_path_is_disabled_without_a_nonempty_home() {
+        assert_eq!(resolve_history_path_with_env(None, |_| None), None);
+        assert_eq!(
+            resolve_history_path_with_env(None, |_| Some(String::new())),
+            None
         );
     }
 

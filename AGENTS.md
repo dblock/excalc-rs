@@ -16,6 +16,8 @@ cargo clippy --all-targets --all-features -- -D warnings
 cargo test --all-features
 ```
 
+When changing Rust code or Dylint configuration, also run both Dylint commands in [CONTRIBUTING.md](CONTRIBUTING.md#dylint). They use the pinned upstream general-purpose lint collection and run in a separate Linux CI job.
+
 CI runs the same checks on Linux, macOS, and Windows; don't push code that fails any of them locally.
 
 ## Coverage
@@ -41,6 +43,8 @@ Do not hard-wrap prose in Markdown files. Write each paragraph as a single long 
 ## Releasing
 
 Follow [RELEASING.md](RELEASING.md) step by step when asked to cut a release. Update [CHANGELOG.md](CHANGELOG.md) as part of any change that adds, removes, or changes behavior — add an entry under `[Unreleased]`.
+
+Include a linked PR number and contributor GitHub username in each new changelog entry, using `[#123](https://github.com/dblock/excalc-rs/pull/123): Description - [@contributor](https://github.com/contributor).` Once the PR is created, update the entry with its assigned number before considering the PR ready.
 
 ## Porting from the original Pascal engine
 

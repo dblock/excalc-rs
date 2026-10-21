@@ -51,3 +51,11 @@ stacker = "0.1.25"
 
 [dev-dependencies]
 serde_json = "1"
+
+[workspace.metadata.dylint]
+libraries = [
+    { git = "https://github.com/trailofbits/dylint", rev = "4723dd08bff96c8f5589e1df9f7460fac6458b9e", pattern = "examples/general" },
+]
+
+[lints.rust]
+unexpected_cfgs = { level = "warn", check-cfg = ['cfg(dylint_lib, values("general"))'] }
