@@ -55,6 +55,7 @@ serde_json = "1"
 [workspace.metadata.dylint]
 libraries = [
     { git = "https://github.com/trailofbits/dylint", rev = "4723dd08bff96c8f5589e1df9f7460fac6458b9e", pattern = "examples/general" },
+    { git = "https://github.com/dblock/dylint-spellcheck", tag = "v0.1.0" },
 ]
 
 [lints.rust]
