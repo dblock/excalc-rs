@@ -59,6 +59,10 @@ msiexec /i excalc.msi /quiet
 
 If you don't want to use the MSI, download the x86-64 (`x86_64-pc-windows-msvc`) portable ZIP and its SHA-256 checksum from the [latest release](https://github.com/dblock/excalc-rs/releases/latest). It contains the same three executables.
 
+## Privacy
+
+Calculations run locally without telemetry. Interactive command history is saved on your device by default; use `--no-history` to disable persistence. AI clients that call the MCP server have their own data handling. See [PRIVACY.md](PRIVACY.md) for details.
+
 ## Usage
 
 ```
