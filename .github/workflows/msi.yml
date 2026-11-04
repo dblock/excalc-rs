@@ -7,7 +7,7 @@ on:
 
 env:
   CARGO_TERM_COLOR: always
-  BUILD_TAG: master-latest
+  BUILD_TAG: latest-preview
 
 jobs:
   msi:
@@ -78,7 +78,7 @@ jobs:
         with:
           tag: ${{ env.BUILD_TAG }}
           commit: ${{ github.sha }}
-          name: Latest master build
+          name: Latest preview
           body: |
             Unreleased build of ${{ github.sha }}.
 
