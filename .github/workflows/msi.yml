@@ -7,7 +7,7 @@ on:
 
 env:
   CARGO_TERM_COLOR: always
-  BUILD_TAG: build-${{ github.run_number }}-${{ github.run_attempt }}
+  BUILD_TAG: master-latest
 
 jobs:
   msi:
@@ -15,6 +15,9 @@ jobs:
     runs-on: windows-latest
     permissions:
       contents: write
+    concurrency:
+      group: msi-${{ github.ref }}
+      cancel-in-progress: false
     steps:
       - uses: actions/checkout@v4
       - uses: dtolnay/rust-toolchain@stable
@@ -75,7 +78,7 @@ jobs:
         with:
           tag: ${{ env.BUILD_TAG }}
           commit: ${{ github.sha }}
-          name: Master build ${{ env.BUILD_TAG }}
+          name: Latest master build
           body: |
             Unreleased build of ${{ github.sha }}.
 
@@ -84,5 +87,7 @@ jobs:
             ```
           prerelease: true
           makeLatest: "false"
+          allowUpdates: true
+          removeArtifacts: true
           artifactErrorsFailBuild: true
           artifacts: target/wix/*.msi,Vestris.Excalc.manifests.zip
