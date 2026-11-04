@@ -59,6 +59,17 @@ msiexec /i excalc.msi /quiet
 
 If you don't want to use the MSI, download the x86-64 (`x86_64-pc-windows-msvc`) portable ZIP and its SHA-256 checksum from the [latest release](https://github.com/dblock/excalc-rs/releases/latest). It contains the same three executables.
 
+#### Latest Build
+
+The MSI workflow publishes the installer and `Vestris.Excalc.manifests.zip` as a `build-<run number>-<attempt>` prerelease. Download and run the MSI directly from the [releases page](https://github.com/dblock/excalc-rs/releases).
+
+With a WinGet client containing [microsoft/winget-cli#6651](https://github.com/microsoft/winget-cli/pull/6651), copy the build's `Vestris.Excalc.manifests.zip` download URL and pass it as `--source`:
+
+```powershell
+winget install --source https://github.com/dblock/excalc-rs/releases/download/build-123-1/Vestris.Excalc.manifests.zip
+winget upgrade --source https://github.com/dblock/excalc-rs/releases/download/build-124-1/Vestris.Excalc.manifests.zip
+```
+
 ## Privacy
 
 Calculations run locally without telemetry. Interactive command history is saved on your device by default; use `--no-history` to disable persistence. AI clients that call the MCP server have their own data handling. See [PRIVACY.md](PRIVACY.md) for details.

@@ -1,0 +1,30 @@
+# Created with https://github.com/russellbanks/Komac
+# yaml-language-server: $schema=https://aka.ms/winget-manifest.installer.1.28.0.schema.json
+
+PackageIdentifier: Vestris.Excalc
+PackageVersion: 0.0.0
+InstallerLocale: en-US
+InstallerType: wix
+Scope: machine
+InstallModes:
+- interactive
+- silent
+- silentWithProgress
+UpgradeBehavior: install
+Commands:
+- calc
+- excalc
+- excalc-mcp
+ReleaseDate: 1970-01-01
+Installers:
+- Architecture: x64
+  InstallerUrl: https://placeholder.invalid/installer.msi
+  InstallerSha256: '0000000000000000000000000000000000000000000000000000000000000000'
+  ProductCode: '{00000000-0000-0000-0000-000000000000}'
+  AppsAndFeaturesEntries:
+  - DisplayName: excalc
+    Publisher: Daniel Doubrovkine and contributors
+    ProductCode: '{00000000-0000-0000-0000-000000000000}'
+    UpgradeCode: '{9148F6F4-8AFD-416F-94EC-B17DC1826020}'
+ManifestType: installer
+ManifestVersion: 1.28.0

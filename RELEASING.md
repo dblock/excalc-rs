@@ -112,6 +112,8 @@ If submission fails, inspect the logs and check for an existing PR before rerunn
 
 ## Notes
 
-- Never force-push tags or rewrite an already-pushed release tag. If a release was cut with a mistake, ship a new patch version instead.
+- The MSI workflow updates templates in `wix/manifests/` and publishes the MSI plus `Vestris.Excalc.manifests.zip` as a `build-<run number>-<attempt>` prerelease on master. PRs only upload workflow artifacts.
+- Build MSI versions use UTC `<year minus 2000>.<month>.<minutes since month start>`; builds within the same minute share a version.
+- Never force-push tags or rewrite an already-pushed release tag. If a release was cut with a mistake, publish a new version instead.
 - Homebrew users install via `brew tap dblock/excalc-rs https://github.com/dblock/excalc-rs`, `brew trust --formula dblock/excalc-rs/excalc`, then `brew install excalc` (no `homebrew-` prefix needed since the URL is explicit). The tap lives in this same repo's `Formula/` directory — there is no separate tap repo.
 - The MSI installer's WiX definition lives in `wix/main.wxs` (generated once with `cargo wix init`, then committed and hand-maintained). It bundles all three binaries (`excalc`, `calc`, `excalc-mcp`) and an optional "add to PATH" component. `.github/workflows/msi.yml` builds it on every push/PR to catch regressions; `.github/workflows/release.yml` rebuilds it and attaches it to each published GitHub release.

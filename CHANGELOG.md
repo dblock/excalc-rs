@@ -8,6 +8,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 
 ### Added
 
+- [#9](https://github.com/dblock/excalc-rs/pull/9): Per-build Windows MSI prereleases with Vestris.Excalc.manifests.zip and copyable installation commands - [@dblock](https://github.com/dblock).
 - [#7](https://github.com/dblock/excalc-rs/pull/7): An ExCalc-specific privacy policy covering local calculations, persistent command history, MCP clients, distribution, and support - [@dblock](https://github.com/dblock).
 - [#6](https://github.com/dblock/excalc-rs/pull/6): Release CI submits stable WinGet manifest updates after successful crate publishing and artifact uploads, with a pull request link in the job summary and documented token setup - [@dblock](https://github.com/dblock).
 - [#4](https://github.com/dblock/excalc-rs/pull/4): Rust comment spelling checks via a pinned dylint-spellcheck adapter, using its bundled English dictionary and a generated, reviewed project vocabulary - [@dblock](https://github.com/dblock).
