@@ -7,11 +7,14 @@ on:
 
 env:
   CARGO_TERM_COLOR: always
+  BUILD_TAG: build-${{ github.run_number }}-${{ github.run_attempt }}
 
 jobs:
   msi:
     name: Build MSI installer
     runs-on: windows-latest
+    permissions:
+      contents: write
     steps:
       - uses: actions/checkout@v4
       - uses: dtolnay/rust-toolchain@stable
@@ -26,9 +29,60 @@ jobs:
         if: steps.cache-cargo-wix.outputs.cache-hit != 'true'
         run: cargo install cargo-wix --version 0.3.9 --locked
       - name: Build MSI
-        run: cargo wix --nocapture
-      - name: Upload MSI artifact
+        shell: pwsh
+        run: |
+          $ErrorActionPreference = 'Stop'
+          $PSNativeCommandUseErrorActionPreference = $true
+          $version = & { $now = [DateTime]::UtcNow; '{0}.{1}.{2}' -f ($now.Year - 2000), $now.Month, [int][Math]::Floor(($now - $now.Date.AddDays(1 - $now.Day)).TotalMinutes) }
+          cargo wix --nocapture --target x86_64-pc-windows-msvc --install-version $version
+          "MSI_VERSION=$version" >> $env:GITHUB_ENV
+      - name: Prepare current source archive
+        shell: pwsh
+        run: |
+          $ErrorActionPreference = 'Stop'
+          $PSNativeCommandUseErrorActionPreference = $true
+          $repository = $env:GITHUB_REPOSITORY
+          $installer = Get-Item "target\wix\excalc-$env:MSI_VERSION-x86_64.msi"
+          $hash = (Get-FileHash $installer.FullName).Hash
+          $database = (New-Object -ComObject WindowsInstaller.Installer).OpenDatabase($installer.FullName, 0)
+          $view = $database.OpenView("SELECT ``Value`` FROM ``Property`` WHERE ``Property``='ProductCode'")
+          $view.Execute()
+          $productCode = $view.Fetch().StringData(1)
+          New-Item -ItemType Directory -Force manifests | Out-Null
+          foreach ($template in Get-ChildItem 'wix\manifests\*.yaml') {
+            $content = Get-Content -Raw $template.FullName
+            $content = $content -replace '(?m)^PackageVersion:.*', "PackageVersion: $env:MSI_VERSION"
+            $content = $content -replace '(?m)^(\s*)InstallerUrl:.*', "`$1InstallerUrl: https://github.com/$repository/releases/download/$env:BUILD_TAG/$($installer.Name)"
+            $content = $content -replace '(?m)^(\s*)InstallerSha256:.*', "`$1InstallerSha256: $hash"
+            $content = $content -replace '(?m)^(\s*)ProductCode:.*', "`$1ProductCode: '$productCode'"
+            $content = $content -replace '(?m)^ReleaseDate:.*', "ReleaseDate: $([DateTime]::UtcNow.ToString('yyyy-MM-dd'))"
+            $content = $content -replace '(?m)^ReleaseNotesUrl:.*', "ReleaseNotesUrl: https://github.com/$repository/releases/tag/$env:BUILD_TAG"
+            Set-Content "manifests\$($template.Name)" $content -Encoding utf8NoBOM
+          }
+          Compress-Archive manifests Vestris.Excalc.manifests.zip
+      - name: Upload prepared release artifacts
         uses: actions/upload-artifact@v4
         with:
-          name: excalc-msi
-          path: target/wix/*.msi
+          name: excalc-current
+          if-no-files-found: error
+          path: |
+            target/wix/*.msi
+            Vestris.Excalc.manifests.zip
+
+      - name: Publish build
+        if: github.event_name == 'push' && github.ref == 'refs/heads/master'
+        uses: ncipollo/release-action@339a81892b84b4eeb0f6e744e4574d79d0d9b8dd # v1
+        with:
+          tag: ${{ env.BUILD_TAG }}
+          commit: ${{ github.sha }}
+          name: Master build ${{ env.BUILD_TAG }}
+          body: |
+            Unreleased build of ${{ github.sha }}.
+
+            ```powershell
+            winget install --source https://github.com/${{ github.repository }}/releases/download/${{ env.BUILD_TAG }}/Vestris.Excalc.manifests.zip
+            ```
+          prerelease: true
+          makeLatest: "false"
+          artifactErrorsFailBuild: true
+          artifacts: target/wix/*.msi,Vestris.Excalc.manifests.zip
