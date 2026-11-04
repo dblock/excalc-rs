@@ -39,7 +39,7 @@ jobs:
           $version = & { $now = [DateTime]::UtcNow; '{0}.{1}.{2}' -f ($now.Year - 2000), $now.Month, [int][Math]::Floor(($now - $now.Date.AddDays(1 - $now.Day)).TotalMinutes) }
           cargo wix --nocapture --target x86_64-pc-windows-msvc --install-version $version
           "MSI_VERSION=$version" >> $env:GITHUB_ENV
-      - name: Prepare current source archive
+      - name: Prepare current manifests
         shell: pwsh
         run: |
           $ErrorActionPreference = 'Stop'
@@ -62,7 +62,14 @@ jobs:
             $content = $content -replace '(?m)^ReleaseNotesUrl:.*', "ReleaseNotesUrl: https://github.com/$repository/releases/tag/$env:BUILD_TAG"
             Set-Content "manifests\$($template.Name)" $content -Encoding utf8NoBOM
           }
-          Compress-Archive manifests Vestris.Excalc.manifests.zip
+          Compress-Archive manifests Vestris.Excalc.preview.manifests.zip
+          $installerManifest = Get-Content -Raw 'manifests\Vestris.Excalc.installer.yaml'
+          $localeManifest = Get-Content -Raw 'manifests\Vestris.Excalc.locale.en-US.yaml'
+          $singleton = $localeManifest -replace 'winget-manifest\.defaultLocale\.[\d.]+\.schema\.json', 'winget-manifest.singleton.1.6.0.schema.json'
+          $singleton = $singleton -replace '(?m)^ManifestType:.*', 'ManifestType: singleton' -replace '(?m)^ManifestVersion:.*', 'ManifestVersion: 1.6.0'
+          $singleton += $installerManifest -replace '(?m)^(#.*|PackageIdentifier:.*|PackageVersion:.*|ManifestType:.*|ManifestVersion:.*)\r?\n', ''
+          Set-Content Vestris.Excalc.preview.yaml $singleton -Encoding utf8NoBOM
+          winget validate --manifest Vestris.Excalc.preview.yaml
       - name: Upload prepared release artifacts
         uses: actions/upload-artifact@v4
         with:
@@ -70,7 +77,8 @@ jobs:
           if-no-files-found: error
           path: |
             target/wix/*.msi
-            Vestris.Excalc.manifests.zip
+            Vestris.Excalc.preview.manifests.zip
+            Vestris.Excalc.preview.yaml
 
       - name: Publish build
         if: github.event_name == 'push' && github.ref == 'refs/heads/master'
@@ -78,16 +86,16 @@ jobs:
         with:
           tag: ${{ env.BUILD_TAG }}
           commit: ${{ github.sha }}
-          name: Latest preview
+          name: Latest Preview
           body: |
             Unreleased build of ${{ github.sha }}.
 
             ```powershell
-            winget install --source https://github.com/${{ github.repository }}/releases/download/${{ env.BUILD_TAG }}/Vestris.Excalc.manifests.zip
+            winget install --manifest https://github.com/${{ github.repository }}/releases/download/${{ env.BUILD_TAG }}/Vestris.Excalc.preview.yaml
             ```
           prerelease: true
           makeLatest: "false"
           allowUpdates: true
           removeArtifacts: true
           artifactErrorsFailBuild: true
-          artifacts: target/wix/*.msi,Vestris.Excalc.manifests.zip
+          artifacts: target/wix/*.msi,Vestris.Excalc.preview.manifests.zip,Vestris.Excalc.preview.yaml

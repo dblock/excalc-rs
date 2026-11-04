@@ -61,13 +61,12 @@ If you don't want to use the MSI, download the x86-64 (`x86_64-pc-windows-msvc`)
 
 #### Latest Build
 
-The MSI workflow publishes the installer and `Vestris.Excalc.manifests.zip` to the `latest-preview` prerelease, replacing its previous assets. Download and run the MSI directly from the [release page](https://github.com/dblock/excalc-rs/releases/tag/latest-preview).
+The MSI workflow publishes the installer, `Vestris.Excalc.preview.yaml`, and `Vestris.Excalc.preview.manifests.zip` to the `latest-preview` prerelease, replacing its previous assets. Download and run the MSI directly from the [release page](https://github.com/dblock/excalc-rs/releases/tag/latest-preview).
 
-With a WinGet client containing [microsoft/winget-cli#6651](https://github.com/microsoft/winget-cli/pull/6651), copy the build's `Vestris.Excalc.manifests.zip` download URL and pass it as `--source`:
+With a WinGet client containing [microsoft/winget-cli#6651](https://github.com/microsoft/winget-cli/pull/6651), enable `LocalManifestFiles` and `RemoteManifestFiles` using `winget settings --enable <setting>` in an administrator terminal, then install from the manifest URL:
 
 ```powershell
-winget install --source https://github.com/dblock/excalc-rs/releases/download/latest-preview/Vestris.Excalc.manifests.zip
-winget upgrade --source https://github.com/dblock/excalc-rs/releases/download/latest-preview/Vestris.Excalc.manifests.zip
+winget install --manifest https://github.com/dblock/excalc-rs/releases/download/latest-preview/Vestris.Excalc.preview.yaml
 ```
 
 ## Privacy
