@@ -61,13 +61,13 @@ If you don't want to use the MSI, download the x86-64 (`x86_64-pc-windows-msvc`)
 
 #### Latest Build
 
-The MSI workflow publishes the installer and `Vestris.Excalc.manifests.zip` as a `build-<run number>-<attempt>` prerelease. Download and run the MSI directly from the [releases page](https://github.com/dblock/excalc-rs/releases).
+The MSI workflow publishes the installer and `Vestris.Excalc.manifests.zip` to the `master-latest` prerelease, replacing its previous assets. Download and run the MSI directly from the [release page](https://github.com/dblock/excalc-rs/releases/tag/master-latest).
 
 With a WinGet client containing [microsoft/winget-cli#6651](https://github.com/microsoft/winget-cli/pull/6651), copy the build's `Vestris.Excalc.manifests.zip` download URL and pass it as `--source`:
 
 ```powershell
-winget install --source https://github.com/dblock/excalc-rs/releases/download/build-123-1/Vestris.Excalc.manifests.zip
-winget upgrade --source https://github.com/dblock/excalc-rs/releases/download/build-124-1/Vestris.Excalc.manifests.zip
+winget install --source https://github.com/dblock/excalc-rs/releases/download/master-latest/Vestris.Excalc.manifests.zip
+winget upgrade --source https://github.com/dblock/excalc-rs/releases/download/master-latest/Vestris.Excalc.manifests.zip
 ```
 
 ## Privacy

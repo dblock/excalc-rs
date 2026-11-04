@@ -112,7 +112,7 @@ If submission fails, inspect the logs and check for an existing PR before rerunn
 
 ## Notes
 
-- The MSI workflow updates templates in `wix/manifests/` and publishes the MSI plus `Vestris.Excalc.manifests.zip` as a `build-<run number>-<attempt>` prerelease on master. PRs only upload workflow artifacts.
+- The MSI workflow updates templates in `wix/manifests/` and replaces the MSI plus `Vestris.Excalc.manifests.zip` in the `master-latest` prerelease on master pushes. PRs only upload workflow artifacts. Downloads overlapping publication may need retrying with a fresh manifest archive.
 - Build MSI versions use UTC `<year minus 2000>.<month>.<minutes since month start>`; builds within the same minute share a version.
 - Never force-push tags or rewrite an already-pushed release tag. If a release was cut with a mistake, publish a new version instead.
 - Homebrew users install via `brew tap dblock/excalc-rs https://github.com/dblock/excalc-rs`, `brew trust --formula dblock/excalc-rs/excalc`, then `brew install excalc` (no `homebrew-` prefix needed since the URL is explicit). The tap lives in this same repo's `Formula/` directory — there is no separate tap repo.
