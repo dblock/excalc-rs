@@ -8,6 +8,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 
 ### Added
 
+- [#11](https://github.com/dblock/excalc-rs/pull/11): Rename the rolling master-latest prerelease to latest-preview - [@dblock](https://github.com/dblock).
 - [#10](https://github.com/dblock/excalc-rs/pull/10): Publish current MSI and manifest assets to one master-latest prerelease instead of per-build releases - [@dblock](https://github.com/dblock).
 - [#9](https://github.com/dblock/excalc-rs/pull/9): Per-build Windows MSI prereleases with Vestris.Excalc.manifests.zip and copyable installation commands - [@dblock](https://github.com/dblock).
 - [#7](https://github.com/dblock/excalc-rs/pull/7): An ExCalc-specific privacy policy covering local calculations, persistent command history, MCP clients, distribution, and support - [@dblock](https://github.com/dblock).
