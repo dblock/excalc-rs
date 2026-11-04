@@ -34,7 +34,15 @@ If you don't want to install with Cargo, download the ARM64 (`aarch64-unknown-li
 
 ### Windows
 
-Download and run the MSI installer from the [latest release](https://github.com/dblock/excalc-rs/releases/latest). It installs `excalc.exe`, `calc.exe`, and `excalc-mcp.exe`, with options to put the binaries on your `PATH` and register `excalc-mcp` with [GitHub Copilot CLI](https://docs.github.com/en/copilot/how-tos/copilot-cli) and [Claude Code](https://docs.claude.com/en/docs/claude-code/overview), both on by default. You can also install it silently from the command line with the [GitHub CLI](https://cli.github.com/):
+Install with [WinGet](https://learn.microsoft.com/en-us/windows/package-manager/winget/):
+
+```powershell
+winget install --id Vestris.Excalc --exact
+```
+
+Open a new terminal after installation so the updated `PATH` takes effect, then run `excalc "2+2"` to print `4`.
+
+Alternatively, download and run the MSI installer from the [latest release](https://github.com/dblock/excalc-rs/releases/latest). It installs `excalc.exe`, `calc.exe`, and `excalc-mcp.exe`, with options to put the binaries on your `PATH` and register `excalc-mcp` with [GitHub Copilot CLI](https://docs.github.com/en/copilot/how-tos/copilot-cli) and [Claude Code](https://docs.claude.com/en/docs/claude-code/overview), both on by default. You can also install it silently from the command line with the [GitHub CLI](https://cli.github.com/):
 
 ```powershell
 gh release download --repo dblock/excalc-rs --pattern "*.msi" --output excalc.msi

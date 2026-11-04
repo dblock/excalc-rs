@@ -156,6 +156,8 @@ jobs:
           ARCHIVE_SHA="$archive_sha" ruby -pi -e 'gsub(%r{/refs/tags/v[^/"]+\.tar\.gz}, "/refs/tags/#{ENV.fetch("RELEASE_TAG")}.tar.gz"); gsub(/sha256 "[0-9a-f]+"/, "sha256 #{ENV.fetch("ARCHIVE_SHA").inspect}")' Formula/excalc.rb
       - name: Tap this checkout
         run: brew tap dblock/excalc-rs "$GITHUB_WORKSPACE"
+      - name: Trust formula
+        run: brew trust --formula dblock/excalc-rs/excalc
       - name: Audit formula
         run: brew audit --strict dblock/excalc-rs/excalc
       - name: Install formula

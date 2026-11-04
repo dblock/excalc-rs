@@ -95,7 +95,7 @@ CI runs the same checks on Linux, macOS, and Windows; don't push code that fails
 [Dylint](https://github.com/trailofbits/dylint) runs additional compiler-based lints alongside Clippy. Install its tools using a rustup-managed stable toolchain:
 
 ```bash
-cargo +stable install cargo-dylint dylint-link --version 6.2.0 --locked
+cargo +stable install cargo-dylint dylint-link --version 6.3.2 --locked
 RUSTFLAGS="-D warnings" cargo +stable dylint --all -- --all-targets --all-features
 RUSTFLAGS="-D warnings" cargo +stable dylint --all -- --all-targets --no-default-features
 ```

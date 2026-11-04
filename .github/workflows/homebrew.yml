@@ -22,6 +22,8 @@ jobs:
             homebrew-${{ runner.os }}-
       - name: Tap this checkout
         run: brew tap dblock/excalc-rs "$GITHUB_WORKSPACE"
+      - name: Trust formula
+        run: brew trust --formula dblock/excalc-rs/excalc
       - name: Audit formula
         run: brew audit --strict dblock/excalc-rs/excalc
       - name: Install formula
