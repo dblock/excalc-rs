@@ -1,6 +1,6 @@
 # Releasing
 
-Releases use [rust-crate-release](https://github.com/dblock/rust-crate-release), pinned to `v0.1.1` in `.github/workflows/release.yml`. The workflow validates and publishes the crate through crates.io Trusted Publishing, versions the changelog, pushes the release commit and tag, creates the GitHub release, and prepares the next patch version in `Cargo.toml` and `Cargo.lock`. The same run builds the portable archives and MSI, then updates Homebrew and submits WinGet.
+Releases use [rust-crate-release](https://github.com/dblock/rust-crate-release), pinned to `v0.1.1` in `.github/workflows/release.yml`. The workflow validates and publishes the crate through crates.io Trusted Publishing, versions the changelog, pushes the release commit and tag, creates the GitHub release, and prepares the next patch version in `Cargo.toml` and `Cargo.lock`. The same run builds the portable archives and MSI, then updates Homebrew. Stable WinGet submissions are a separate manual step.
 
 ## One-time setup
 
@@ -53,25 +53,9 @@ gh workflow run release.yml --repo dblock/excalc-rs --ref master -f version=0.4.
 
 Publishing is one-way: a version can never be replaced or deleted, only yanked. A failed run may already have published the crate or pushed its tag. Inspect the run summary, crates.io, remote refs, and [rcr's recovery guidance](https://github.com/dblock/rust-crate-release/blob/v0.1.1/docs/recovery.md) before retrying. Do not blindly dispatch again or change already-published package contents.
 
-### WinGet submission setup
-
-Stable releases also submit a manifest update for `Vestris.Excalc` to [microsoft/winget-pkgs](https://github.com/microsoft/winget-pkgs), using [WinGet Releaser](https://github.com/vedantmgoyal9/winget-releaser) and Komac. The job waits for successful crate publishing, archives, and MSI upload, then selects only the `excalc-<version>-x86_64.msi` release asset. It uses the existing accepted package as its manifest base and retains older versions. Artifact-only rebuilds do not submit WinGet updates.
-
-One-time setup:
-
-1. Keep a `winget-pkgs` fork under the repository owner's account (`dblock/winget-pkgs`), and complete Microsoft's Contributor License Agreement for the submitting account.
-2. Open the [prefilled classic token creation form](https://github.com/settings/tokens/new?description=ExCalc%20WinGet&scopes=public_repo,workflow) for that account, choose an expiration, and generate a token with `public_repo` and `workflow` scopes. Token creation requires the browser; `gh` cannot create a classic PAT. WinGet Releaser does not support fine-grained tokens. The `workflow` scope lets Komac synchronize upstream workflow changes into the fork.
-3. Store the token as the repository Actions secret `WINGET_TOKEN` with the following command. Paste it at the hidden prompt, never into a workflow or command argument:
-
-```bash
-gh secret set WINGET_TOKEN --repo dblock/excalc-rs
-```
-
-The built-in `GITHUB_TOKEN` cannot push to the separate fork and submit the upstream PR. A missing `WINGET_TOKEN` fails the job explicitly; if an existing token expires or cannot synchronize the fork, replace it or fix its permissions and rerun the failed job.
-
 ## 4. Verify the release workflow
 
-Confirm the release workflow published the crate, portable archives, checksums, and Windows MSI, updated the Homebrew formula on `master`, and submitted the WinGet PR:
+Confirm the release workflow published the crate, portable archives, checksums, and Windows MSI, and updated the Homebrew formula on `master`:
 
 ```bash
 gh run list --workflow=release.yml --limit 1
@@ -82,9 +66,28 @@ The release should list five platform archives, their `.sha256` files, and an `e
 
 The release job audits, installs, and tests the updated formula before committing it. The commit is pushed with the built-in `GITHUB_TOKEN`, so it does not trigger another set of workflows.
 
-For stable releases, the **Submit WinGet update** job records the manifest PR URL in its job summary. Submission is not publication: follow the upstream PR through validation, moderator review, merge, and the publish pipeline. Check the generated manifest schema, MSI version and hash, architecture, machine scope, product codes, and command names.
+## 5. Submit the WinGet update manually
 
-If submission fails, inspect the logs and check for an existing PR before rerunning the failed job; do not blindly create duplicate submissions. Rerunning failed jobs avoids republishing an already-published crate. An artifact-only `workflow_dispatch` run will not submit a WinGet PR. For manual recovery, use `wingetcreate update Vestris.Excalc --version <version> --urls <published-msi-url>`, review and submit the generated manifests. Once Microsoft's publish pipeline succeeds, run `winget source update`, then `winget show --id Vestris.Excalc --exact` to confirm availability.
+WinGet submission is intentionally not part of release CI. The previous [WinGet Releaser](https://github.com/vedantmgoyal9/winget-releaser) integration required a classic PAT with `public_repo` and `workflow` scopes; it did not support fine-grained tokens. Organization token policies and SAML authorization requirements can prevent that PAT from accessing `microsoft/winget-pkgs`, even when anonymous access succeeds. Komac can report such API failures as "package does not exist," so that message alone does not mean the package needs an initial submission. The release workflow no longer uses `WINGET_TOKEN`; an existing repository secret can be removed after this change is merged.
+
+1. Check [microsoft/winget-pkgs](https://github.com/microsoft/winget-pkgs) for an existing `Vestris.Excalc` update PR before starting. Use the latest accepted stable manifests as the base, keep a fork such as `dblock/winget-pkgs`, and complete Microsoft's Contributor License Agreement for the submitting account.
+2. On Windows, use [WinGetCreate](https://github.com/microsoft/winget-create/blob/main/doc/update.md) to generate an update for the published stable MSI. For example, for the already-published `0.3.2` release:
+
+```powershell
+wingetcreate update Vestris.Excalc --version 0.3.2 --urls https://github.com/dblock/excalc-rs/releases/download/v0.3.2/excalc-0.3.2-x86_64.msi --release-notes-url https://github.com/dblock/excalc-rs/releases/tag/v0.3.2 --out .\winget-update
+```
+
+Do not pass `--submit` or a token on the command line. This step prepares manifests; submit the PR through the browser using the organization's permitted sign-in flow.
+
+3. Review the generated manifest schema, MSI version and hash, architecture, machine scope, product codes, command names, and locale metadata. Copy the generated version directory into `manifests/v/Vestris/Excalc/0.3.2/` in your fork without removing older versions. Validate it from the fork's root:
+
+```powershell
+winget validate --manifest .\manifests\v\Vestris\Excalc\0.3.2
+```
+
+4. Commit the reviewed manifests on a topic branch in your fork and open a PR to `microsoft/winget-pkgs` in the browser. Submission is not publication: follow validation, moderator review, merge, and the publish pipeline. Once Microsoft's publish pipeline succeeds, run `winget source update`, then `winget show --id Vestris.Excalc --exact` to confirm availability.
+
+The local templates in `wix/manifests/` are for `latest-preview` assets only; do not submit their placeholder or preview versions as stable manifests. Neither a manual WinGet submission nor retrying a failed submission requires republishing the crate or creating another ExCalc release.
 
 ## Artifact-only recovery
 
@@ -94,7 +97,7 @@ To rebuild archives and the MSI for an existing GitHub release without publishin
 gh workflow run release.yml --repo dblock/excalc-rs --ref master -f tag=v0.3.1
 ```
 
-The workflow verifies the GitHub release exists before building from its tag. Never supply both `tag` and `version`. For a normal release whose downstream jobs failed, prefer **Re-run failed jobs** so successful publishing is not repeated and Homebrew/WinGet can still complete.
+The workflow verifies the GitHub release exists before building from its tag. Never supply both `tag` and `version`. For a normal release whose downstream jobs failed, prefer **Re-run failed jobs** so successful publishing is not repeated and Homebrew can still complete. WinGet submission remains manual.
 
 ## Notes
 

@@ -6,6 +6,10 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 
 ## [Unreleased]
 
+### Changed
+
+- [#17](https://github.com/dblock/excalc-rs/pull/17): Remove automated WinGet submissions and document manual stable-manifest preparation and browser submission when organization token policies prevent classic PAT access - [@dblock](https://github.com/dblock).
+
 ## [0.3.2] - 2026-11-12
 
 ### Fixed
