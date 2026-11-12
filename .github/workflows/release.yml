@@ -148,47 +148,6 @@ jobs:
           GH_TOKEN: ${{ github.token }}
         run: gh release upload "$env:RELEASE_TAG" target/wix/*.msi --clobber
 
-  winget:
-    name: Submit WinGet update
-    needs: [publish, release-tag, archives, msi]
-    if: ${{ !cancelled() && needs.publish.result == 'success' && needs.archives.result == 'success' && needs.msi.result == 'success' }}
-    runs-on: windows-latest
-    env:
-      RELEASE_TAG: ${{ needs.release-tag.outputs.tag }}
-    permissions:
-      contents: read
-    concurrency:
-      group: winget-manifest-update
-      cancel-in-progress: false
-    steps:
-      - name: Require WinGet submission token
-        shell: bash
-        env:
-          WINGET_TOKEN: ${{ secrets.WINGET_TOKEN }}
-        run: |
-          if [[ -z "$WINGET_TOKEN" ]]; then
-            echo "::error::Set the WINGET_TOKEN repository secret as described in RELEASING.md."
-            exit 1
-          fi
-      - name: Submit manifest pull request
-        id: winget
-        uses: vedantmgoyal9/winget-releaser@b7370d4d152efdce803a26cc6ca9eee58cb2ad54
-        with:
-          identifier: Vestris.Excalc
-          installers-regex: '^excalc-[0-9]+\.[0-9]+\.[0-9]+-x86_64\.msi$'
-          release-tag: ${{ env.RELEASE_TAG }}
-          token: ${{ secrets.WINGET_TOKEN }}
-      - name: Record WinGet pull request
-        shell: bash
-        env:
-          PR_URL: ${{ steps.winget.outputs.pr-url }}
-        run: |
-          if [[ "$PR_URL" != https://github.com/microsoft/winget-pkgs/pull/* ]]; then
-            echo "::error::WinGet submission did not return a pull request URL; inspect the submission logs."
-            exit 1
-          fi
-          printf 'WinGet manifest update: %s\n\nMicrosoft review and publication are asynchronous.\n' "$PR_URL" >> "$GITHUB_STEP_SUMMARY"
-
   homebrew:
     name: Update Homebrew formula
     needs: [publish, release-tag, archives, msi]
