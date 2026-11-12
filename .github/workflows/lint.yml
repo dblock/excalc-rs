@@ -5,6 +5,10 @@ on:
     branches: [master]
   pull_request:
 
+concurrency:
+  group: ${{ github.workflow }}-${{ github.event.pull_request.number || github.sha }}
+  cancel-in-progress: ${{ github.event_name == 'pull_request' }}
+
 env:
   CARGO_TERM_COLOR: always
 
@@ -34,6 +38,15 @@ jobs:
       - uses: Swatinem/rust-cache@v2
         with:
           key: dylint
+      - name: Cache Dylint libraries, drivers, and toolchains
+        uses: actions/cache@v4
+        with:
+          path: |
+            ~/.cargo/git/checkouts
+            ~/.dylint_drivers
+            ~/.rustup/toolchains/nightly-*
+            target/dylint/libraries
+          key: dylint-v1-${{ runner.os }}-${{ runner.arch }}-${{ hashFiles('Cargo.toml', '.github/workflows/lint.yml') }}
       - name: Install Dylint
         run: cargo install cargo-dylint dylint-link --version 6.3.2 --locked
       - name: Dylint
