@@ -6,6 +6,10 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 
 ## [Unreleased]
 
+### Fixed
+
+- [#15](https://github.com/dblock/excalc-rs/pull/15): Build Apple Silicon release archives on the supported macOS 15 runner instead of the retired macOS 14 image - [@dblock](https://github.com/dblock).
+
 ## [0.3.1] - 2026-11-12
 
 ### Added
