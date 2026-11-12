@@ -61,7 +61,7 @@ jobs:
       fail-fast: false
       matrix:
         entry:
-          - { target: aarch64-apple-darwin, runner: macos-14, format: tar }
+          - { target: aarch64-apple-darwin, runner: macos-15, format: tar }
           - { target: x86_64-apple-darwin, runner: macos-15-intel, format: tar }
           - { target: aarch64-unknown-linux-musl, runner: ubuntu-22.04-arm, format: tar }
           - { target: x86_64-unknown-linux-musl, runner: ubuntu-22.04, format: tar }
