@@ -1,8 +1,16 @@
 # Releasing
 
-Steps to cut a release of excalc-rs. Follow these exactly, in order.
+Releases use [rust-crate-release](https://github.com/dblock/rust-crate-release), pinned to `v0.1.0` in `.github/workflows/release.yml`. The workflow validates and publishes the crate through crates.io Trusted Publishing, versions the changelog, pushes the release commit and tag, creates the GitHub release, and prepares the next patch version in `Cargo.toml` and `Cargo.lock`. The same run builds the portable archives and MSI, then updates Homebrew and submits WinGet.
 
-## 1. Decide the version number
+## One-time setup
+
+1. In GitHub **Settings → Environments**, create `release` and restrict deployments to `master`.
+2. On the `excalc` crate's [Settings → Trusted Publishing](https://crates.io/crates/excalc/settings) page, configure a GitHub publisher for owner `dblock`, repository `excalc-rs`, workflow `release.yml`, and environment `release`. Replace the previous publisher with a blank environment; the reusable workflow requires `release`.
+3. Ensure repository rules permit ordinary bot pushes to `master` and creation of `vX.Y.Z` tags. A required-PR or required-status-check rule can block release commits even with `contents: write`. Keep force-push and deletion protections.
+
+The workflow uses the built-in `GITHUB_TOKEN` and `id-token: write`; no Cargo-token secret, separate authentication action, or local `cargo login` is required. `actions: read` allows rcr to verify its immutable recovery artifact before publishing.
+
+## 1. Prepare release notes and choose the version
 
 Use [Semantic Versioning](https://semver.org/): `MAJOR.MINOR.PATCH`.
 
@@ -10,76 +18,44 @@ Use [Semantic Versioning](https://semver.org/): `MAJOR.MINOR.PATCH`.
 - **MINOR** (`0.1.0` → `0.2.0`): new functions or features, backward compatible.
 - **MAJOR** (`0.1.0` → `1.0.0`): breaking changes (removed/renamed functions, changed precedence, changed CLI output format).
 
-Before 1.0.0, breaking changes may also land in a MINOR bump; use judgment and say so explicitly in the changelog entry.
+Before 1.0.0, breaking changes may also land in a MINOR bump; use judgment and say so explicitly in the changelog entry. Add meaningful notes under `[Unreleased]` in `CHANGELOG.md`; an empty section is not releasable. Do not date/version the changelog or create a release tag yourself.
 
-## 2. Update CHANGELOG.md
+The default release version is the one already in `Cargo.toml`, not an automatically incremented version. Adoption advances the previously published `0.3.0` manifest to `0.3.1` so the first default dispatch targets an unpublished version. For a different version, supply the optional workflow `version` input, or update `Cargo.toml`, run `cargo check` to refresh `Cargo.lock`, and commit both.
 
-- Rename the `[Unreleased]` section to the new version and today's date, e.g. `## [0.2.0] - 2026-09-24`.
-- Add a fresh empty `[Unreleased]` section above it.
-- Update the link references at the bottom of the file:
-  - Add `[0.2.0]: https://github.com/dblock/excalc-rs/compare/v0.1.0...v0.2.0` (or `.../releases/tag/v0.2.0` if this is the very first release).
-  - Update `[Unreleased]` to compare from the new tag to `HEAD`.
-- If `[Unreleased]` was empty (nothing to release), stop here — there is nothing to release.
+## 2. Validate and merge
 
-## 3. Bump the version in Cargo.toml
-
-Update `version = "..."` in `Cargo.toml` to match. Then run:
-
-```bash
-cargo build
-```
-
-This regenerates `Cargo.lock` with the new version. Commit both files.
-
-## 4. Verify everything passes locally
+Follow [CONTRIBUTING.md](CONTRIBUTING.md#prerequisites), then run:
 
 ```bash
 cargo fmt --all -- --check
 cargo clippy --all-targets --all-features -- -D warnings
-cargo test
-cargo publish --dry-run
+cargo test --all-features
+cargo test --no-default-features
 ```
 
-Fix anything that fails before proceeding. Do not release on a red build.
+Merge the changes and unreleased notes onto `master`. Confirm CI is green before publishing. The workflow repeats these checks using `rcr.toml` and also validates the packaged archive before upload.
 
-## 5. Commit and push
+## 3. Dispatch the release
+
+Select **Actions → Release → Run workflow**, choose `master`, leave `tag` blank, and optionally enter a stable `version`. Equivalently:
 
 ```bash
-git add Cargo.toml Cargo.lock CHANGELOG.md
-git commit -m "Release v0.2.0"
-git push origin master
+gh workflow run release.yml --repo dblock/excalc-rs --ref master
 ```
 
-Wait for CI on `master` to pass before tagging the release commit.
-
-## 6. Tag and release
+To select a minor release explicitly:
 
 ```bash
-git tag -a v0.2.0 -m "v0.2.0"
-git push origin v0.2.0
+gh workflow run release.yml --repo dblock/excalc-rs --ref master -f version=0.4.0
 ```
 
-Create the GitHub release after pushing the tag:
+**This publishes a real release.** For example, releasing `0.3.1` creates `v0.3.1` and then commits `0.3.2` for development. Do not publish, tag, or create the GitHub release manually. Releases created with `GITHUB_TOKEN` do not trigger another release workflow, so artifact and distribution jobs depend on rcr's output in this same run and check out the release tag, not the next-development commit.
 
-```bash
-gh release create v0.2.0 --title "v0.2.0" --notes-from-tag
-```
-
-Publishing the GitHub release triggers `.github/workflows/release.yml`. A build matrix creates checksummed portable archives for macOS (Apple Silicon and Intel), Linux (ARM64 and x86-64, statically linked with musl), and Windows x86-64. The same workflow publishes the crate to crates.io using Trusted Publishing and attaches the Windows MSI.
-
-One-time setup on crates.io:
-
-1. Open the `excalc` crate's **Settings → Trusted Publishing** page.
-2. Add a GitHub Actions publisher for owner `dblock`, repository `excalc-rs`, and workflow `release.yml`.
-3. Leave the environment blank; the workflow does not use a GitHub environment.
-
-The workflow needs only the built-in GitHub OIDC permission (`id-token: write`); no GitHub Actions secret or local `cargo login` credential is required.
-
-Publishing is one-way: a version can never be replaced or deleted, only yanked (hidden from new installs, but not removed). If publishing fails after an upload, do not retry with the same version number after changing package contents — bump to the next patch version instead.
+Publishing is one-way: a version can never be replaced or deleted, only yanked. A failed run may already have published the crate or pushed its tag. Inspect the run summary, crates.io, remote refs, and [rcr's recovery guidance](https://github.com/dblock/rust-crate-release/blob/v0.1.0/docs/recovery.md) before retrying. Do not blindly dispatch again or change already-published package contents.
 
 ### WinGet submission setup
 
-Stable releases also submit a manifest update for `Vestris.Excalc` to [microsoft/winget-pkgs](https://github.com/microsoft/winget-pkgs), using [WinGet Releaser](https://github.com/vedantmgoyal9/winget-releaser) and Komac. The job waits for successful crate publishing, archives, and MSI upload, then selects only the `excalc-<version>-x86_64.msi` release asset. It uses the existing accepted package as its manifest base and retains older versions. Prereleases and `workflow_dispatch` artifact rebuilds do not submit WinGet updates.
+Stable releases also submit a manifest update for `Vestris.Excalc` to [microsoft/winget-pkgs](https://github.com/microsoft/winget-pkgs), using [WinGet Releaser](https://github.com/vedantmgoyal9/winget-releaser) and Komac. The job waits for successful crate publishing, archives, and MSI upload, then selects only the `excalc-<version>-x86_64.msi` release asset. It uses the existing accepted package as its manifest base and retains older versions. Artifact-only rebuilds do not submit WinGet updates.
 
 One-time setup:
 
@@ -93,13 +69,13 @@ gh secret set WINGET_TOKEN --repo dblock/excalc-rs
 
 The built-in `GITHUB_TOKEN` cannot push to the separate fork and submit the upstream PR. A missing `WINGET_TOKEN` fails the job explicitly; if an existing token expires or cannot synchronize the fork, replace it or fix its permissions and rerun the failed job.
 
-## 7. Verify the release workflow
+## 4. Verify the release workflow
 
 Confirm the release workflow published the crate, portable archives, checksums, and Windows MSI, updated the Homebrew formula on `master`, and submitted the WinGet PR:
 
 ```bash
 gh run list --workflow=release.yml --limit 1
-gh release view v0.2.0
+gh release view v0.3.1
 ```
 
 The release should list five platform archives, their `.sha256` files, and an `excalc-<version>-x86_64.msi` asset once the workflow finishes. `cargo search excalc --limit 1` should show the new version, and `Formula/excalc.rb` on `master` should point at the new tag and checksum. Treat a missing asset, missing crate version, stale formula, or red run as a release blocker.
@@ -109,6 +85,16 @@ The release job audits, installs, and tests the updated formula before committin
 For stable releases, the **Submit WinGet update** job records the manifest PR URL in its job summary. Submission is not publication: follow the upstream PR through validation, moderator review, merge, and the publish pipeline. Check the generated manifest schema, MSI version and hash, architecture, machine scope, product codes, and command names.
 
 If submission fails, inspect the logs and check for an existing PR before rerunning the failed job; do not blindly create duplicate submissions. Rerunning failed jobs avoids republishing an already-published crate. An artifact-only `workflow_dispatch` run will not submit a WinGet PR. For manual recovery, use `wingetcreate update Vestris.Excalc --version <version> --urls <published-msi-url>`, review and submit the generated manifests. Once Microsoft's publish pipeline succeeds, run `winget source update`, then `winget show --id Vestris.Excalc --exact` to confirm availability.
+
+## Artifact-only recovery
+
+To rebuild archives and the MSI for an existing GitHub release without publishing a crate, changing versions/changelog, updating Homebrew, or submitting WinGet, dispatch from `master` with only `tag`:
+
+```bash
+gh workflow run release.yml --repo dblock/excalc-rs --ref master -f tag=v0.3.1
+```
+
+The workflow verifies the GitHub release exists before building from its tag. Never supply both `tag` and `version`. For a normal release whose downstream jobs failed, prefer **Re-run failed jobs** so successful publishing is not repeated and Homebrew/WinGet can still complete.
 
 ## Notes
 

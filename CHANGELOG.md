@@ -8,6 +8,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 
 ### Added
 
+- [#13](https://github.com/dblock/excalc-rs/pull/13): Automate crate, changelog, tag, and GitHub releases with rust-crate-release, retaining portable archives, MSI, Homebrew, WinGet, and artifact-only rebuilds - [@dblock](https://github.com/dblock).
 - [#12](https://github.com/dblock/excalc-rs/pull/12): Publish a combined singleton WinGet manifest and use preview-specific YAML and ZIP asset names - [@dblock](https://github.com/dblock).
 - [#11](https://github.com/dblock/excalc-rs/pull/11): Rename the rolling master-latest prerelease to latest-preview - [@dblock](https://github.com/dblock).
 - [#10](https://github.com/dblock/excalc-rs/pull/10): Publish current MSI and manifest assets to one master-latest prerelease instead of per-build releases - [@dblock](https://github.com/dblock).
