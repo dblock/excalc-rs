@@ -1,8 +1,8 @@
 class Excalc < Formula
   desc "Expression calculator CLI tool and MCP server for AI coding agents"
   homepage "https://github.com/dblock/excalc-rs"
-  url "https://github.com/dblock/excalc-rs/archive/refs/tags/v0.3.2.tar.gz"
-  sha256 "1227166013353bfab52b5f29f7ea66084622a162451373ff2a1f66e6cc596538"
+  url "https://github.com/dblock/excalc-rs/archive/refs/tags/v0.3.3.tar.gz"
+  sha256 "659ceda0a08cc3ed19f0010ef24b4efcb7ee1c134652732d9379aebf49986b1a"
   license "MIT"
   head "https://github.com/dblock/excalc-rs.git", branch: "master"
 
