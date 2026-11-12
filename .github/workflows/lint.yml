@@ -4,6 +4,10 @@ on:
   push:
     branches: [master]
   pull_request:
+    types: [opened, synchronize, reopened, edited]
+
+permissions:
+  contents: read
 
 concurrency:
   group: ${{ github.workflow }}-${{ github.event.pull_request.number || github.sha }}
@@ -18,15 +22,29 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
+        with:
+          fetch-depth: 2
+          persist-credentials: false
+      - name: Check local lint claim
+        id: tested
+        if: github.event_name == 'pull_request' && github.event.pull_request.user.login == github.repository_owner
+        uses: dblock/already-tested@add3c44b21056eb396ba951beef70be789645378 # v0.1.0
+        with:
+          check: lint-linux-x86_64
       - uses: dtolnay/rust-toolchain@stable
+        if: steps.tested.outputs.skip != 'true'
         with:
           components: rustfmt, clippy
       - uses: Swatinem/rust-cache@v2
+        if: steps.tested.outputs.skip != 'true'
       - name: Check formatting
+        if: steps.tested.outputs.skip != 'true'
         run: cargo fmt --all -- --check
       - name: Clippy
+        if: steps.tested.outputs.skip != 'true'
         run: cargo clippy --all-targets --all-features -- -D warnings
       - name: Clippy (no default features)
+        if: steps.tested.outputs.skip != 'true'
         run: cargo clippy --all-targets --no-default-features -- -D warnings
 
   dylint:
@@ -34,11 +52,23 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
+        with:
+          fetch-depth: 2
+          persist-credentials: false
+      - name: Check local Dylint claim
+        id: tested
+        if: github.event_name == 'pull_request' && github.event.pull_request.user.login == github.repository_owner
+        uses: dblock/already-tested@add3c44b21056eb396ba951beef70be789645378 # v0.1.0
+        with:
+          check: dylint-linux-x86_64
       - uses: dtolnay/rust-toolchain@stable
+        if: steps.tested.outputs.skip != 'true'
       - uses: Swatinem/rust-cache@v2
+        if: steps.tested.outputs.skip != 'true'
         with:
           key: dylint
       - name: Cache Dylint libraries, drivers, and toolchains
+        if: steps.tested.outputs.skip != 'true'
         uses: actions/cache@v4
         with:
           path: |
@@ -48,12 +78,15 @@ jobs:
             target/dylint/libraries
           key: dylint-v1-${{ runner.os }}-${{ runner.arch }}-${{ hashFiles('Cargo.toml', '.github/workflows/lint.yml') }}
       - name: Install Dylint
+        if: steps.tested.outputs.skip != 'true'
         run: cargo install cargo-dylint dylint-link --version 6.3.2 --locked
       - name: Dylint
+        if: steps.tested.outputs.skip != 'true'
         env:
           RUSTFLAGS: -D warnings
         run: cargo dylint --all -- --all-targets --all-features
       - name: Dylint (no default features)
+        if: steps.tested.outputs.skip != 'true'
         env:
           RUSTFLAGS: -D warnings
         run: cargo dylint --all -- --all-targets --no-default-features

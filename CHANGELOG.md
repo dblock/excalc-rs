@@ -6,6 +6,10 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 
 ## [Unreleased]
 
+### Added
+
+- [#18](https://github.com/dblock/excalc-rs/pull/18): Add a crates.io release-version badge and already-tested gates for matching local Test and Lint claims on repository-owner-authored PRs, while keeping independent publishing and coverage checks - [@dblock](https://github.com/dblock).
+
 ## [0.3.3] - 2026-11-12
 
 ### Changed

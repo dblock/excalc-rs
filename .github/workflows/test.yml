@@ -4,6 +4,10 @@ on:
   push:
     branches: [master]
   pull_request:
+    types: [opened, synchronize, reopened, edited]
+
+permissions:
+  contents: read
 
 concurrency:
   group: ${{ github.workflow }}-${{ github.event.pull_request.number || github.sha }}
@@ -14,17 +18,33 @@ env:
 
 jobs:
   test:
-    name: Build & Test (${{ matrix.os }})
-    runs-on: ${{ matrix.os }}
+    name: Build & Test (${{ matrix.entry.os }})
+    runs-on: ${{ matrix.entry.os }}
     strategy:
       fail-fast: false
       matrix:
-        os: [ubuntu-latest, macos-latest, windows-latest]
+        entry:
+          - { os: ubuntu-latest, check: test-linux-x86_64 }
+          - { os: macos-latest, check: test-macos-arm64 }
+          - { os: windows-latest, check: test-windows-x86_64 }
     steps:
       - uses: actions/checkout@v4
+        with:
+          fetch-depth: 2
+          persist-credentials: false
+      - name: Check local test claim
+        id: tested
+        if: github.event_name == 'pull_request' && github.event.pull_request.user.login == github.repository_owner
+        uses: dblock/already-tested@add3c44b21056eb396ba951beef70be789645378 # v0.1.0
+        with:
+          check: ${{ matrix.entry.check }}
       - uses: dtolnay/rust-toolchain@stable
+        if: steps.tested.outputs.skip != 'true'
       - uses: Swatinem/rust-cache@v2
+        if: steps.tested.outputs.skip != 'true'
       - name: Build
+        if: steps.tested.outputs.skip != 'true'
         run: cargo build --all-features --verbose
       - name: Test
+        if: steps.tested.outputs.skip != 'true'
         run: cargo test --all-features --verbose
