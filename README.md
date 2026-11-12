@@ -2,6 +2,7 @@ Expression Calculator (CLI, MCP, Rust)
 ======================================
 
 [![Test](https://github.com/dblock/excalc-rs/actions/workflows/test.yml/badge.svg)](https://github.com/dblock/excalc-rs/actions/workflows/test.yml)
+[![Crates.io](https://img.shields.io/crates/v/excalc.svg)](https://crates.io/crates/excalc)
 [![Coverage Status](https://coveralls.io/repos/github/dblock/excalc-rs/badge.svg?branch=master)](https://coveralls.io/github/dblock/excalc-rs?branch=master)
 
 An expression calculator CLI tool and MCP server built for AI coding agents like Claude and GitHub Copilot to outsource arithmetic, saving tokens and avoiding LLM math hallucinations. Also usable as a one-shot command, piped from stdin, or as an interactive REPL.
