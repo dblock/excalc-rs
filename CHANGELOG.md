@@ -8,6 +8,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 
 ### Fixed
 
+- [#16](https://github.com/dblock/excalc-rs/pull/16): Cache Dylint's pinned nightly toolchains, drivers, and compiled lint libraries, and cancel superseded read-only PR checks without changing platform coverage or release publishing - [@dblock](https://github.com/dblock).
 - [#15](https://github.com/dblock/excalc-rs/pull/15): Build Apple Silicon release archives on the supported macOS 15 runner instead of the retired macOS 14 image - [@dblock](https://github.com/dblock).
 
 ## [0.3.1] - 2026-11-12
