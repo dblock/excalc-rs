@@ -1,108 +1,117 @@
 name: Release
 
 on:
-  release:
-    types: [published]
   workflow_dispatch:
     inputs:
-      tag:
-        description: "Release tag to attach artifacts to (defaults to the triggering release)"
+      version:
+        description: "Optional explicit stable crate version (defaults to Cargo.toml)"
         required: false
+        type: string
+      tag:
+        description: "Existing release tag for artifact-only rebuilds (skips publishing; leave version blank)"
+        required: false
+        type: string
+
+permissions:
+  actions: read
+  contents: write
+  id-token: write
 
 env:
   CARGO_TERM_COLOR: always
-  RELEASE_TAG: ${{ github.event.release.tag_name || inputs.tag }}
 
 jobs:
   publish:
-    name: Publish crate
-    if: github.event_name == 'release' && !github.event.release.prerelease
+    name: Release crate
+    if: inputs.tag == ''
+    uses: dblock/rust-crate-release/.github/workflows/release.yml@v0.1.0
+    with:
+      tool-ref: v0.1.0
+      version: ${{ inputs.version }}
+
+  release-tag:
+    name: Resolve artifact release
+    needs: publish
+    if: ${{ always() && github.ref == 'refs/heads/master' && (needs.publish.result == 'success' || (needs.publish.result == 'skipped' && inputs.tag != '' && inputs.version == '')) }}
     runs-on: ubuntu-latest
     permissions:
       contents: read
-      id-token: write
+    outputs:
+      tag: ${{ steps.release.outputs.tag }}
     steps:
-      - uses: actions/checkout@v4
-        with:
-          ref: ${{ env.RELEASE_TAG }}
-      - uses: dtolnay/rust-toolchain@stable
-      - uses: rust-lang/crates-io-auth-action@v1
-        id: auth
-      - name: Publish to crates.io
-        run: cargo publish
+      - name: Verify release exists
+        id: release
         env:
-          CARGO_REGISTRY_TOKEN: ${{ steps.auth.outputs.token }}
+          GH_TOKEN: ${{ github.token }}
+          RELEASE_TAG: ${{ inputs.tag || format('v{0}', needs.publish.outputs.version) }}
+        run: |
+          gh release view "$RELEASE_TAG" --repo "$GITHUB_REPOSITORY"
+          printf 'tag=%s\n' "$RELEASE_TAG" >> "$GITHUB_OUTPUT"
 
   archives:
-    name: Archive (${{ matrix.target }})
-    runs-on: ${{ matrix.runner }}
+    name: Archive (${{ matrix.entry.target }})
+    needs: release-tag
+    if: ${{ !cancelled() && needs.release-tag.result == 'success' }}
+    runs-on: ${{ matrix.entry.runner }}
+    env:
+      RELEASE_TAG: ${{ needs.release-tag.outputs.tag }}
     permissions:
       contents: write
     strategy:
       fail-fast: false
       matrix:
-        include:
-          - target: aarch64-apple-darwin
-            runner: macos-14
-            format: tar
-          - target: x86_64-apple-darwin
-            runner: macos-15-intel
-            format: tar
-          - target: aarch64-unknown-linux-musl
-            runner: ubuntu-22.04-arm
-            format: tar
-          - target: x86_64-unknown-linux-musl
-            runner: ubuntu-22.04
-            format: tar
-          - target: x86_64-pc-windows-msvc
-            runner: windows-2022
-            format: zip
+        entry:
+          - { target: aarch64-apple-darwin, runner: macos-14, format: tar }
+          - { target: x86_64-apple-darwin, runner: macos-15-intel, format: tar }
+          - { target: aarch64-unknown-linux-musl, runner: ubuntu-22.04-arm, format: tar }
+          - { target: x86_64-unknown-linux-musl, runner: ubuntu-22.04, format: tar }
+          - { target: x86_64-pc-windows-msvc, runner: windows-2022, format: zip }
     steps:
       - uses: actions/checkout@v4
         with:
           ref: ${{ env.RELEASE_TAG }}
       - uses: dtolnay/rust-toolchain@stable
         with:
-          targets: ${{ matrix.target }}
+          targets: ${{ matrix.entry.target }}
       - uses: Swatinem/rust-cache@v2
         with:
-          key: release-${{ matrix.target }}
+          key: release-${{ matrix.entry.target }}
       - name: Install musl tools
-        if: contains(matrix.target, 'linux-musl')
+        if: contains(matrix.entry.target, 'linux-musl')
         run: sudo apt-get update && sudo apt-get install -y musl-tools
       - name: Build binaries
-        run: cargo build --release --target "${{ matrix.target }}" --bin excalc --bin calc --bin excalc-mcp
+        run: cargo build --release --target "${{ matrix.entry.target }}" --bin excalc --bin calc --bin excalc-mcp
       - name: Package Unix archive
-        if: matrix.format == 'tar'
+        if: matrix.entry.format == 'tar'
         shell: bash
         run: |
           version="${RELEASE_TAG#v}"
-          name="excalc-${version}-${{ matrix.target }}"
+          name="excalc-${version}-${{ matrix.entry.target }}"
           mkdir -p "target/release-archives/${name}"
-          cp "target/${{ matrix.target }}/release/excalc" "target/${{ matrix.target }}/release/calc" "target/${{ matrix.target }}/release/excalc-mcp" README.md CHANGELOG.md LICENSE "target/release-archives/${name}/"
+          cp "target/${{ matrix.entry.target }}/release/excalc" "target/${{ matrix.entry.target }}/release/calc" "target/${{ matrix.entry.target }}/release/excalc-mcp" README.md CHANGELOG.md LICENSE "target/release-archives/${name}/"
           tar -C target/release-archives -czf "target/release-archives/${name}.tar.gz" "${name}"
           cd target/release-archives
           shasum -a 256 "${name}.tar.gz" > "${name}.tar.gz.sha256"
       - name: Package Windows archive
-        if: matrix.format == 'zip'
+        if: matrix.entry.format == 'zip'
         shell: pwsh
         run: |
           $version = $env:RELEASE_TAG.TrimStart("v")
-          $name = "excalc-$version-${{ matrix.target }}"
+          $name = "excalc-$version-${{ matrix.entry.target }}"
           $directory = "target/release-archives/$name"
           New-Item -ItemType Directory -Force -Path $directory
-          Copy-Item "target/${{ matrix.target }}/release/excalc.exe", "target/${{ matrix.target }}/release/calc.exe", "target/${{ matrix.target }}/release/excalc-mcp.exe", "README.md", "CHANGELOG.md", "LICENSE" -Destination $directory
+          Copy-Item "target/${{ matrix.entry.target }}/release/excalc.exe", "target/${{ matrix.entry.target }}/release/calc.exe", "target/${{ matrix.entry.target }}/release/excalc-mcp.exe", "README.md", "CHANGELOG.md", "LICENSE" -Destination $directory
           Compress-Archive -Path "$directory/*" -DestinationPath "target/release-archives/$name.zip"
           $hash = (Get-FileHash "target/release-archives/$name.zip" -Algorithm SHA256).Hash.ToLower()
           "$hash  $name.zip" | Set-Content "target/release-archives/$name.zip.sha256"
       - name: Upload Unix archive to release
-        if: matrix.format == 'tar'
+        if: matrix.entry.format == 'tar'
         env:
           GH_TOKEN: ${{ github.token }}
         shell: bash
         run: gh release upload "$RELEASE_TAG" target/release-archives/*.tar.gz target/release-archives/*.sha256 --clobber
       - name: Upload Windows archive to release
-        if: matrix.format == 'zip'
+        if: matrix.entry.format == 'zip'
         env:
           GH_TOKEN: ${{ github.token }}
         shell: pwsh
@@ -110,7 +119,11 @@ jobs:
 
   msi:
     name: Attach MSI installer to release
+    needs: release-tag
+    if: ${{ !cancelled() && needs.release-tag.result == 'success' }}
     runs-on: windows-latest
+    env:
+      RELEASE_TAG: ${{ needs.release-tag.outputs.tag }}
     permissions:
       contents: write
     steps:
@@ -137,9 +150,11 @@ jobs:
 
   winget:
     name: Submit WinGet update
-    needs: [publish, archives, msi]
-    if: ${{ always() && github.event_name == 'release' && !github.event.release.prerelease && needs.publish.result == 'success' && needs.archives.result == 'success' && needs.msi.result == 'success' }}
+    needs: [publish, release-tag, archives, msi]
+    if: ${{ !cancelled() && needs.publish.result == 'success' && needs.archives.result == 'success' && needs.msi.result == 'success' }}
     runs-on: windows-latest
+    env:
+      RELEASE_TAG: ${{ needs.release-tag.outputs.tag }}
     permissions:
       contents: read
     concurrency:
@@ -176,9 +191,11 @@ jobs:
 
   homebrew:
     name: Update Homebrew formula
-    needs: [publish, archives, msi]
-    if: ${{ always() && github.event_name == 'release' && needs.publish.result == 'success' && needs.archives.result == 'success' && needs.msi.result == 'success' }}
+    needs: [publish, release-tag, archives, msi]
+    if: ${{ !cancelled() && needs.publish.result == 'success' && needs.archives.result == 'success' && needs.msi.result == 'success' }}
     runs-on: macos-latest
+    env:
+      RELEASE_TAG: ${{ needs.release-tag.outputs.tag }}
     permissions:
       contents: write
     concurrency:
