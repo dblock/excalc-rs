@@ -20,6 +20,10 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 - Prebuilt portable release archives for macOS (Apple Silicon and Intel), Linux (ARM64 and x86-64, statically linked with musl), and Windows x86-64, built and checksummed by release CI.
 - Release CI now updates, validates, commits, and pushes the Homebrew formula's tag URL and SHA-256 checksum after the crate, portable archives, and MSI publish successfully.
 
+### Fixed
+
+- [#14](https://github.com/dblock/excalc-rs/pull/14): Update rust-crate-release to v0.1.1 to install rustfmt and Clippy for release validation and fix failure notification and recovery diagnostics - [@dblock](https://github.com/dblock).
+
 ## [0.3.0] - 2026-09-26
 
 ### Added

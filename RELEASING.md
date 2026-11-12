@@ -1,6 +1,6 @@
 # Releasing
 
-Releases use [rust-crate-release](https://github.com/dblock/rust-crate-release), pinned to `v0.1.0` in `.github/workflows/release.yml`. The workflow validates and publishes the crate through crates.io Trusted Publishing, versions the changelog, pushes the release commit and tag, creates the GitHub release, and prepares the next patch version in `Cargo.toml` and `Cargo.lock`. The same run builds the portable archives and MSI, then updates Homebrew and submits WinGet.
+Releases use [rust-crate-release](https://github.com/dblock/rust-crate-release), pinned to `v0.1.1` in `.github/workflows/release.yml`. The workflow validates and publishes the crate through crates.io Trusted Publishing, versions the changelog, pushes the release commit and tag, creates the GitHub release, and prepares the next patch version in `Cargo.toml` and `Cargo.lock`. The same run builds the portable archives and MSI, then updates Homebrew and submits WinGet.
 
 ## One-time setup
 
@@ -51,7 +51,7 @@ gh workflow run release.yml --repo dblock/excalc-rs --ref master -f version=0.4.
 
 **This publishes a real release.** For example, releasing `0.3.1` creates `v0.3.1` and then commits `0.3.2` for development. Do not publish, tag, or create the GitHub release manually. Releases created with `GITHUB_TOKEN` do not trigger another release workflow, so artifact and distribution jobs depend on rcr's output in this same run and check out the release tag, not the next-development commit.
 
-Publishing is one-way: a version can never be replaced or deleted, only yanked. A failed run may already have published the crate or pushed its tag. Inspect the run summary, crates.io, remote refs, and [rcr's recovery guidance](https://github.com/dblock/rust-crate-release/blob/v0.1.0/docs/recovery.md) before retrying. Do not blindly dispatch again or change already-published package contents.
+Publishing is one-way: a version can never be replaced or deleted, only yanked. A failed run may already have published the crate or pushed its tag. Inspect the run summary, crates.io, remote refs, and [rcr's recovery guidance](https://github.com/dblock/rust-crate-release/blob/v0.1.1/docs/recovery.md) before retrying. Do not blindly dispatch again or change already-published package contents.
 
 ### WinGet submission setup
 
