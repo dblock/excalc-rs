@@ -22,7 +22,17 @@ CI runs the same checks on Linux, macOS, and Windows; don't push code that fails
 
 ## Local CI Claims
 
-[already-tested](https://github.com/dblock/already-tested/tree/v0.1.0) can skip duplicate Test and Lint work on repository-owner-authored PRs. Install the pinned `v0.1.0` CLI using its [local installation instructions](https://github.com/dblock/already-tested/tree/v0.1.0#local-cli) if needed. Other contributors' PRs and all master pushes run normal CI. Coverage, MSI, Homebrew, and releases never use claims.
+[already-tested](https://github.com/dblock/already-tested/tree/v0.2.0) can skip duplicate Test and Lint work on repository-owner-authored PRs. Other contributors' PRs and all master pushes run normal CI. Coverage, MSI, Homebrew, and releases never use claims.
+
+Install the pinned `v0.2.0` CLI on macOS or Linux:
+
+```sh
+curl -fsSL https://github.com/dblock/already-tested/releases/download/v0.2.0/install.sh | sh -s -- --version v0.2.0
+export PATH="$HOME/.local/bin:$PATH"
+already-tested --version
+```
+
+For Windows and custom locations, follow the [installation guide](https://github.com/dblock/already-tested/blob/v0.2.0/docs/cli.md#installation), selecting `v0.2.0` for both the installer download and version argument. Keep CLI and Action versions together.
 
 Run the complete command for a check with its matching OS family, CPU architecture, and Rust stable toolchain. Exact hosted image or OS patch versions do not need to match:
 

@@ -28,7 +28,7 @@ jobs:
       - name: Check local lint claim
         id: tested
         if: github.event_name == 'pull_request' && github.event.pull_request.user.login == github.repository_owner
-        uses: dblock/already-tested@add3c44b21056eb396ba951beef70be789645378 # v0.1.0
+        uses: dblock/already-tested@7dadeffe162d2223466a7103698072c56fd26a17 # v0.2.0
         with:
           check: lint-linux-x86_64
       - uses: dtolnay/rust-toolchain@stable
@@ -58,7 +58,7 @@ jobs:
       - name: Check local Dylint claim
         id: tested
         if: github.event_name == 'pull_request' && github.event.pull_request.user.login == github.repository_owner
-        uses: dblock/already-tested@add3c44b21056eb396ba951beef70be789645378 # v0.1.0
+        uses: dblock/already-tested@7dadeffe162d2223466a7103698072c56fd26a17 # v0.2.0
         with:
           check: dylint-linux-x86_64
       - uses: dtolnay/rust-toolchain@stable

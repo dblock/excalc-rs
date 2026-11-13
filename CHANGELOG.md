@@ -10,6 +10,10 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 
 - [#18](https://github.com/dblock/excalc-rs/pull/18): Add a crates.io release-version badge and already-tested gates for matching local Test and Lint claims on repository-owner-authored PRs, while keeping independent publishing and coverage checks - [@dblock](https://github.com/dblock).
 
+### Changed
+
+- [#19](https://github.com/dblock/excalc-rs/pull/19): Upgrade already-tested Action and CLI pins to v0.2.0 while preserving environment-specific checks and independent CI - [@dblock](https://github.com/dblock).
+
 ## [0.3.3] - 2026-11-12
 
 ### Changed
