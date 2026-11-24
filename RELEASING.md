@@ -1,6 +1,6 @@
 # Releasing
 
-Releases use [rust-crate-release](https://github.com/dblock/rust-crate-release), pinned to `v0.1.1` in `.github/workflows/release.yml`. The workflow validates and publishes the crate through crates.io Trusted Publishing, versions the changelog, pushes the release commit and tag, creates the GitHub release, and prepares the next patch version in `Cargo.toml` and `Cargo.lock`. The same run builds the portable archives and MSI, then updates Homebrew. Stable WinGet submissions are a separate manual step.
+Releases use [rust-crate-release](https://github.com/dblock/rust-crate-release), pinned to `v0.1.2` in `.github/workflows/release.yml`. The workflow validates and publishes the crate through crates.io Trusted Publishing, versions the changelog, pushes the release commit and tag, creates the GitHub release, and prepares the next patch version in `Cargo.toml` and `Cargo.lock`. The same run builds the portable archives and MSI. The [dblock/tap](https://github.com/dblock/homebrew-tap) Homebrew formula is generated from those archives by that repository. Stable WinGet submissions are a separate manual step.
 
 ## One-time setup
 
@@ -51,22 +51,28 @@ gh workflow run release.yml --repo dblock/excalc-rs --ref master -f version=0.4.
 
 **This publishes a real release.** For example, releasing `0.3.1` creates `v0.3.1` and then commits `0.3.2` for development. Do not publish, tag, or create the GitHub release manually. Releases created with `GITHUB_TOKEN` do not trigger another release workflow, so artifact and distribution jobs depend on rcr's output in this same run and check out the release tag, not the next-development commit.
 
-Publishing is one-way: a version can never be replaced or deleted, only yanked. A failed run may already have published the crate or pushed its tag. Inspect the run summary, crates.io, remote refs, and [rcr's recovery guidance](https://github.com/dblock/rust-crate-release/blob/v0.1.1/docs/recovery.md) before retrying. Do not blindly dispatch again or change already-published package contents.
+Publishing is one-way: a version can never be replaced or deleted, only yanked. A failed run may already have published the crate or pushed its tag. Inspect the run summary, crates.io, remote refs, and [rcr's recovery guidance](https://github.com/dblock/rust-crate-release/blob/v0.1.2/docs/recovery.md) before retrying. Do not blindly dispatch again or change already-published package contents.
 
 ## 4. Verify the release workflow
 
-Confirm the release workflow published the crate, portable archives, checksums, and Windows MSI, and updated the Homebrew formula on `master`:
+Confirm the release workflow published the crate, portable archives, checksums, and Windows MSI:
 
 ```bash
 gh run list --workflow=release.yml --limit 1
 gh release view v0.3.1
 ```
 
-The release should list five platform archives, their `.sha256` files, and an `excalc-<version>-x86_64.msi` asset once the workflow finishes. `cargo search excalc --limit 1` should show the new version, and `Formula/excalc.rb` on `master` should point at the new tag and checksum. Treat a missing asset, missing crate version, stale formula, or red run as a release blocker.
+The release should list five platform archives, their `.sha256` files, and an `excalc-<version>-x86_64.msi` asset once the workflow finishes. `cargo search excalc --limit 1` should show the new version. Treat a missing asset, missing crate version, or red run as a release blocker.
 
-The release job audits, installs, and tests the updated formula before committing it. The commit is pushed with the built-in `GITHUB_TOKEN`, so it does not trigger another set of workflows.
+## 5. Update Homebrew
 
-## 5. Submit the WinGet update manually
+The [Update Formulae](https://github.com/dblock/homebrew-tap/actions/workflows/update.yml) workflow in [dblock/homebrew-tap](https://github.com/dblock/homebrew-tap) regenerates `Formula/excalc.rb` from the latest release's archives and `.sha256` files every six hours, and audits, installs, and tests it before committing. It needs all four macOS and Linux archives, so run it once the release workflow has finished, then confirm `brew info dblock/tap/excalc` shows the new version:
+
+```bash
+gh workflow run update.yml --repo dblock/homebrew-tap
+```
+
+## 6. Submit the WinGet update manually
 
 WinGet submission is intentionally not part of release CI. The previous [WinGet Releaser](https://github.com/vedantmgoyal9/winget-releaser) integration required a classic PAT with `public_repo` and `workflow` scopes; it did not support fine-grained tokens. Organization token policies and SAML authorization requirements can prevent that PAT from accessing `microsoft/winget-pkgs`, even when anonymous access succeeds. Komac can report such API failures as "package does not exist," so that message alone does not mean the package needs an initial submission. The release workflow no longer uses `WINGET_TOKEN`; an existing repository secret can be removed after this change is merged.
 
@@ -91,18 +97,18 @@ The local templates in `wix/manifests/` are for `latest-preview` assets only; do
 
 ## Artifact-only recovery
 
-To rebuild archives and the MSI for an existing GitHub release without publishing a crate, changing versions/changelog, updating Homebrew, or submitting WinGet, dispatch from `master` with only `tag`:
+To rebuild archives and the MSI for an existing GitHub release without publishing a crate, changing versions/changelog, or submitting WinGet, dispatch from `master` with only `tag`:
 
 ```bash
 gh workflow run release.yml --repo dblock/excalc-rs --ref master -f tag=v0.3.1
 ```
 
-The workflow verifies the GitHub release exists before building from its tag. Never supply both `tag` and `version`. For a normal release whose downstream jobs failed, prefer **Re-run failed jobs** so successful publishing is not repeated and Homebrew can still complete. WinGet submission remains manual.
+The workflow verifies the GitHub release exists before building from its tag. Never supply both `tag` and `version`. For a normal release whose downstream jobs failed, prefer **Re-run failed jobs** so successful publishing is not repeated. After rebuilding archives, run the tap's Update Formulae workflow again. WinGet submission remains manual.
 
 ## Notes
 
 - The MSI workflow updates templates in `wix/manifests/` and replaces the MSI, `Vestris.Excalc.preview.yaml`, and `Vestris.Excalc.preview.manifests.zip` in the `latest-preview` prerelease on master pushes. PRs only upload workflow artifacts. Downloads overlapping publication may need retrying with a fresh manifest.
 - Build MSI versions use UTC `<year minus 2000>.<month>.<minutes since month start>`; builds within the same minute share a version.
 - Never force-push tags or rewrite an already-pushed release tag. If a release was cut with a mistake, publish a new version instead.
-- Homebrew users install via `brew tap dblock/excalc-rs https://github.com/dblock/excalc-rs`, `brew trust --formula dblock/excalc-rs/excalc`, then `brew install excalc` (no `homebrew-` prefix needed since the URL is explicit). The tap lives in this same repo's `Formula/` directory — there is no separate tap repo.
+- Homebrew users install with `brew install dblock/tap/excalc`. This repository was previously its own tap; `tap_migrations.json` moves existing `dblock/excalc-rs/excalc` installs to `dblock/tap` on `brew update`. Keep it so older installs keep upgrading.
 - The MSI installer's WiX definition lives in `wix/main.wxs` (generated once with `cargo wix init`, then committed and hand-maintained). It bundles all three binaries (`excalc`, `calc`, `excalc-mcp`) and an optional "add to PATH" component. `.github/workflows/msi.yml` builds it on every push/PR to catch regressions; `.github/workflows/release.yml` rebuilds it and attaches it to each published GitHub release.

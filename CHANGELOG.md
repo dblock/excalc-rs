@@ -13,6 +13,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 ### Changed
 
 - [#19](https://github.com/dblock/excalc-rs/pull/19): Upgrade already-tested Action and CLI pins to v0.2.0 while preserving environment-specific checks and independent CI - [@dblock](https://github.com/dblock).
+- [#20](https://github.com/dblock/excalc-rs/pull/20): Install with `brew install dblock/tap/excalc` from prebuilt release binaries in [dblock/homebrew-tap](https://github.com/dblock/homebrew-tap), migrate existing `dblock/excalc-rs` tap installs there, and upgrade rust-crate-release to v0.1.2 - [@dblock](https://github.com/dblock).
 
 ## [0.3.3] - 2026-11-12
 
