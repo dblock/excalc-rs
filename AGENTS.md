@@ -22,7 +22,7 @@ CI runs the same checks on Linux, macOS, and Windows; don't push code that fails
 
 ## Local CI Claims
 
-[already-tested](https://github.com/dblock/already-tested/tree/v0.2.0) can skip duplicate Test and Lint work on repository-owner-authored PRs. Other contributors' PRs and all master pushes run normal CI. Coverage, MSI, Homebrew, and releases never use claims.
+[already-tested](https://github.com/dblock/already-tested/tree/v0.2.0) can skip duplicate Test and Lint work on repository-owner-authored PRs. Other contributors' PRs and all master pushes run normal CI. Coverage, MSI, and releases never use claims.
 
 Install the pinned `v0.2.0` CLI on macOS or Linux:
 

@@ -19,19 +19,19 @@ This installs the `excalc`, `calc` (a shorter alias for `excalc`), and `excalc-m
 
 ### macOS
 
-If you don't want to install with Cargo, use [Homebrew](https://brew.sh/):
+If you don't want to install with Cargo, use [Homebrew](https://brew.sh/), which installs the prebuilt binaries from the latest release on macOS and Linux:
 
 ```bash
-brew tap dblock/excalc-rs https://github.com/dblock/excalc-rs
-brew trust --formula dblock/excalc-rs/excalc
-brew install excalc
+brew install dblock/tap/excalc
 ```
+
+The formula lives in [dblock/homebrew-tap](https://github.com/dblock/homebrew-tap) and conflicts with Homebrew's unrelated `calc` formula, which installs a binary with the same name.
 
 Alternatively, download the Apple Silicon (`aarch64-apple-darwin`) or Intel (`x86_64-apple-darwin`) portable archive and its SHA-256 checksum from the [latest release](https://github.com/dblock/excalc-rs/releases/latest). Each archive contains `excalc`, `calc`, and `excalc-mcp`. The macOS portable binaries are not signed or notarized. After verifying the archive's SHA-256 checksum, remove the download quarantine attribute before running each binary, e.g. `xattr -d com.apple.quarantine ./calc`.
 
 ### Linux
 
-If you don't want to install with Cargo, download the ARM64 (`aarch64-unknown-linux-musl`) or x86-64 (`x86_64-unknown-linux-musl`) portable archive and its SHA-256 checksum from the [latest release](https://github.com/dblock/excalc-rs/releases/latest). Each statically linked archive contains `excalc`, `calc`, and `excalc-mcp` and does not require a Rust toolchain.
+If you don't want to install with Cargo, use [Homebrew](#macos) or download the ARM64 (`aarch64-unknown-linux-musl`) or x86-64 (`x86_64-unknown-linux-musl`) portable archive and its SHA-256 checksum from the [latest release](https://github.com/dblock/excalc-rs/releases/latest). Each statically linked archive contains `excalc`, `calc`, and `excalc-mcp` and does not require a Rust toolchain.
 
 ### Windows
 
